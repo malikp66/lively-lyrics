@@ -1,0 +1,87 @@
+{
+  "name": "livelylyrics-miniplayer",
+  "version": "2.2.3",
+  "description": "Powerful & accurate floating transparent Spotify synced lyrics miniplayer for Windows",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-builder --win",
+    "dist:win": "electron-builder --win",
+    "dist:mac": "electron-builder --mac",
+    "dist:linux": "electron-builder --linux",
+    "dist:all": "electron-builder -mwl"
+  },
+  "keywords": [
+    "spotify",
+    "lyrics",
+    "miniplayer",
+    "floating",
+    "windows",
+    "macos",
+    "linux"
+  ],
+  "author": "LivelyLyrics",
+  "license": "MIT",
+  "build": {
+    "appId": "com.livelylyrics.miniplayer",
+    "productName": "LivelyLyrics",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "main.js",
+      "preload.js",
+      "bridge/**/*",
+      "services/**/*",
+      "public/**/*"
+    ],
+    "win": {
+      "target": [
+        "nsis"
+      ],
+      "icon": "public/icon.ico"
+    },
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "icon": "public/icon.png",
+      "category": "public.app-category.music"
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "icon": "public/icon.png",
+      "category": "Audio"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "LivelyLyrics"
+    },
+    "asarUnpack": [
+      "bridge/**/*",
+      "public/icon.png",
+      "public/icon.ico"
+    ],
+    "publish": [
+      {
+        "provider": "github",
+        "owner": "malik",
+        "repo": "livelylyrics"
+      }
+    ]
+  },
+  "devDependencies": {
+    "electron": "^40.10.2",
+    "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "electron-updater": "^6.8.9"
+  }
+}
