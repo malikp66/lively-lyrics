@@ -8,10 +8,10 @@
 
   <!-- Primary Project Badges -->
   <p>
-    <a href="https://github.com/malik/livelylyrics/releases">
+    <a href="https://github.com/malikp66/lively-lyrics/releases">
       <img src="https://img.shields.io/badge/Release-v2.2.3-1ed760?style=for-the-badge&logo=spotify&logoColor=white" alt="Release v2.2.3" />
     </a>
-    <a href="https://github.com/malik/livelylyrics">
+    <a href="https://github.com/malikp66/lively-lyrics">
       <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-0078d4?style=for-the-badge&logo=windows&logoColor=white" alt="Platform Windows macOS Linux" />
     </a>
     <a href="https://electronjs.org/">
@@ -24,20 +24,20 @@
 
   <!-- Live GitHub Repo Stats -->
   <p>
-    <a href="https://github.com/malik/livelylyrics/stargazers">
-      <img src="https://img.shields.io/github/stars/malik/livelylyrics?style=for-the-badge&logo=star&color=1ed760&labelColor=121620" alt="GitHub Stars" />
+    <a href="https://github.com/malikp66/lively-lyrics/stargazers">
+      <img src="https://img.shields.io/github/stars/malikp66/lively-lyrics?style=for-the-badge&logo=star&color=1ed760&labelColor=121620" alt="GitHub Stars" />
     </a>
-    <a href="https://github.com/malik/livelylyrics/network/members">
-      <img src="https://img.shields.io/github/forks/malik/livelylyrics?style=for-the-badge&logo=git&color=06b6d4&labelColor=121620" alt="GitHub Forks" />
+    <a href="https://github.com/malikp66/lively-lyrics/network/members">
+      <img src="https://img.shields.io/github/forks/malikp66/lively-lyrics?style=for-the-badge&logo=git&color=06b6d4&labelColor=121620" alt="GitHub Forks" />
     </a>
-    <a href="https://github.com/malik/livelylyrics/releases">
-      <img src="https://img.shields.io/github/downloads/malik/livelylyrics/total?style=for-the-badge&logo=windows&color=a855f7&labelColor=121620" alt="Total Downloads" />
+    <a href="https://github.com/malikp66/lively-lyrics/releases">
+      <img src="https://img.shields.io/github/downloads/malikp66/lively-lyrics/total?style=for-the-badge&logo=windows&color=a855f7&labelColor=121620" alt="Total Downloads" />
     </a>
-    <a href="https://github.com/malik/livelylyrics/issues">
-      <img src="https://img.shields.io/github/issues/malik/livelylyrics?style=for-the-badge&logo=github&color=f59e0b&labelColor=121620" alt="Open Issues" />
+    <a href="https://github.com/malikp66/lively-lyrics/issues">
+      <img src="https://img.shields.io/github/issues/malikp66/lively-lyrics?style=for-the-badge&logo=github&color=f59e0b&labelColor=121620" alt="Open Issues" />
     </a>
-    <a href="https://github.com/malik/livelylyrics/commits/master">
-      <img src="https://img.shields.io/github/last-commit/malik/livelylyrics?style=for-the-badge&logo=git&color=ec4899&labelColor=121620" alt="Last Commit" />
+    <a href="https://github.com/malikp66/lively-lyrics/commits/master">
+      <img src="https://img.shields.io/github/last-commit/malikp66/lively-lyrics?style=for-the-badge&logo=git&color=ec4899&labelColor=121620" alt="Last Commit" />
     </a>
   </p>
 
@@ -91,27 +91,21 @@ Aplikasi desktop Spotify resmi memiliki keterbatasan besar:
 
 ---
 
-## 🖥️ Mode Tampilan
+## 🖥️ Mode Tampilan Fleksibel
 
-LivelyLyrics dirancang fleksibel untuk berbagai gaya multitasking:
+LivelyLyrics menyediakan **3 mode tampilan adaptif** yang dirancang untuk berbagai kebutuhan multitasking:
 
-```
-┌────────────────────────────────────────────────────────┐
-│ 1. CARD MODE (Expanded)                                │
-│    ├── Header dengan Track Ticker & Quick Controls     │
-│    ├── Album Art & Dynamic Equalizer Bars              │
-│    ├── 3-5 Baris Lirik Karaoke Mengalir (Auto-Center)   │
-│    └── Scrubber Bar & Playback Dock                    │
-├────────────────────────────────────────────────────────┤
-│ 2. COMPACT BAR MODE (Dynamic Island)                   │
-│    ├── Single-line ultra-slim floating bar             │
-│    └── Sangat ideal diletakkan di bawah atau atas taskbar│
-├────────────────────────────────────────────────────────┤
-│ 3. ONLY-LYRICS MODE (Subtitle / Karaoke)               │
-│    ├── Tanpa frame, tanpa cover art, tanpa dock player │
-│    └── Menampilkan 2 baris lirik dengan Quick-Pill on hover│
-└────────────────────────────────────────────────────────┘
-```
+| Mode | Karakteristik Visual | Komponen yang Ditampilkan | Ideal Untuk |
+| :--- | :--- | :--- | :--- |
+| 🎴 **Card Mode**<br>*(Expanded Default)* | Jendela aero-glass elegan dengan visual dan kontrol lengkap | Artwork album, equalizer bars, timeline scrubber, kontrol pemutar, dan 3–5 baris lirik mengalir | Multitasking santai, mendengarkan musik di layar desktop |
+| 💊 **Compact Mode**<br>*(Dynamic Island)* | Bar horizontal ultra-ramping satu baris hemat tempat | Mini artwork cover, judul trek, dan 1 baris lirik aktif yang ringkas | Diletakkan tepat di atas/bawah Taskbar saat bekerja atau coding |
+| 💬 **Only-Lyrics Mode**<br>*(Pure Subtitle)* | Tanpa frame, tanpa cover art, murni floating text transparan | 2 baris lirik mengambang dengan floating toolbar interaktif saat kursor mendekat | Bermain game layar penuh, menonton video, atau membaca dokumen |
+
+> [!TIP]
+> Anda dapat beralih mode kapan saja dengan cepat menggunakan shortcut keyboard:
+> - **Mode Hanya Lirik (Subtitle)**: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>L</kbd>
+> - **Ghost Mode (Tembus Klik)**: <kbd>Ctrl</kbd> + <kbd>Alt</kbd> + <kbd>G</kbd>
+
 
 ---
 
@@ -122,13 +116,13 @@ LivelyLyrics mendukung penuh sistem operasi **Windows**, **macOS**, dan **Linux*
 ### 🪟 1. Windows (10 / 11)
 
 **Metode 1: Installer `.exe` (Paling Mudah)**
-1. Unduh installer resmi terbaru: 👉 **[`LivelyLyrics-Setup-2.2.3.exe`](https://github.com/malik/livelylyrics/releases)**
+1. Unduh installer resmi terbaru: 👉 **[`LivelyLyrics-Setup-2.2.3.exe`](https://github.com/malikp66/lively-lyrics/releases)**
 2. Jalankan file `.exe` dan ikuti wizard instalasi NSIS (bisa pilih buat shortcut di Desktop / Start Menu).
 3. Buka **LivelyLyrics**, jalankan **Spotify**, dan putar lagu apapun. Lirik langsung sinkron otomatis via *Windows System Media Transport Controls (SMTC)*.
 
 **Metode 2: Dari Source Code**
 ```bash
-git clone https://github.com/malik/livelylyrics.git
+git clone https://github.com/malikp66/lively-lyrics.git
 cd livelylyrics
 npm install
 npm start
@@ -145,7 +139,7 @@ LivelyLyrics di macOS menggunakan jembatan *AppleScript / JXA* native yang sanga
 **Cara Menjalankan & Menggunakan:**
 1. Clone repositori dan install dependensi:
    ```bash
-   git clone https://github.com/malik/livelylyrics.git
+   git clone https://github.com/malikp66/lively-lyrics.git
    cd livelylyrics
    npm install
    npm start
@@ -181,7 +175,7 @@ sudo pacman -S playerctl
 **Cara Menjalankan & Menggunakan:**
 1. Clone repositori dan jalankan aplikasi:
    ```bash
-   git clone https://github.com/malik/livelylyrics.git
+   git clone https://github.com/malikp66/lively-lyrics.git
    cd livelylyrics
    npm install
    npm start
@@ -238,31 +232,25 @@ Tersedia 6 preset warna tema atau pilih warna HEX bebas:
 
 ## 🏗️ Arsitektur Sistem
 
-LivelyLyrics menggunakan arsitektur non-blocking berbasis *Native Windows Runtime Interop* untuk menjaga performa tetap ringan dan bebas lag:
+LivelyLyrics dirancang dengan arsitektur modular non-blocking untuk menghasilkan performa tinggi, latensi sinkronisasi minimal (< 35ms), dan penggunaan CPU hemat (< 0.5%):
+
+| Lapisan (Layer) | Komponen | Fungsi & Mekanisme Kerja |
+| :--- | :--- | :--- |
+| 🎵 **Media Provider** | Spotify Desktop | Memutar audio dan menyiarkan sesi pemutaran ke API Media OS. |
+| ⚡ **OS Session Hook** | Windows SMTC / macOS AppleScript / Linux MPRIS2 | Membaca metadata lagu dan posisi playback secara langsung tanpa OAuth token Spotify. |
+| ⚙️ **Core Service** | Electron Main (`main.js` & `mediaService.js`) | Mengelola lifecycle jendela aplikasi, IPC bridge, dan koordinasi pencarian lirik. |
+| 📜 **Lyrics Engine** | LRCLIB API + Local Cache | Mengambil bait lirik `.lrc` tersinkronisasi dan menyimpannya di cache lokal untuk akses instan. |
+| 🎨 **Glass Renderer** | Chromium WebContents (`app.js` & CSS Glass) | Merender antarmuka kaca aero, pendaran ambient cover art, dan auto-scroll lirik pada 60+ FPS. |
 
 ```mermaid
 flowchart TD
-    subgraph Windows_OS["Windows 10 / 11 OS"]
-        Spotify["Spotify Desktop Application"] -->|Media Metadata & Position| SMTC["System Media Transport Controls (GSMTC)"]
-    end
-
-    subgraph Daemon["Background Service"]
-        SMTC -->|Async WinRT Win32 API| PSDaemon["PowerShell Daemon (smtc-daemon.ps1)"]
-        PSDaemon -->|JSON Stream (stdout)| MediaService["MediaService (Node ChildProcess)"]
-    end
-
-    subgraph Electron_Main["Electron Main Process"]
-        MediaService -->|IPC: media-update| Main["main.js"]
-        Main -->|Query Track Metadata| LyricsService["LyricsService (LRCLIB + Cache)"]
-        LyricsService -->|IPC: lyrics-loaded| Main
-    end
-
-    subgraph Renderer_UI["Aero Glassmorphic Renderer"]
-        Main -->|IPC Forwarding| Preload["preload.js (ContextBridge)"]
-        Preload --> UI["app.js / index.html (CSS Glass Engine)"]
-        UI -->|High-Frequency Loop 35ms| SyncEngine["Lyric Synchronization Engine"]
-        SyncEngine -->|Interactive Seek / Commands| Preload
-    end
+    Spotify["Spotify Desktop Application"] --> OS["Native OS Media Session"]
+    OS --> MediaService["MediaService Bridge"]
+    MediaService --> Main["Electron Main Core"]
+    Main --> LyricsService["LyricsService Engine"]
+    LyricsService --> Cache["Local Storage Cache"]
+    Main --> Renderer["Aero Glassmorphic Renderer"]
+    Renderer --> Sync["Karaoke Sync Loop 35ms"]
 ```
 
 ### Keunggulan Arsitektur:
@@ -305,11 +293,11 @@ Sangat ringan. LivelyLyrics memanfaatkan akselerasi hardware Chromium yang hemat
 Jika Anda menyukai proyek ini, silakan tinggalkan bintang ⭐ di GitHub untuk mendukung perkembangan **LivelyLyrics**!
 
 <div align="center">
-  <a href="https://star-history.com/#malik/livelylyrics&Date">
+  <a href="https://star-history.com/#malikp66/lively-lyrics&Date">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=malik/livelylyrics&type=Date&theme=dark" />
-      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=malik/livelylyrics&type=Date" />
-      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=malik/livelylyrics&type=Date" width="650" />
+      <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=malikp66/lively-lyrics&type=Date&theme=dark" />
+      <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=malikp66/lively-lyrics&type=Date" />
+      <img alt="Star History Chart" src="https://api.star-history.com/svg?repos=malikp66/lively-lyrics&type=Date" width="650" />
     </picture>
   </a>
 </div>
@@ -319,7 +307,7 @@ Jika Anda menyukai proyek ini, silakan tinggalkan bintang ⭐ di GitHub untuk me
 <div align="center">
   <h3>✨ Suka dengan LivelyLyrics?</h3>
   <p>Berikan dukungan Anda dengan memberikan Star (⭐) pada repositori ini!</p>
-  <a href="https://github.com/malik/livelylyrics">
+  <a href="https://github.com/malikp66/lively-lyrics">
     <img src="https://img.shields.io/badge/⭐%20Star%20LivelyLyrics%20on%20GitHub-1ed760?style=for-the-badge&logo=github&logoColor=white" alt="Star on GitHub" />
   </a>
 </div>
@@ -331,8 +319,8 @@ Jika Anda menyukai proyek ini, silakan tinggalkan bintang ⭐ di GitHub untuk me
 Terima kasih banyak kepada semua kontributor yang turut serta menyempurnakan LivelyLyrics:
 
 <p align="center">
-  <a href="https://github.com/malik/livelylyrics/graphs/contributors">
-    <img src="https://contrib.rocks/image?repo=malik/livelylyrics" alt="Contributors" />
+  <a href="https://github.com/malikp66/lively-lyrics/graphs/contributors">
+    <img src="https://contrib.rocks/image?repo=malikp66/lively-lyrics" alt="Contributors" />
   </a>
 </p>
 
