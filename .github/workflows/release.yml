@@ -37,7 +37,6 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: 'npm'
 
       - name: Install Linux Dependencies
         if: matrix.platform == 'linux'
@@ -71,8 +70,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
         with:
-          tag_name: ${{ github.ref_name || inputs.tag }}
-          name: LivelyLyrics ${{ github.ref_name || inputs.tag }}
+          tag_name: ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
+          name: LivelyLyrics ${{ github.ref_type == 'tag' && github.ref_name || inputs.tag }}
           draft: false
           prerelease: false
           generate_release_notes: true
