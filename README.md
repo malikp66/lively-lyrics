@@ -46,6 +46,24 @@
   </p>
 
   <p align="center">
+    <a href="https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-Setup-2.2.3.exe">
+      <img src="https://img.shields.io/badge/Windows-Download_.exe-0078D6?style=for-the-badge&logo=windows&logoColor=white" alt="Download Windows" />
+    </a>
+    <a href="https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-arm64.dmg">
+      <img src="https://img.shields.io/badge/macOS_(M1/M2/M3/M4)-Download_.dmg-000000?style=for-the-badge&logo=apple&logoColor=white" alt="Download macOS Apple Silicon" />
+    </a>
+    <a href="https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.dmg">
+      <img src="https://img.shields.io/badge/macOS_(Intel)-Download_.dmg-555555?style=for-the-badge&logo=apple&logoColor=white" alt="Download macOS Intel" />
+    </a>
+    <a href="https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.AppImage">
+      <img src="https://img.shields.io/badge/Linux-Download_.AppImage-FCC624?style=for-the-badge&logo=linux&logoColor=black" alt="Download Linux AppImage" />
+    </a>
+    <a href="https://github.com/malikp66/lively-lyrics/releases/latest/download/livelylyrics-miniplayer_2.2.3_amd64.deb">
+      <img src="https://img.shields.io/badge/Ubuntu/Debian-Download_.deb-E95420?style=for-the-badge&logo=ubuntu&logoColor=white" alt="Download Linux deb" />
+    </a>
+  </p>
+
+  <p align="center">
     <a href="#-download--instalasi-rilis">Download & Instalasi</a> •
     <a href="#-fitur-unggulan">Fitur Utama</a> •
     <a href="#-mode-tampilan">Mode Tampilan</a> •
@@ -76,19 +94,23 @@ Aplikasi desktop pemutar musik seperti Spotify memiliki keterbatasan saat kita s
 
 ## 📦 Download & Instalasi Rilis
 
-Unduh paket instalasi siap pakai sesuai sistem operasi Anda melalui halaman **[GitHub Releases](https://github.com/malikp66/lively-lyrics/releases)**:
+Klik tombol download langsung di bawah ini sesuai dengan sistem operasi perangkat Anda:
 
-| Sistem Operasi | Format Paket Rilis | Arsitektur | Deskripsi |
+| Perangkat / OS | Tombol Download Langsung | Tipe & Arsitektur | Panduan Instalasi |
 | :--- | :--- | :--- | :--- |
-| 🪟 **Windows 10 / 11** | `LivelyLyrics Setup x.x.x.exe` | `x64` | Installer resmi NSIS (mendukung pembuatan shortcut Desktop & Start Menu) |
-| 🍎 **macOS** | `LivelyLyrics-x.x.x.dmg`<br>`LivelyLyrics-x.x.x-mac.zip` | Apple Silicon (`arm64`) & Intel (`x64`) | Disk Image `.dmg` drag-and-drop ke folder `Applications` |
-| 🐧 **Linux** | `LivelyLyrics-x.x.x.AppImage`<br>`livelylyrics-miniplayer_x.x.x_amd64.deb` | `x86_64` (`amd64`) | Paket universal portabel `.AppImage` & paket `.deb` untuk Ubuntu/Debian/Mint |
+| 🪟 **Windows 10 / 11** | [**⬇️ Unduh Installer (.exe)**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-Setup-2.2.3.exe)<br>[*Unduh Versi Portable (.exe)*](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.exe) | Installer NSIS resmi `x64` (Shortcut Desktop & Start Menu) | [Buka Panduan Windows](#-1-panduan-instalasi-di-windows-10--11) |
+| 🍎 **macOS (Apple Silicon)** | [**⬇️ Unduh .dmg (M1/M2/M3/M4)**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-arm64.dmg)<br>[*Unduh Versi .zip*](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-arm64-mac.zip) | Apple Silicon (`arm64`) | [Buka Panduan macOS](#-2-panduan-instalasi-di-macos-apple-silicon-m1m2m3m4--intel) |
+| 🍏 **macOS (Intel)** | [**⬇️ Unduh .dmg (Intel Mac)**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.dmg)<br>[*Unduh Versi .zip*](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-mac.zip) | Mac Prosesor Intel (`x64`) | [Buka Panduan macOS](#-2-panduan-instalasi-di-macos-apple-silicon-m1m2m3m4--intel) |
+| 🐧 **Linux (Universal)** | [**⬇️ Unduh .AppImage**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.AppImage) | Universal Portable `x86_64` (Semua Distro) | [Buka Panduan Linux](#-3-panduan-instalasi-di-linux-ubuntu-debian-fedora-arch-mint) |
+| 🐧 **Linux (Ubuntu/Debian)** | [**⬇️ Unduh Paket .deb**](https://github.com/malikp66/lively-lyrics/releases/latest/download/livelylyrics-miniplayer_2.2.3_amd64.deb) | Native Debian / Ubuntu (`amd64`) | [Buka Panduan Linux](#-3-panduan-instalasi-di-linux-ubuntu-debian-fedora-arch-mint) |
+
+> 💡 Daftar lengkap semua file rilis dan arsip versi sebelumnya dapat diakses di **[GitHub Releases](https://github.com/malikp66/lively-lyrics/releases)**.
 
 ---
 
 ### 🪟 1. Panduan Instalasi di Windows (10 / 11)
 
-1. Unduh file **`LivelyLyrics Setup 2.2.3.exe`** dari halaman **[Releases](https://github.com/malikp66/lively-lyrics/releases)**.
+1. Unduh [**`LivelyLyrics-Setup-2.2.3.exe`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-Setup-2.2.3.exe) (atau gunakan [versi Portable](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.exe) jika tidak ingin menginstal).
 2. Jalankan installer `.exe` (jika muncul *Windows SmartScreen*, klik **More info** $\rightarrow$ **Run anyway**).
 3. Pilih lokasi instalasi dan selesaikan proses wizard.
 4. Buka **LivelyLyrics** dan putar lagu di **Spotify Desktop**. Lirik akan otomatis tersinkronisasi melalui *Windows System Media Transport Controls (SMTC)*.
@@ -97,7 +119,9 @@ Unduh paket instalasi siap pakai sesuai sistem operasi Anda melalui halaman **[G
 
 ### 🍎 2. Panduan Instalasi di macOS (Apple Silicon M1/M2/M3/M4 & Intel)
 
-1. Unduh file **`LivelyLyrics-2.2.3.dmg`** (atau `-arm64.dmg` untuk Mac M-series) dari halaman **[Releases](https://github.com/malikp66/lively-lyrics/releases)**.
+1. Unduh installer sesuai tipe prosesor Mac Anda:
+   - **Apple Silicon (M1/M2/M3/M4)**: [**`LivelyLyrics-2.2.3-arm64.dmg`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-arm64.dmg)
+   - **Intel Mac**: [**`LivelyLyrics-2.2.3.dmg`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.dmg)
 2. Buka file `.dmg` tersebut, lalu seret (*drag & drop*) ikon **LivelyLyrics** ke dalam folder **Applications**.
 3. **Catatan Gatekeeper macOS (Aplikasi Tanpa Apple Developer ID Berbayar)**:
    Jika saat pertama kali dibuka muncul peringatan *"LivelyLyrics cannot be opened because the developer cannot be verified"* atau *"is damaged"*:
@@ -132,19 +156,20 @@ sudo pacman -S playerctl
 #### Langkah 2: Pasang LivelyLyrics (Pilih `.AppImage` atau `.deb`)
 
 **Opsi A — Menggunakan `.AppImage` (Semua Distro Linux):**
-```bash
-# Berikan izin eksekusi pada file AppImage yang diunduh
-chmod +x LivelyLyrics-*.AppImage
-
-# Jalankan langsung
-./LivelyLyrics-*.AppImage
-```
+1. Unduh file [**`LivelyLyrics-2.2.3.AppImage`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.AppImage).
+2. Berikan izin eksekusi dan jalankan:
+   ```bash
+   chmod +x LivelyLyrics-*.AppImage
+   ./LivelyLyrics-*.AppImage
+   ```
 *(Catatan untuk Ubuntu 22.04+: Jika AppImage membutuhkan FUSE, jalankan `sudo apt install libfuse2` terlebih dahulu).*
 
 **Opsi B — Menggunakan Paket `.deb` (Ubuntu / Debian / Mint):**
-```bash
-sudo apt install ./livelylyrics-miniplayer_*_amd64.deb
-```
+1. Unduh paket [**`livelylyrics-miniplayer_2.2.3_amd64.deb`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/livelylyrics-miniplayer_2.2.3_amd64.deb).
+2. Pasang paket melalui Terminal:
+   ```bash
+   sudo apt install ./livelylyrics-miniplayer_*_amd64.deb
+   ```
 Setelah terinstal, Anda dapat membuka **LivelyLyrics** langsung dari Application Launcher / Menu Distro Anda.
 
 ---
