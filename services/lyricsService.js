@@ -127,13 +127,15 @@ function invalidateCache(trackKey) {
 /**
  * Fetch lyrics from LRCLIB using smart multi-candidate search
  */
-async function fetchLyrics(title, artist, album, duration) {
+async function fetchLyrics(title, artist, album, duration, nativeArtworkUrl = '') {
     const rawKey = `${title} - ${artist}`.toLowerCase();
     const cleanedTitle = cleanSongTitle(title);
     const cleanedArtist = cleanArtist(artist);
 
-    // Fetch artwork concurrently
-    const artworkPromise = fetchArtwork(cleanedTitle || title, cleanedArtist || artist);
+    // Fetch artwork concurrently (use iTunes HD artwork first, fallback to native player artworkUrl)
+    const artworkPromise = fetchArtwork(cleanedTitle || title, cleanedArtist || artist).then((itunesArt) => {
+        return itunesArt || nativeArtworkUrl || null;
+    });
 
     // Check existing positive cache
     if (lyricsCache.has(rawKey)) {
@@ -145,7 +147,7 @@ async function fetchLyrics(title, artist, album, duration) {
     }
 
     const headers = {
-        'User-Agent': 'LivelyLyrics/2.1 (Windows Media Player; Open Source)'
+        'User-Agent': 'LivelyLyrics/2.2.3 (https://github.com/malikp66/lively-lyrics)'
     };
 
     let result = null;
@@ -161,8 +163,11 @@ async function fetchLyrics(title, artist, album, duration) {
         title.trim()
     ].filter(Boolean);
 
+    // Deduplicate candidates
+    const uniqueCandidates = [...new Set(searchCandidates)];
+
     // 1. Search Query Strategy (Most resilient & finds exact synchronized lyrics)
-    for (const candidate of searchCandidates) {
+    for (const candidate of uniqueCandidates) {
         if (result) break;
 
         try {
@@ -174,7 +179,7 @@ async function fetchLyrics(title, artist, album, duration) {
                     const synced = list.filter(item => !!item.syncedLyrics);
                     if (synced.length > 0) {
                         if (duration && duration > 0) {
-                            // Sort by closest duration to Spotify playback
+                            // Sort by closest duration to playback
                             synced.sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
                         }
                         result = processLyricsResult(synced[0]);
@@ -188,7 +193,7 @@ async function fetchLyrics(title, artist, album, duration) {
                     }
                 }
             }
-            await sleep(250); // Friendly pacing
+            await sleep(200); // Friendly pacing
         } catch (e) {
             console.warn('[LyricsService] Candidate error:', e.message);
         }
@@ -219,7 +224,7 @@ async function fetchLyrics(title, artist, album, duration) {
             isPlain: false,
             lines: [],
             rawLyrics: '',
-            message: 'Lirik belum tersedia untuk lagu ini. Tekan Ctrl+R atau Sync Ulang untuk mencari kembali.'
+            message: 'Lirik belum tersedia untuk lagu ini. Tekan Cmd/Ctrl+R atau Sync Ulang untuk mencari kembali.'
         };
         // DO NOT permanently cache empty/failed lyrics!
     } else {

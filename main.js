@@ -1,5 +1,6 @@
 const { app, BrowserWindow, ipcMain, globalShortcut, Tray, Menu, nativeImage, screen } = require('electron');
 const path = require('path');
+const fs = require('fs');
 const mediaService = require('./services/mediaService');
 const lyricsService = require('./services/lyricsService');
 const updateService = require('./services/updateService');
@@ -12,6 +13,11 @@ app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-backgrounding-occluded-windows');
 app.commandLine.appendSwitch('disable-renderer-backgrounding');
 
+// Linux transparency & Wayland/X11 visual compatibility
+if (process.platform === 'linux') {
+    app.commandLine.appendSwitch('enable-transparent-visuals');
+}
+
 const gotTheLock = app.requestSingleInstanceLock();
 if (!gotTheLock) {
     app.quit();
@@ -21,19 +27,89 @@ let mainWindow = null;
 let tray = null;
 let isClickThrough = false;
 let currentTrackKey = '';
+let positionSaveTimeout = null;
 
-function getIconPath() {
+function getUnpackedOrLocalPath(...segments) {
     if (app && app.isPackaged) {
-        return path.join(process.resourcesPath, 'app.asar.unpacked', 'public', 'icon.png');
+        const unpacked = path.join(process.resourcesPath, 'app.asar.unpacked', ...segments);
+        if (fs.existsSync(unpacked)) return unpacked;
     }
-    return path.join(__dirname, 'public', 'icon.png');
+    return path.join(__dirname, ...segments);
 }
 
-function getTrayIconPath() {
-    if (app && app.isPackaged) {
-        return path.join(process.resourcesPath, 'app.asar.unpacked', 'public', 'icon.ico');
+function getIconPath() {
+    if (process.platform === 'win32') {
+        const icoPath = getUnpackedOrLocalPath('public', 'icon.ico');
+        if (fs.existsSync(icoPath)) return icoPath;
     }
-    return path.join(__dirname, 'public', 'icon.ico');
+    return getUnpackedOrLocalPath('public', 'icon.png');
+}
+
+function getTrayIcon() {
+    if (process.platform === 'win32') {
+        const icoPath = getUnpackedOrLocalPath('public', 'icon.ico');
+        return nativeImage.createFromPath(icoPath);
+    }
+    if (process.platform === 'darwin') {
+        const tplPath = getUnpackedOrLocalPath('public', 'trayTemplate.png');
+        if (fs.existsSync(tplPath)) {
+            const img = nativeImage.createFromPath(tplPath);
+            img.setTemplateImage(true);
+            return img;
+        }
+    }
+    // Linux: use crisp 32x32 icon
+    const png32 = getUnpackedOrLocalPath('public', 'icon-32.png');
+    const pngPath = fs.existsSync(png32) ? png32 : getUnpackedOrLocalPath('public', 'icon.png');
+    let img = nativeImage.createFromPath(pngPath);
+    if (!img.isEmpty() && img.getSize().width > 32) {
+        img = img.resize({ width: 32, height: 32, quality: 'best' });
+    }
+    return img;
+}
+
+function getBoundsStorePath() {
+    return path.join(app.getPath('userData'), 'window-bounds.json');
+}
+
+function loadSavedPosition(defaultX, defaultY) {
+    try {
+        const filePath = getBoundsStorePath();
+        if (fs.existsSync(filePath)) {
+            const raw = JSON.parse(fs.readFileSync(filePath, 'utf8'));
+            if (typeof raw.x === 'number' && typeof raw.y === 'number') {
+                // Verify coordinates are within at least one visible display
+                const displays = screen.getAllDisplays();
+                const isVisible = displays.some(d => {
+                    const b = d.bounds;
+                    return raw.x >= b.x - 100 && raw.x <= b.x + b.width - 50 &&
+                           raw.y >= b.y - 50 && raw.y <= b.y + b.height - 50;
+                });
+                if (isVisible) {
+                    return { x: raw.x, y: raw.y };
+                }
+            }
+        }
+    } catch (e) {}
+    return { x: defaultX, y: defaultY };
+}
+
+function saveWindowPosition() {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    try {
+        const [x, y] = mainWindow.getPosition();
+        fs.writeFileSync(getBoundsStorePath(), JSON.stringify({ x, y }), 'utf8');
+    } catch (e) {}
+}
+
+function applyAlwaysOnTop(win, enabled) {
+    if (!win || win.isDestroyed()) return;
+    if (process.platform === 'darwin') {
+        win.setAlwaysOnTop(enabled, 'floating', 1);
+        win.setVisibleOnAllWorkspaces(enabled, { visibleOnFullScreen: true });
+    } else {
+        win.setAlwaysOnTop(enabled, 'screen-saver');
+    }
 }
 
 function createWindow() {
@@ -42,9 +118,9 @@ function createWindow() {
 
     const winWidth = 460;
     const winHeight = 275;
-    // Position near bottom-right corner of screen
-    const posX = Math.max(20, screenWidth - winWidth - 30);
-    const posY = Math.max(20, screenHeight - winHeight - 30);
+    const defaultX = Math.max(20, screenWidth - winWidth - 30);
+    const defaultY = Math.max(20, screenHeight - winHeight - 30);
+    const { x: posX, y: posY } = loadSavedPosition(defaultX, defaultY);
 
     mainWindow = new BrowserWindow({
         width: winWidth,
@@ -57,7 +133,7 @@ function createWindow() {
         transparent: true,
         alwaysOnTop: true,
         resizable: true,
-        show: true,
+        show: false,
         icon: getIconPath(),
         skipTaskbar: false,
         backgroundColor: '#00000000',
@@ -72,12 +148,13 @@ function createWindow() {
 
     mainWindow.loadFile(path.join(__dirname, 'public', 'index.html'));
 
-    mainWindow.setAlwaysOnTop(true);
+    applyAlwaysOnTop(mainWindow, true);
 
     mainWindow.once('ready-to-show', () => {
+        if (!mainWindow || mainWindow.isDestroyed()) return;
         mainWindow.show();
         mainWindow.focus();
-        console.log('LivelyLyrics window is ready and shown at', posX, posY);
+        console.log(`LivelyLyrics (${process.platform}) window ready at`, posX, posY);
 
         // Auto check for updates 5 seconds after startup
         setTimeout(() => {
@@ -85,18 +162,28 @@ function createWindow() {
         }, 5000);
     });
 
-    mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
-        console.log(`[Renderer Line ${line}]:`, message);
+    mainWindow.on('moved', () => {
+        clearTimeout(positionSaveTimeout);
+        positionSaveTimeout = setTimeout(saveWindowPosition, 400);
+    });
+
+    mainWindow.webContents.on('console-message', (event) => {
+        const msg = event && typeof event === 'object' && 'message' in event ? event.message : arguments[2];
+        const ln = event && typeof event === 'object' && 'lineNumber' in event ? event.lineNumber : arguments[3];
+        if (msg && !String(msg).includes('Electron Security Warning')) {
+            console.log(`[Renderer Line ${ln || 0}]:`, msg);
+        }
     });
 
     // Register global shortcuts
     try {
-        // Ctrl+Alt+G: Ghost Mode
+        globalShortcut.unregisterAll();
+        // Cmd/Ctrl+Alt+G: Ghost Mode
         globalShortcut.register('CommandOrControl+Alt+G', () => {
             toggleClickThrough();
         });
 
-        // Ctrl+Alt+L: Only Lyrics Mode
+        // Cmd/Ctrl+Alt+L: Only Lyrics Mode
         globalShortcut.register('CommandOrControl+Alt+L', () => {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.webContents.send('toggle-only-lyrics-shortcut');
@@ -128,7 +215,7 @@ app.on('second-instance', () => {
 });
 
 function toggleClickThrough() {
-    if (!mainWindow) return;
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     isClickThrough = !isClickThrough;
     mainWindow.setIgnoreMouseEvents(isClickThrough, { forward: true });
     mainWindow.webContents.send('click-through-changed', isClickThrough);
@@ -136,20 +223,22 @@ function toggleClickThrough() {
 
 function setupTray() {
     try {
-        const currentIcon = getTrayIconPath();
-        const trayIcon = nativeImage.createFromPath(currentIcon);
+        const trayIcon = getTrayIcon();
         tray = new Tray(trayIcon);
+        const modLabel = process.platform === 'darwin' ? 'Cmd+Opt' : 'Ctrl+Alt';
         const contextMenu = Menu.buildFromTemplate([
             { label: '🎵 LivelyLyrics Miniplayer', enabled: false },
             { type: 'separator' },
             {
-                label: 'Mode Hanya Lirik (Ctrl+Alt+L)',
+                label: `Mode Hanya Lirik (${modLabel}+L)`,
                 click: () => {
-                    if (mainWindow) mainWindow.webContents.send('toggle-only-lyrics-shortcut');
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                        mainWindow.webContents.send('toggle-only-lyrics-shortcut');
+                    }
                 }
             },
             {
-                label: 'Toggle Ghost Mode (Ctrl+Alt+G)',
+                label: `Toggle Ghost Mode (${modLabel}+G)`,
                 click: () => toggleClickThrough()
             },
             {
@@ -157,16 +246,19 @@ function setupTray() {
                 type: 'checkbox',
                 checked: true,
                 click: (item) => {
-                    if (mainWindow) mainWindow.setAlwaysOnTop(item.checked);
+                    if (mainWindow && !mainWindow.isDestroyed()) {
+                        applyAlwaysOnTop(mainWindow, item.checked);
+                    }
                 }
             },
             {
                 label: 'Pusatkan Jendela ke Layar',
                 click: () => {
-                    if (mainWindow) {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
                         mainWindow.center();
                         mainWindow.show();
                         mainWindow.focus();
+                        saveWindowPosition();
                     }
                 }
             },
@@ -175,7 +267,7 @@ function setupTray() {
                 label: 'Periksa Pembaruan...',
                 click: () => {
                     updateService.checkForUpdates();
-                    if (mainWindow) {
+                    if (mainWindow && !mainWindow.isDestroyed()) {
                         mainWindow.show();
                         mainWindow.focus();
                     }
@@ -190,11 +282,13 @@ function setupTray() {
             }
         ]);
 
-        tray.setToolTip('LivelyLyrics - Spotify Floating Miniplayer');
+        tray.setToolTip('LivelyLyrics - Floating Synced Lyrics Miniplayer');
         tray.setContextMenu(contextMenu);
         tray.on('click', () => {
-            if (mainWindow) {
+            if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.isVisible() ? mainWindow.focus() : mainWindow.show();
+            } else if (BrowserWindow.getAllWindows().length === 0) {
+                createWindow();
             }
         });
     } catch (err) {
@@ -216,7 +310,8 @@ async function loadLyrics(data, force = false) {
             data.title,
             data.artist,
             data.album,
-            data.duration
+            data.duration,
+            data.artworkUrl || ''
         );
         currentLyricsLoaded = !!(lyrics && (lyrics.hasSynced || lyrics.isPlain));
         if (mainWindow && !mainWindow.isDestroyed()) {
@@ -279,33 +374,34 @@ ipcMain.on('resync-media', async () => {
 });
 
 ipcMain.on('set-click-through', (event, enabled) => {
-    if (!mainWindow) return;
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     isClickThrough = !!enabled;
     mainWindow.setIgnoreMouseEvents(isClickThrough, { forward: true });
     mainWindow.webContents.send('click-through-changed', isClickThrough);
 });
 
 ipcMain.on('set-always-on-top', (event, enabled) => {
-    if (!mainWindow) return;
-    mainWindow.setAlwaysOnTop(enabled);
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    applyAlwaysOnTop(mainWindow, !!enabled);
 });
 
 ipcMain.on('set-window-opacity', (event, opacity) => {
-    if (!mainWindow) return;
+    if (!mainWindow || mainWindow.isDestroyed()) return;
     const clamped = Math.max(0.15, Math.min(1.0, opacity));
     mainWindow.setOpacity(clamped);
 });
 
 ipcMain.on('minimize-window', () => {
-    if (mainWindow) mainWindow.minimize();
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.minimize();
 });
 
 ipcMain.on('close-window', () => {
-    if (mainWindow) mainWindow.close();
+    saveWindowPosition();
+    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
 });
 
 ipcMain.on('resize-window', (event, { width, height }) => {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.setSize(width, height);
     }
 });
@@ -331,7 +427,12 @@ ipcMain.on('install-update', () => {
     updateService.quitAndInstall();
 });
 
-app.whenReady().then(() => {
+const startApp = () => {
+    if (process.platform === 'darwin' && app.dock) {
+        try {
+            app.dock.setIcon(getIconPath());
+        } catch (e) {}
+    }
     createWindow();
     setupTray();
     mediaService.start();
@@ -339,11 +440,24 @@ app.whenReady().then(() => {
     app.on('activate', () => {
         if (BrowserWindow.getAllWindows().length === 0) {
             createWindow();
+        } else if (mainWindow && !mainWindow.isDestroyed()) {
+            mainWindow.show();
+            mainWindow.focus();
         }
     });
+};
+
+app.whenReady().then(() => {
+    // On Linux X11 compositors, slight delay ensures ARGB visual transparency is initialized cleanly
+    if (process.platform === 'linux') {
+        setTimeout(startApp, 300);
+    } else {
+        startApp();
+    }
 });
 
 app.on('will-quit', () => {
+    saveWindowPosition();
     globalShortcut.unregisterAll();
     mediaService.stop();
 });

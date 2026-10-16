@@ -1,15 +1,63 @@
 /**
  * mediaService.js
  * Multi-platform background media controller and listener:
- * - Windows: PowerShell GSMTC Daemon (smtc-daemon.ps1)
- * - macOS: AppleScript / JXA (osascript)
- * - Linux: MPRIS2 / playerctl
+ * - Windows: PowerShell GSMTC Daemon (smtc-daemon.ps1) with high-precision compensation
+ * - macOS: JXA (JavaScript for Automation via osascript) supporting Spotify & Apple Music
+ *            with safe JSON serialization (immune to quotes/newlines in song titles)
+ * - Linux: MPRIS2 / playerctl supporting Spotify & active MPRIS players with single-call polling
  */
 
-const { spawn, exec } = require('child_process');
+const { spawn, execFile } = require('child_process');
 const path = require('path');
 const EventEmitter = require('events');
 const { app } = require('electron');
+
+// Safe JXA script for macOS (queries Spotify first, then Apple Music fallback)
+const MAC_JXA_POLL_SCRIPT = `
+function getPlayerState(appName) {
+    try {
+        var a = Application(appName);
+        if (!a.running()) return null;
+        var state = a.playerState();
+        if (state !== 'playing' && state !== 'paused') return null;
+        var track = a.currentTrack;
+        if (!track) return null;
+        var title = track.name() || '';
+        if (!title) return null;
+        var artist = track.artist() || '';
+        var album = track.album() || '';
+        var rawDur = track.duration() || 0;
+        var duration = (appName === 'Spotify') ? (rawDur / 1000) : rawDur;
+        var position = a.playerPosition() || 0;
+        var artworkUrl = '';
+        try {
+            if (appName === 'Spotify') artworkUrl = track.artworkUrl() || '';
+        } catch (e) {}
+        return {
+            active: true,
+            appId: appName,
+            title: String(title),
+            artist: String(artist),
+            album: String(album),
+            status: (state === 'playing') ? 'Playing' : 'Paused',
+            position: Math.round(position * 100) / 100,
+            duration: Math.round(duration * 100) / 100,
+            artworkUrl: String(artworkUrl),
+            lastUpdated: Date.now()
+        };
+    } catch (e) {
+        return null;
+    }
+}
+var sp = getPlayerState('Spotify');
+var mu = getPlayerState('Music');
+var chosen = null;
+if (sp && sp.status === 'Playing') chosen = sp;
+else if (mu && mu.status === 'Playing') chosen = mu;
+else if (sp) chosen = sp;
+else if (mu) chosen = mu;
+JSON.stringify(chosen || { active: false });
+`.trim();
 
 class MediaService extends EventEmitter {
     constructor() {
@@ -19,6 +67,8 @@ class MediaService extends EventEmitter {
         this.lastKnownState = null;
         this.restartTimeout = null;
         this.macLinuxInterval = null;
+        this.isPollingInFlight = false;
+        this.activeMacApp = 'Spotify';
         this.platform = process.platform;
     }
 
@@ -30,7 +80,7 @@ class MediaService extends EventEmitter {
     }
 
     start() {
-        if (this.isStopping) return;
+        this.isStopping = false;
 
         if (this.platform === 'win32') {
             this.startWindowsDaemon();
@@ -53,6 +103,7 @@ class MediaService extends EventEmitter {
         try {
             this.process = spawn('powershell.exe', [
                 '-NoProfile',
+                '-NonInteractive',
                 '-ExecutionPolicy', 'Bypass',
                 '-File', scriptPath
             ], {
@@ -84,11 +135,11 @@ class MediaService extends EventEmitter {
                 }
             });
 
-            this.process.on('close', (code) => {
+            this.process.on('close', () => {
                 this.process = null;
                 if (!this.isStopping) {
                     clearTimeout(this.restartTimeout);
-                    this.restartTimeout = setTimeout(() => this.start(), 3000);
+                    this.restartTimeout = setTimeout(() => this.start(), 2500);
                 }
             });
 
@@ -102,81 +153,97 @@ class MediaService extends EventEmitter {
     }
 
     /* =========================================================================
-       macOS: AppleScript / Spotify Query
+       macOS: Safe JXA (JavaScript for Automation) Polling
        ========================================================================= */
+    pollMacOnce() {
+        if (this.isStopping || this.isPollingInFlight) return;
+        this.isPollingInFlight = true;
+
+        execFile('osascript', ['-l', 'JavaScript', '-e', MAC_JXA_POLL_SCRIPT], { timeout: 2500 }, (err, stdout) => {
+            this.isPollingInFlight = false;
+            if (!err && stdout) {
+                try {
+                    const parsed = JSON.parse(stdout.trim());
+                    if (parsed && parsed.appId) {
+                        this.activeMacApp = parsed.appId;
+                    }
+                    this.handleMessage({ event: 'mediaUpdate', data: parsed });
+                } catch (e) {}
+            } else if (err) {
+                this.handleMessage({ event: 'mediaUpdate', data: { active: false } });
+            }
+        });
+    }
+
     startMacPolling() {
+        clearInterval(this.macLinuxInterval);
         this.emit('ready');
-        const pollScript = `
-        if application "Spotify" is running then
-            tell application "Spotify"
-                set pStatus to player state as string
-                set tName to name of current track
-                set tArtist to artist of current track
-                set tAlbum to album of current track
-                set tDuration to (duration of current track) / 1000
-                set tPosition to player position
-                return "{\"active\":true,\"title\":\"" & tName & "\",\"artist\":\"" & tArtist & "\",\"album\":\"" & tAlbum & "\",\"status\":\"" & (if pStatus is "playing" then "Playing" else "Paused") & "\",\"position\":" & tPosition & ",\"duration\":" & tDuration & "}"
-            end tell
-        else
-            return "{\"active\":false}"
-        end if
-        `.replace(/\n/g, ' ');
-
-        const poll = () => {
-            if (this.isStopping) return;
-            exec(`osascript -e '${pollScript}'`, (err, stdout) => {
-                if (!err && stdout) {
-                    try {
-                        const parsed = JSON.parse(stdout.trim());
-                        this.handleMessage({ event: 'mediaUpdate', data: parsed });
-                    } catch (e) {}
-                }
-            });
-        };
-
-        poll();
-        this.macLinuxInterval = setInterval(poll, 1000);
+        this.pollMacOnce();
+        this.macLinuxInterval = setInterval(() => this.pollMacOnce(), 900);
     }
 
     /* =========================================================================
-       LINUX: playerctl / MPRIS2
+       LINUX: MPRIS2 / playerctl (Single-command atomic query)
        ========================================================================= */
+    pollLinuxOnce() {
+        if (this.isStopping || this.isPollingInFlight) return;
+        this.isPollingInFlight = true;
+
+        const formatStr = '{{playerName}}:::{{status}}:::{{title}}:::{{artist}}:::{{album}}:::{{position}}:::{{mpris:length}}:::{{mpris:artUrl}}';
+
+        execFile('playerctl', [
+            '-p', 'spotify,%any',
+            'metadata',
+            '--format', formatStr
+        ], { timeout: 2000 }, (err, stdout) => {
+            this.isPollingInFlight = false;
+            if (err || !stdout || !stdout.trim()) {
+                this.handleMessage({ event: 'mediaUpdate', data: { active: false } });
+                return;
+            }
+
+            const firstLine = stdout.trim().split('\n')[0];
+            const parts = firstLine.split(':::');
+            if (parts.length < 7) {
+                this.handleMessage({ event: 'mediaUpdate', data: { active: false } });
+                return;
+            }
+
+            const playerName = parts[0] || 'spotify';
+            const rawStatus = (parts[1] || '').trim();
+            const title = (parts[2] || '').trim();
+            const artist = (parts[3] || '').trim();
+            const album = (parts[4] || '').trim();
+            const posMicro = parseFloat(parts[5]) || 0;
+            const lenMicro = parseFloat(parts[6]) || 0;
+            const artworkUrl = (parts[7] || '').trim();
+
+            if (!title) {
+                this.handleMessage({ event: 'mediaUpdate', data: { active: false } });
+                return;
+            }
+
+            const data = {
+                active: true,
+                appId: playerName,
+                title,
+                artist,
+                album,
+                status: rawStatus === 'Playing' ? 'Playing' : 'Paused',
+                position: Math.round((posMicro / 1000000) * 100) / 100,
+                duration: Math.round((lenMicro / 1000000) * 100) / 100,
+                artworkUrl: artworkUrl.startsWith('http') ? artworkUrl : '',
+                lastUpdated: Date.now()
+            };
+            this.handleMessage({ event: 'mediaUpdate', data });
+        });
+    }
+
     startLinuxPolling() {
+        clearInterval(this.macLinuxInterval);
         this.emit('ready');
-        const poll = () => {
-            if (this.isStopping) return;
-            exec(`playerctl -p spotify status`, (errStatus, statusOut) => {
-                if (errStatus || !statusOut.trim()) {
-                    this.handleMessage({ event: 'mediaUpdate', data: { active: false } });
-                    return;
-                }
-                const status = statusOut.trim() === 'Playing' ? 'Playing' : 'Paused';
-
-                exec(`playerctl -p spotify metadata --format '{{title}}:::{{artist}}:::{{album}}:::{{position}}:::{{mpris:length}}'`, (errMeta, metaOut) => {
-                    if (errMeta || !metaOut.trim()) return;
-                    const parts = metaOut.trim().split(':::');
-                    const title = parts[0] || '';
-                    const artist = parts[1] || '';
-                    const album = parts[2] || '';
-                    const posMicro = parseFloat(parts[3]) || 0;
-                    const lenMicro = parseFloat(parts[4]) || 0;
-
-                    const data = {
-                        active: true,
-                        title,
-                        artist,
-                        album,
-                        status,
-                        position: Math.round((posMicro / 1000000) * 100) / 100,
-                        duration: Math.round((lenMicro / 1000000) * 100) / 100
-                    };
-                    this.handleMessage({ event: 'mediaUpdate', data });
-                });
-            });
-        };
-
-        poll();
-        this.macLinuxInterval = setInterval(poll, 1000);
+        this.pollLinuxOnce();
+        this.macLinuxInterval = setInterval(() => this.pollLinuxOnce(), 900);
     }
 
     handleMessage(msg) {
@@ -196,19 +263,35 @@ class MediaService extends EventEmitter {
                 this.process.stdin.write(payload);
             } catch (e) {}
         } else if (this.platform === 'darwin') {
-            if (action === 'playpause') exec(`osascript -e 'tell application "Spotify" to playpause'`);
-            else if (action === 'next') exec(`osascript -e 'tell application "Spotify" to next track'`);
-            else if (action === 'previous') exec(`osascript -e 'tell application "Spotify" to previous track'`);
-            else if (action === 'seek' && typeof extra.position === 'number') {
-                exec(`osascript -e 'tell application "Spotify" to set player position to ${extra.position}'`);
+            const targetApp = this.activeMacApp || 'Spotify';
+            let jxaCmd = '';
+            if (action === 'playpause') {
+                jxaCmd = `Application(${JSON.stringify(targetApp)}).playpause()`;
+            } else if (action === 'next') {
+                jxaCmd = `Application(${JSON.stringify(targetApp)}).nextTrack()`;
+            } else if (action === 'previous') {
+                jxaCmd = `Application(${JSON.stringify(targetApp)}).previousTrack()`;
+            } else if (action === 'seek' && typeof extra.position === 'number') {
+                jxaCmd = `Application(${JSON.stringify(targetApp)}).playerPosition = ${Number(extra.position)}`;
+            }
+            if (jxaCmd) {
+                execFile('osascript', ['-l', 'JavaScript', '-e', jxaCmd], () => {
+                    setTimeout(() => this.pollMacOnce(), 120);
+                });
             }
         } else if (this.platform === 'linux') {
-            if (action === 'playpause') exec(`playerctl -p spotify play-pause`);
-            else if (action === 'next') exec(`playerctl -p spotify next`);
-            else if (action === 'previous') exec(`playerctl -p spotify previous`);
+            const args = ['-p', 'spotify,%any'];
+            if (action === 'playpause') args.push('play-pause');
+            else if (action === 'next') args.push('next');
+            else if (action === 'previous') args.push('previous');
             else if (action === 'seek' && typeof extra.position === 'number') {
-                exec(`playerctl -p spotify position ${extra.position}`);
+                args.push('position', String(Number(extra.position)));
+            } else {
+                return;
             }
+            execFile('playerctl', args, () => {
+                setTimeout(() => this.pollLinuxOnce(), 120);
+            });
         }
     }
 
@@ -231,6 +314,10 @@ class MediaService extends EventEmitter {
     resync() {
         if (this.platform === 'win32') {
             this.sendCommand('resync');
+        } else if (this.platform === 'darwin') {
+            this.pollMacOnce();
+        } else if (this.platform === 'linux') {
+            this.pollLinuxOnce();
         }
     }
 

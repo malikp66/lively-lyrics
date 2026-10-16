@@ -1,11 +1,12 @@
 {
   "name": "livelylyrics-miniplayer",
   "version": "2.2.3",
-  "description": "Powerful & accurate floating transparent Spotify synced lyrics miniplayer for Windows",
+  "description": "Powerful & accurate floating transparent Spotify & Music synced lyrics miniplayer for Windows, macOS, and Linux",
   "main": "main.js",
   "scripts": {
+    "postinstall": "node node_modules/electron/install.js || true",
     "start": "electron .",
-    "dist": "electron-builder --win",
+    "dist": "electron-builder",
     "dist:win": "electron-builder --win",
     "dist:mac": "electron-builder --mac",
     "dist:linux": "electron-builder --linux",
@@ -13,12 +14,15 @@
   },
   "keywords": [
     "spotify",
+    "apple-music",
     "lyrics",
     "miniplayer",
     "floating",
     "windows",
     "macos",
-    "linux"
+    "linux",
+    "mpris",
+    "smtc"
   ],
   "author": "LivelyLyrics",
   "license": "MIT",
@@ -37,25 +41,52 @@
     ],
     "win": {
       "target": [
-        "nsis"
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        },
+        {
+          "target": "portable",
+          "arch": ["x64"]
+        }
       ],
       "icon": "public/icon.ico"
     },
     "mac": {
       "target": [
-        "dmg",
-        "zip"
+        {
+          "target": "dmg",
+          "arch": ["x64", "arm64"]
+        },
+        {
+          "target": "zip",
+          "arch": ["x64", "arm64"]
+        }
       ],
-      "icon": "public/icon.png",
-      "category": "public.app-category.music"
+      "icon": "public/icon.icns",
+      "category": "public.app-category.music",
+      "identity": null,
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "LivelyLyrics membutuhkan izin untuk membaca lagu yang sedang diputar dan mengontrol pemutaran di Spotify atau Apple Music.",
+        "LSUIElement": false
+      }
     },
     "linux": {
       "target": [
-        "AppImage",
-        "deb"
+        {
+          "target": "AppImage",
+          "arch": ["x64"]
+        },
+        {
+          "target": "deb",
+          "arch": ["x64"]
+        }
       ],
       "icon": "public/icon.png",
-      "category": "Audio"
+      "category": "Audio",
+      "synopsis": "Floating Synced Lyrics Miniplayer for Spotify & MPRIS Players"
     },
     "nsis": {
       "oneClick": false,
@@ -67,13 +98,18 @@
     "asarUnpack": [
       "bridge/**/*",
       "public/icon.png",
-      "public/icon.ico"
+      "public/icon.icns",
+      "public/icon.ico",
+      "public/icon-16.png",
+      "public/icon-32.png",
+      "public/trayTemplate.png",
+      "public/trayTemplate@2x.png"
     ],
     "publish": [
       {
         "provider": "github",
-        "owner": "malik",
-        "repo": "livelylyrics"
+        "owner": "malikp66",
+        "repo": "lively-lyrics"
       }
     ]
   },
@@ -82,6 +118,7 @@
     "electron-builder": "^26.15.3"
   },
   "dependencies": {
+    "@phosphor-icons/web": "^2.1.2",
     "electron-updater": "^6.8.9"
   }
 }

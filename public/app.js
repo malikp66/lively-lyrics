@@ -26,6 +26,11 @@ let userFontWeight = localStorage.getItem('lyric_font_weight') || '700';
 let userTextGlow = localStorage.getItem('lyric_text_glow') || 'soft';
 let userInactiveOpacity = localStorage.getItem('lyric_inactive_opacity') || '35';
 let userCustomAccent = localStorage.getItem('lyric_custom_accent') || '';
+let userTextColorMode = localStorage.getItem('lyric_text_color_mode') || 'white';
+let userCustomTextColor = localStorage.getItem('lyric_custom_text_color') || '';
+let userInactiveColor = localStorage.getItem('lyric_inactive_color') || '#cbd5e1';
+let userFontStyle = localStorage.getItem('lyric_font_style') || 'normal';
+let userTextStroke = localStorage.getItem('lyric_text_stroke') || 'none';
 let isCompactMode = localStorage.getItem('is_compact_mode') === 'true';
 let isOnlyLyricsMode = localStorage.getItem('only_lyrics_mode') === 'true';
 let autoHideControls = localStorage.getItem('autohide_controls') !== 'false';
@@ -45,9 +50,13 @@ const fontLabels = {
 // DOM Elements
 const bodyEl = document.body;
 const appContainer = document.getElementById('app-container');
+const splashScreen = document.getElementById('splash-screen');
+const splashStatusText = document.getElementById('splash-status-text');
 const ambientBackdrop = document.getElementById('ambient-backdrop');
 const connectionDot = document.getElementById('connection-dot');
 const trackHeaderTicker = document.getElementById('track-header-ticker');
+const headerAvatarImg = document.getElementById('header-avatar-img');
+const headerAvatarFallback = document.getElementById('header-avatar-fallback');
 const trackCoverArt = document.getElementById('track-cover-art');
 const coverPlaceholder = document.getElementById('cover-placeholder');
 const trackNameEl = document.getElementById('track-name');
@@ -123,6 +132,14 @@ const inactiveOpacitySlider = document.getElementById('inactive-opacity-slider')
 const inactiveOpacityVal = document.getElementById('inactive-opacity-val');
 const customAccentColor = document.getElementById('custom-accent-color');
 const accentHexVal = document.getElementById('accent-hex-val');
+const textColorBtns = document.querySelectorAll('.text-color-btn');
+const customTextColor = document.getElementById('custom-text-color');
+const textColorHexVal = document.getElementById('text-color-hex-val');
+const inactiveColorBtns = document.querySelectorAll('.inactive-color-btn');
+const customInactiveColor = document.getElementById('custom-inactive-color');
+const inactiveColorHexVal = document.getElementById('inactive-color-hex-val');
+const fstyleBtns = document.querySelectorAll('.fstyle-btn');
+const strokeBtns = document.querySelectorAll('.stroke-btn');
 
 // Updates Tab Elements
 const appVersionBadge = document.getElementById('app-version-badge');
@@ -150,9 +167,55 @@ window.addEventListener('unhandledrejection', (err) => {
     console.warn('[Renderer Unhandled Rejection Caught]:', err.reason);
 });
 
+const currentPlatform = (window.electronAPI && window.electronAPI.platform) ? window.electronAPI.platform : 'win32';
+const isMac = currentPlatform === 'darwin';
+const modShortcut = isMac ? 'Cmd+Option' : 'Ctrl+Alt';
+const resyncShortcut = isMac ? 'Cmd+R' : 'Ctrl+R';
+
 // Initialize Saved Preferences & Dynamic Version
 function applySavedPreferences() {
     try {
+        // Dynamic Platform Labels & Shortcuts
+        const platformNames = {
+            darwin: 'macOS',
+            linux: 'Linux',
+            win32: 'Windows'
+        };
+        const bridgeNames = {
+            darwin: 'macOS JXA Media Bridge (Spotify & Apple Music)',
+            linux: 'Linux MPRIS2 / playerctl Bridge',
+            win32: 'Windows SMTC Media Daemon'
+        };
+        const osName = platformNames[currentPlatform] || 'Desktop';
+        const updateAppTitle = document.getElementById('update-app-title');
+        if (updateAppTitle) updateAppTitle.textContent = `LivelyLyrics for ${osName}`;
+
+        const syncBridgeSubtext = document.getElementById('sync-bridge-subtext');
+        if (syncBridgeSubtext) {
+            syncBridgeSubtext.textContent = `Paksa ${bridgeNames[currentPlatform] || 'sistem media'} mencocokkan detik playback secara instan tanpa jeda:`;
+        }
+
+        const ghostShortcutLabel = document.getElementById('ghost-shortcut-label');
+        if (ghostShortcutLabel) ghostShortcutLabel.textContent = `${modShortcut}+G`;
+
+        const kbdOnlyLyrics = document.getElementById('kbd-only-lyrics');
+        if (kbdOnlyLyrics) kbdOnlyLyrics.textContent = isMac ? 'Cmd + Option + L' : 'Ctrl + Alt + L';
+
+        const kbdGhostMode = document.getElementById('kbd-ghost-mode');
+        if (kbdGhostMode) kbdGhostMode.textContent = isMac ? 'Cmd + Option + G' : 'Ctrl + Alt + G';
+
+        const kbdResync = document.getElementById('kbd-resync');
+        if (kbdResync) kbdResync.textContent = isMac ? 'Cmd + R' : 'Ctrl + R';
+
+        if (textForceResync) {
+            textForceResync.textContent = `Sinkronkan Ulang Sekarang (${resyncShortcut})`;
+        }
+        if (btnOnlyLyrics) btnOnlyLyrics.title = `Mode Hanya Lirik (${modShortcut}+L)`;
+        if (btnExitOnlyLyrics) btnExitOnlyLyrics.title = `Kembali ke Mode Normal (${modShortcut}+L)`;
+        if (btnGhost) btnGhost.title = `Ghost Mode / Tembus Klik (${modShortcut}+G)`;
+        if (btnResync) btnResync.title = `Sync Ulang Lirik & Waktu (${resyncShortcut})`;
+        if (btnResyncPill) btnResyncPill.title = `Sync Ulang (${resyncShortcut})`;
+
         // Dynamic App Version from Electron
         if (window.electronAPI && window.electronAPI.getAppVersion) {
             window.electronAPI.getAppVersion().then((ver) => {
@@ -165,13 +228,18 @@ function applySavedPreferences() {
 
         try { setTheme(userTheme); } catch (e) { console.warn('setTheme error:', e); }
         try { if (userCustomAccent) setCustomAccentColor(userCustomAccent); } catch (e) {}
+        try { setTextColorMode(userTextColorMode); } catch (e) {}
+        try { if (userCustomTextColor) setCustomTextColor(userCustomTextColor); } catch (e) {}
+        try { setInactiveTextColor(userInactiveColor); } catch (e) {}
         try { setBgStyle(userBgStyle); } catch (e) {}
         try { setCustomBgColor(userCustomBgColor); } catch (e) {}
         try { setWindowBlur(userWindowBlur); } catch (e) {}
         try { setFontFamily(userFontFamily); } catch (e) {}
         try { setFontSize(userFontSize); } catch (e) {}
         try { setFontWeight(userFontWeight); } catch (e) {}
+        try { setFontStyle(userFontStyle); } catch (e) {}
         try { setTextGlow(userTextGlow); } catch (e) {}
+        try { setTextStroke(userTextStroke); } catch (e) {}
         try { setTextAlign(userAlign); } catch (e) {}
         try { setInactiveOpacity(userInactiveOpacity); } catch (e) {}
         try { setMode(isCompactMode); } catch (e) {}
@@ -200,6 +268,35 @@ function applySavedPreferences() {
     }
 }
 
+// Startup Splash Screen Animation Controller
+const appStartTime = Date.now();
+let splashDismissed = false;
+
+function dismissSplashScreen(customMessage) {
+    if (splashDismissed || !splashScreen) return;
+    splashDismissed = true;
+
+    if (customMessage && splashStatusText) {
+        splashStatusText.textContent = customMessage;
+    }
+
+    const elapsed = Date.now() - appStartTime;
+    const minSplashDuration = 1200; // minimum display time so user enjoys the logo & wave animation
+    const remainingTime = Math.max(0, minSplashDuration - elapsed);
+
+    setTimeout(() => {
+        splashScreen.classList.add('splash-hide');
+        setTimeout(() => {
+            splashScreen.style.display = 'none';
+        }, 550);
+    }, remainingTime);
+}
+
+// Fallback auto-dismissal after 1.8s
+setTimeout(() => {
+    dismissSplashScreen('Siap menyanyikan lagu favoritmu...');
+}, 1800);
+
 // Format Seconds -> mm:ss
 function formatTime(seconds) {
     if (isNaN(seconds) || seconds < 0) return '0:00';
@@ -208,10 +305,26 @@ function formatTime(seconds) {
     return `${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
+// Update Header Track Artwork Avatar
+function updateHeaderAvatar(artworkUrl) {
+    if (!headerAvatarImg || !headerAvatarFallback) return;
+    if (artworkUrl) {
+        headerAvatarImg.src = artworkUrl;
+        headerAvatarImg.classList.remove('hidden');
+        headerAvatarFallback.classList.add('hidden');
+    } else {
+        headerAvatarImg.classList.add('hidden');
+        headerAvatarImg.src = '';
+        headerAvatarFallback.classList.remove('hidden');
+    }
+}
+
 // Media State Update from Electron IPC
 if (window.electronAPI) {
     window.electronAPI.onMediaUpdate((data) => {
         if (!data || !data.active) {
+            dismissSplashScreen('Menunggu pemutar musik...');
+            updateHeaderAvatar('');
             connectionDot.classList.remove('connected');
             if (playbackStatusText) playbackStatusText.textContent = 'Standby';
             if (liveEq) liveEq.classList.add('hidden');
@@ -222,6 +335,7 @@ if (window.electronAPI) {
             return;
         }
 
+        dismissSplashScreen(`Terhubung: ${data.title || 'Musik'}`);
         connectionDot.classList.add('connected');
         const previousStatus = isPlaying;
         const previousTitle = currentMedia ? currentMedia.title : '';
@@ -233,6 +347,10 @@ if (window.electronAPI) {
         trackNameEl.textContent = titleText;
         artistNameEl.textContent = artistText;
         trackHeaderTicker.textContent = `${titleText} — ${artistText}`;
+
+        if (data.artworkUrl && (!currentLyrics || !currentLyrics.artwork)) {
+            updateHeaderAvatar(data.artworkUrl);
+        }
 
         isPlaying = (data.status === 'Playing');
         if (playbackStatusText) playbackStatusText.textContent = isPlaying ? 'Playing' : 'Paused';
@@ -264,10 +382,16 @@ if (window.electronAPI) {
             trackCoverArt.src = lyrics.artwork;
             trackCoverArt.classList.remove('hidden');
             coverPlaceholder.classList.add('hidden');
+            updateHeaderAvatar(lyrics.artwork);
             ambientBackdrop.style.backgroundImage = `url('${lyrics.artwork}')`;
         } else {
             trackCoverArt.classList.add('hidden');
             coverPlaceholder.classList.remove('hidden');
+            if (currentMedia && currentMedia.artworkUrl) {
+                updateHeaderAvatar(currentMedia.artworkUrl);
+            } else {
+                updateHeaderAvatar('');
+            }
             ambientBackdrop.style.backgroundImage = 'none';
         }
 
@@ -312,8 +436,8 @@ function renderLyrics(lyrics) {
                 </div>
                 <p class="placeholder-text">${lyrics && lyrics.message ? lyrics.message : 'Lirik belum tersedia untuk lagu ini.'}</p>
                 <button class="btn-placeholder-retry" id="btn-placeholder-retry">
-                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
-                    <span>Cari Ulang Lirik (Ctrl+R)</span>
+                    <i class="ph-bold ph-arrows-clockwise"></i>
+                    <span>Cari Ulang Lirik (${resyncShortcut})</span>
                 </button>
             </div>
         `;
@@ -383,6 +507,27 @@ function syncLoop() {
 // Continuous non-throttled interval
 setInterval(syncLoop, 35);
 
+// Scroll active lyric line into center of viewport reliably across all modes
+function centerActiveLineInViewport(behavior = 'smooth') {
+    if (activeLineIndex < 0) return;
+    const activeEl = document.getElementById(`line-${activeLineIndex}`);
+    if (!activeEl || !lyricsViewport) return;
+
+    const containerHeight = lyricsViewport.clientHeight;
+    if (containerHeight <= 0) return;
+    const targetTop = Math.max(0, activeEl.offsetTop - (containerHeight / 2) + (activeEl.clientHeight / 2));
+
+    if (document.hasFocus() && behavior === 'smooth') {
+        try {
+            lyricsViewport.scrollTo({ top: targetTop, behavior: 'smooth' });
+        } catch (e) {
+            lyricsViewport.scrollTop = targetTop;
+        }
+    } else {
+        lyricsViewport.scrollTop = targetTop;
+    }
+}
+
 // Highlight and center-scroll
 function updateActiveLine(newIdx) {
     if (activeLineIndex >= 0) {
@@ -404,16 +549,7 @@ function updateActiveLine(newIdx) {
         const nextEl = document.getElementById(`line-${newIdx + 1}`);
         if (nextEl) nextEl.classList.add('near');
 
-        if (document.hasFocus()) {
-            newEl.scrollIntoView({
-                behavior: 'smooth',
-                block: 'center'
-            });
-        } else {
-            const containerHeight = lyricsViewport.clientHeight;
-            const targetTop = newEl.offsetTop - (containerHeight / 2) + (newEl.clientHeight / 2);
-            lyricsViewport.scrollTop = Math.max(0, targetTop);
-        }
+        centerActiveLineInViewport('smooth');
     }
 }
 
@@ -514,7 +650,7 @@ function triggerResync() {
             textForceResync.textContent = 'Tersinkronisasi! ✓';
             setTimeout(() => {
                 btnForceResync.classList.remove('active-feedback');
-                textForceResync.textContent = 'Sinkronkan Ulang Sekarang (Ctrl+R)';
+                textForceResync.textContent = `Sinkronkan Ulang Sekarang (${resyncShortcut})`;
             }, 1400);
         }
     }, 700);
@@ -525,9 +661,15 @@ if (btnResyncPill) btnResyncPill.addEventListener('click', triggerResync);
 if (btnForceResync) btnForceResync.addEventListener('click', triggerResync);
 
 window.addEventListener('keydown', (e) => {
+    const activeTag = document.activeElement ? document.activeElement.tagName.toLowerCase() : '';
+    const isTyping = activeTag === 'input' || activeTag === 'textarea';
+
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'r') {
         e.preventDefault();
         triggerResync();
+    } else if (e.code === 'Space' && !isTyping) {
+        e.preventDefault();
+        if (window.electronAPI) window.electronAPI.controlMedia('playpause');
     }
 });
 
@@ -563,6 +705,15 @@ function setOnlyLyricsMode(enabled) {
             if (window.electronAPI) window.electronAPI.resizeWindow(460, 275);
         }
     }
+
+    // Re-center active lyric line immediately after layout/resize settles
+    setTimeout(() => {
+        centerActiveLineInViewport('auto');
+        syncLoop();
+    }, 60);
+    setTimeout(() => {
+        centerActiveLineInViewport('smooth');
+    }, 180);
 }
 
 if (btnCloseOnlyLyrics) {
@@ -579,15 +730,23 @@ btnCompact.addEventListener('click', () => {
 function setMode(compact) {
     isCompactMode = compact;
     localStorage.setItem('is_compact_mode', compact);
+    const compactIcon = document.getElementById('icon-compact-expand');
     if (compact) {
         appContainer.classList.add('mode-compact');
         appContainer.classList.remove('mode-card');
+        if (compactIcon) {
+            compactIcon.className = 'ph-bold ph-arrows-out-simple';
+        }
         if (!isOnlyLyricsMode && window.electronAPI) window.electronAPI.resizeWindow(440, 160);
     } else {
         appContainer.classList.remove('mode-compact');
         appContainer.classList.add('mode-card');
+        if (compactIcon) {
+            compactIcon.className = 'ph-bold ph-arrows-in-simple';
+        }
         if (!isOnlyLyricsMode && window.electronAPI) window.electronAPI.resizeWindow(460, 275);
     }
+    setTimeout(() => centerActiveLineInViewport('auto'), 60);
 }
 
 // Settings Modal & Tabs
@@ -605,7 +764,7 @@ function openSettings() {
 
     // Expand window smoothly for comfortable settings layout
     if (window.electronAPI) {
-        window.electronAPI.resizeWindow(480, 360);
+        window.electronAPI.resizeWindow(480, 390);
     }
 
     const scrollContainer = document.querySelector('.settings-body-scroll');
@@ -631,6 +790,8 @@ function closeSettings() {
             window.electronAPI.resizeWindow(460, 275);
         }
     }
+
+    setTimeout(() => centerActiveLineInViewport('auto'), 60);
 }
 
 btnSettings.addEventListener('click', () => {
@@ -679,6 +840,9 @@ themeChips.forEach(chip => {
         localStorage.removeItem('lyric_custom_accent');
         setTheme(chip.dataset.theme);
         if (accentHexVal) accentHexVal.textContent = chip.dataset.color || '#1ed760';
+        if (userTextColorMode === 'accent' && !userCustomTextColor) {
+            if (textColorHexVal) textColorHexVal.textContent = chip.dataset.color || '#1ed760';
+        }
     });
 });
 
@@ -708,6 +872,76 @@ function setCustomAccentColor(hex) {
     document.documentElement.style.setProperty('--accent-glow', `${hex}77`);
     if (accentHexVal) accentHexVal.textContent = hex;
     if (customAccentColor) customAccentColor.value = hex;
+    if (userTextColorMode === 'accent' && !userCustomTextColor) {
+        if (textColorHexVal) textColorHexVal.textContent = hex;
+    }
+}
+
+// Active Text Color Presets & Custom Picker
+textColorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        userCustomTextColor = '';
+        localStorage.removeItem('lyric_custom_text_color');
+        setTextColorMode(btn.dataset.textcolor);
+    });
+});
+
+function setTextColorMode(mode) {
+    userTextColorMode = mode || 'white';
+    localStorage.setItem('lyric_text_color_mode', userTextColorMode);
+    textColorBtns.forEach(b => b.classList.toggle('active', b.dataset.textcolor === userTextColorMode));
+    bodyEl.classList.remove('textcolor-white', 'textcolor-accent', 'textcolor-gold', 'textcolor-cyan');
+    bodyEl.classList.add(`textcolor-${userTextColorMode}`);
+    document.documentElement.style.removeProperty('--lyric-active-color');
+
+    const modeHexMap = {
+        white: '#ffffff',
+        accent: userCustomAccent || (accentHexVal ? accentHexVal.textContent : '#1ed760'),
+        gold: '#fde047',
+        cyan: '#67e8f9'
+    };
+    const resolvedHex = modeHexMap[userTextColorMode] || '#ffffff';
+    if (textColorHexVal) textColorHexVal.textContent = resolvedHex;
+    if (customTextColor && resolvedHex.startsWith('#')) customTextColor.value = resolvedHex;
+}
+
+if (customTextColor) {
+    customTextColor.addEventListener('input', (e) => {
+        setCustomTextColor(e.target.value);
+    });
+}
+
+function setCustomTextColor(hex) {
+    if (!hex) return;
+    userCustomTextColor = hex;
+    localStorage.setItem('lyric_custom_text_color', hex);
+    textColorBtns.forEach(b => b.classList.remove('active'));
+    document.documentElement.style.setProperty('--lyric-active-color', hex);
+    if (textColorHexVal) textColorHexVal.textContent = hex;
+    if (customTextColor) customTextColor.value = hex;
+}
+
+// Inactive Lyric Text Color Presets & Custom Picker
+inactiveColorBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        setInactiveTextColor(btn.dataset.inactivecolor);
+    });
+});
+
+if (customInactiveColor) {
+    customInactiveColor.addEventListener('input', (e) => {
+        setInactiveTextColor(e.target.value);
+    });
+}
+
+function setInactiveTextColor(hex) {
+    if (!hex) return;
+    userInactiveColor = hex;
+    localStorage.setItem('lyric_inactive_color', hex);
+    inactiveColorBtns.forEach(b => b.classList.toggle('active', b.dataset.inactivecolor.toLowerCase() === hex.toLowerCase()));
+    document.documentElement.style.setProperty('--lyric-inactive-color', hex);
+    if (inactiveColorHexVal) inactiveColorHexVal.textContent = hex;
+    if (customInactiveColor && hex.startsWith('#')) customInactiveColor.value = hex;
 }
 
 // Background Style Selector
@@ -795,6 +1029,7 @@ function setFontSize(size) {
     segFontBtns.forEach(b => b.classList.toggle('active', b.dataset.size === size));
     bodyEl.classList.remove('font-small', 'font-medium', 'font-large', 'font-xlarge', 'font-jumbo');
     bodyEl.classList.add(`font-${size}`);
+    setTimeout(() => centerActiveLineInViewport('auto'), 30);
 }
 
 // Font Weight Selector
@@ -812,6 +1047,21 @@ function setFontWeight(weight) {
     bodyEl.classList.add(`weight-${weight}`);
 }
 
+// Font Style & Transform Selector
+fstyleBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        setFontStyle(btn.dataset.fstyle);
+    });
+});
+
+function setFontStyle(style) {
+    userFontStyle = style || 'normal';
+    localStorage.setItem('lyric_font_style', userFontStyle);
+    fstyleBtns.forEach(b => b.classList.toggle('active', b.dataset.fstyle === userFontStyle));
+    bodyEl.classList.remove('fstyle-normal', 'fstyle-italic', 'fstyle-uppercase', 'fstyle-capitalize');
+    bodyEl.classList.add(`fstyle-${userFontStyle}`);
+}
+
 // Text Glow Selector
 glowBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -825,6 +1075,21 @@ function setTextGlow(glow) {
     glowBtns.forEach(b => b.classList.toggle('active', b.dataset.glow === glow));
     bodyEl.classList.remove('glow-none', 'glow-soft', 'glow-strong');
     bodyEl.classList.add(`glow-${glow}`);
+}
+
+// Text Outline / Stroke Selector
+strokeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        setTextStroke(btn.dataset.stroke);
+    });
+});
+
+function setTextStroke(stroke) {
+    userTextStroke = stroke || 'none';
+    localStorage.setItem('lyric_text_stroke', userTextStroke);
+    strokeBtns.forEach(b => b.classList.toggle('active', b.dataset.stroke === userTextStroke));
+    bodyEl.classList.remove('stroke-none', 'stroke-shadow', 'stroke-crisp');
+    bodyEl.classList.add(`stroke-${userTextStroke}`);
 }
 
 // Text Alignment
@@ -894,6 +1159,7 @@ async function performManualSearch() {
             const result = await window.electronAPI.searchLyricsManual(query);
             if (result && result.lines && result.lines.length > 0) {
                 currentLyrics = result;
+                if (result.artwork) updateHeaderAvatar(result.artwork);
                 renderLyrics(result);
                 manualSearchStatus.textContent = `✓ Lirik ditemukan (${result.lines.length} baris)`;
                 settingsPanel.classList.add('hidden');
