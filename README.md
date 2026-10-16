@@ -123,13 +123,22 @@ Klik tombol download langsung di bawah ini sesuai dengan sistem operasi perangka
    - **Apple Silicon (M1/M2/M3/M4)**: [**`LivelyLyrics-2.2.3-arm64.dmg`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3-arm64.dmg)
    - **Intel Mac**: [**`LivelyLyrics-2.2.3.dmg`**](https://github.com/malikp66/lively-lyrics/releases/latest/download/LivelyLyrics-2.2.3.dmg)
 2. Buka file `.dmg` tersebut, lalu seret (*drag & drop*) ikon **LivelyLyrics** ke dalam folder **Applications**.
-3. **Catatan Gatekeeper macOS (Aplikasi Tanpa Apple Developer ID Berbayar)**:
-   Jika saat pertama kali dibuka muncul peringatan *"LivelyLyrics cannot be opened because the developer cannot be verified"* atau *"is damaged"*:
-   - **Cara 1 (Klik Kanan)**: Buka **Finder** $\rightarrow$ **Applications**, lalu **Klik Kanan (Control + Klik)** pada **LivelyLyrics** $\rightarrow$ pilih **Open** $\rightarrow$ klik **Open**.
-   - **Cara 2 (Terminal - Paling Cepat)**: Jalankan perintah berikut di Terminal untuk menghapus atribut karantina macOS:
+3. **Mengatasi Peringatan Keamanan macOS (Gatekeeper)**:
+   Karena LivelyLyrics adalah proyek *open-source* gratis dan tidak menggunakan sertifikat Apple Developer berbayar ($99/tahun), macOS (terutama macOS Sequoia, Sonoma, & Ventura) akan memunculkan dialog:
+   > *"Apple could not verify LivelyLyrics is free of malware..."*
+   
+   **Cara membuka aplikasi (Pilih salah satu):**
+   - **Metode A (Melalui Pengaturan Mac — Resmi & Mudah)**:
+     1. Buka **System Settings (Pengaturan Sistem)** di Mac Anda.
+     2. Pilih menu **Privacy & Security (Privasi & Keamanan)** di bilah kiri, lalu gulir ke bawah ke bagian **Security (Keamanan)**.
+     3. Anda akan melihat keterangan: *"LivelyLyrics was blocked to protect your Mac"*.
+     4. Klik tombol **Open Anyway (Tetap Buka)**, lalu masukkan kata sandi Mac atau Touch ID Anda $\rightarrow$ klik **Open**.
+   - **Metode B (Melalui Terminal — Paling Cepat 1 Detik)**:
+     Buka aplikasi **Terminal**, tempel perintah ini lalu tekan Enter untuk menghapus karantina Apple:
      ```bash
      xattr -cr /Applications/LivelyLyrics.app
      ```
+     Setelah itu, LivelyLyrics dapat langsung dibuka secara normal selamanya tanpa peringatan lagi!
 4. **Izin Kontrol Media (Automation Permission)**:
    Saat pertama kali dijalankan, macOS akan menampilkan pop-up:
    > *"LivelyLyrics wants access to control Spotify"* (atau *Music*).
