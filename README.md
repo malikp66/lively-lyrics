@@ -51,7 +51,7 @@
     <a href="#-mode-tampilan">Mode Tampilan</a> •
     <a href="#-shortcut-keyboard">Shortcut</a> •
     <a href="#-kustomisasi-tampilan--teks">Kustomisasi Teks & UI</a> •
-    <a href="#-build--rilis-multi-platform">Panduan Build Rilis</a> •
+    <a href="#-pengembangan--build-mandiri">Pengembangan & Build</a> •
     <a href="#-arsitektur-sistem">Arsitektur</a> •
     <a href="#-faq">FAQ</a>
   </p>
@@ -212,9 +212,9 @@ Buka menu Pengaturan melalui ikon slider (`⚙️`) di bagian atas untuk mengatu
 
 ---
 
-## 🛠️ Build & Rilis Multi-Platform (Dari Source Code)
+## 🛠️ Pengembangan & Build Mandiri
 
-Jika Anda ingin menjalankan dari *source code* atau mem-build file installer sendiri untuk diunggah ke GitHub Releases:
+Bagi Anda yang ingin berkontribusi atau menjalankan LivelyLyrics langsung dari *source code*:
 
 ### 1. Menjalankan Mode Development
 ```bash
@@ -224,37 +224,18 @@ npm install
 npm start
 ```
 
-### 2. Membuat File Installer / Build Produksi
-Seluruh hasil build akan disimpan di dalam direktori `dist/`:
+### 2. Mem-build Paket Installer Sendiri
+Hasil kompilasi biner akan dihasilkan di folder `dist/`:
 
 ```bash
-# Build sesuai OS yang sedang digunakan saat ini
+# Build biner sesuai OS yang sedang aktif
 npm run dist
 
-# Build khusus untuk Windows (.exe NSIS Installer)
-npm run dist:win
-
-# Build khusus untuk macOS (.dmg & .zip)
-npm run dist:mac
-
-# Build khusus untuk Linux (.AppImage & .deb)
-npm run dist:linux
-
-# Build ketiganya sekaligus (Windows, macOS, Linux)
-npm run dist:all
+# Build spesifik per platform
+npm run dist:win    # Windows (.exe installer NSIS & portable)
+npm run dist:mac    # macOS (.dmg & .zip)
+npm run dist:linux  # Linux (.AppImage & .deb)
 ```
-
-> [!TIP]
-> **🚀 Cara Otomatis Membuat Rilis dengan GitHub Actions:**
-> Workflow build otomatis multi-platform telah dikonfigurasi di `.github/workflows/release.yml`. Anda tidak perlu mem-build manual di 3 komputer berbeda:
-> 1. Buat tag rilis baru dan push ke GitHub:
->    ```bash
->    git tag v2.2.3
->    git push origin v2.2.3
->    ```
-> 2. GitHub Actions akan secara otomatis menjalankan 3 runner paralel (*windows-latest*, *macos-latest*, *ubuntu-latest*), mengompilasi semua file installer (`.exe`, `.dmg`, `.zip`, `.AppImage`, `.deb`), dan langsung menerbitkan rilis di tab **[GitHub Releases](https://github.com/malikp66/lively-lyrics/releases)**!
-> 
-> *Alternatif manual*: Anda juga bisa membuka tab **Actions** di GitHub $\rightarrow$ pilih workflow **Build & Release** $\rightarrow$ klik **Run workflow**.
 
 ---
 
