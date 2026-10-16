@@ -107,7 +107,7 @@ Klik tombol download langsung sesuai perangkat Anda:
 > [!IMPORTANT]
 > **🛡️ Catatan Keamanan Saat Membuka Pertama Kali (Aplikasi Open-Source):**
 > * 🪟 **Windows**: Jika muncul layar biru *SmartScreen*, klik **More info** $\rightarrow$ **Run anyway**.
-> * 🍎 **macOS**: Jika dicegat dialog *Apple could not verify*, buka **System Settings** $\rightarrow$ **Privacy & Security** $\rightarrow$ klik **Open Anyway** (atau jalankan perintah `xattr -cr /Applications/LivelyLyrics.app` di Terminal). Klik **Allow / OK** saat pop-up izin kontrol Spotify/Music muncul.
+> * 🍎 **macOS**: Jika dicegat dialog *Apple could not verify*, buka **System Settings** $\rightarrow$ **Privacy & Security** $\rightarrow$ klik **Open Anyway** (atau ketik `xattr -d com.apple.quarantine /Applications/LivelyLyrics.app` di Terminal). Klik **Allow / OK** saat pop-up izin kontrol Spotify/Music muncul.
 > * 🐧 **Linux**: Wajib pasang `playerctl` (`sudo apt install playerctl`). Berikan izin eksekusi (`chmod +x LivelyLyrics-*.AppImage`) atau pasang `.deb` via `sudo apt install ./livelylyrics-*.deb`.
 
 ---
