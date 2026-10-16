@@ -31,7 +31,7 @@ function cleanArtist(artist) {
 }
 
 /**
- * Fetch with automatic 429 retry backoff
+ * Fetch with automatic 429 and 503 retry backoff
  */
 async function fetchWithRetry(url, options = {}, retries = 2) {
     for (let attempt = 0; attempt <= retries; attempt++) {
@@ -42,6 +42,11 @@ async function fetchWithRetry(url, options = {}, retries = 2) {
                 const waitMs = retryAfterHeader ? Math.min(3000, parseInt(retryAfterHeader, 10) * 1000) : (1100 * (attempt + 1));
                 console.warn(`[LyricsService] 429 Rate Limited. Waiting ${waitMs}ms before retry...`);
                 await sleep(waitMs);
+                continue;
+            }
+            if ((res.status === 503 || res.status === 502 || res.status === 504) && attempt < retries) {
+                console.warn(`[LyricsService] Server ${res.status}. Retrying attempt ${attempt + 1}...`);
+                await sleep(500 * (attempt + 1));
                 continue;
             }
             return res;
@@ -86,14 +91,32 @@ async function fetchArtwork(title, artist) {
 
 /**
  * Parse raw LRC string into array of timed objects
+ * Supports [offset: +/-ms], colon milliseconds, and multi-digit minutes
  */
 function parseLRC(lrcText) {
     if (!lrcText) return [];
     const lines = lrcText.split('\n');
     const result = [];
-    const timeRegex = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\]/g;
+    const timeRegex = /\[(\d{1,3}):(\d{2})(?:[.:](\d{2,3}))?\]/g;
+    const offsetRegex = /\[offset:\s*([+-]?\d+)\s*\]/i;
+    let globalOffsetSec = 0;
+
+    // Detect [offset: +/-ms] tag if present
+    for (const line of lines) {
+        const offsetMatch = line.match(offsetRegex);
+        if (offsetMatch) {
+            const ms = parseInt(offsetMatch[1], 10);
+            if (!isNaN(ms)) {
+                globalOffsetSec = ms / 1000;
+            }
+            break;
+        }
+    }
 
     for (const line of lines) {
+        if (line.startsWith('[ti:') || line.startsWith('[ar:') || line.startsWith('[al:') || line.startsWith('[by:') || line.startsWith('[offset:')) {
+            continue;
+        }
         const text = line.replace(timeRegex, '').trim();
         let match;
         timeRegex.lastIndex = 0;
@@ -101,10 +124,10 @@ function parseLRC(lrcText) {
             const min = parseInt(match[1], 10);
             const sec = parseInt(match[2], 10);
             const ms = match[3] ? parseInt(match[3].padEnd(3, '0').slice(0, 3), 10) : 0;
-            const timeInSeconds = min * 60 + sec + ms / 1000;
+            const timeInSeconds = Math.max(0, (min * 60 + sec + ms / 1000) + globalOffsetSec);
             if (text.length > 0) {
                 result.push({
-                    time: timeInSeconds,
+                    time: Math.round(timeInSeconds * 1000) / 1000,
                     text: text
                 });
             }
@@ -152,70 +175,84 @@ async function fetchLyrics(title, artist, album, duration, nativeArtworkUrl = ''
 
     let result = null;
 
-    // Build intelligent search candidates (handles slashes like 'House Of Balloons / Glass Table Girls')
-    const noSlashTitle = cleanedTitle.replace(/[/_]/g, ' ').replace(/\s+/g, ' ').trim();
-    const splitTitlePart = cleanedTitle.includes('/') ? cleanedTitle.split('/')[0].trim() : '';
+    // 1. Exact API /get Strategy First (Fastest, canonical studio sync, immune to 503 search overloads)
+    const getAttempts = [
+        { track_name: cleanedTitle, artist_name: cleanedArtist, duration: duration > 0 ? Math.round(duration) : null },
+        { track_name: cleanedTitle, artist_name: cleanedArtist, duration: null },
+        { track_name: title.trim(), artist_name: artist.trim(), duration: null }
+    ];
 
-    const searchCandidates = [
-        `${cleanedArtist} ${noSlashTitle}`.trim(),
-        noSlashTitle,
-        splitTitlePart ? `${cleanedArtist} ${splitTitlePart}`.trim() : null,
-        title.trim()
-    ].filter(Boolean);
+    for (const attempt of getAttempts) {
+        if (result && result.hasSynced) break;
+        if (!attempt.track_name || !attempt.artist_name) continue;
 
-    // Deduplicate candidates
-    const uniqueCandidates = [...new Set(searchCandidates)];
-
-    // 1. Search Query Strategy (Most resilient & finds exact synchronized lyrics)
-    for (const candidate of uniqueCandidates) {
-        if (result) break;
-
-        try {
-            const res = await fetchWithRetry(`https://lrclib.net/api/search?q=${encodeURIComponent(candidate)}`, { headers }, 2);
-            if (res && res.ok) {
-                const list = await res.json();
-                if (Array.isArray(list) && list.length > 0) {
-                    // Prioritize entries with synchronized lyrics
-                    const synced = list.filter(item => !!item.syncedLyrics);
-                    if (synced.length > 0) {
-                        if (duration && duration > 0) {
-                            // Sort by closest duration to playback
-                            synced.sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
-                        }
-                        result = processLyricsResult(synced[0]);
-                        break;
-                    } else {
-                        // Fallback to plain lyrics if no synced
-                        const plain = list.filter(item => !!item.plainLyrics);
-                        if (plain.length > 0) {
-                            result = processLyricsResult(plain[0]);
-                        }
-                    }
-                }
-            }
-            await sleep(200); // Friendly pacing
-        } catch (e) {
-            console.warn('[LyricsService] Candidate error:', e.message);
-        }
-    }
-
-    // 2. Strict API/get query fallback
-    if (!result) {
         try {
             const params = new URLSearchParams({
-                track_name: cleanedTitle,
-                artist_name: cleanedArtist
+                track_name: attempt.track_name,
+                artist_name: attempt.artist_name
             });
-            if (duration && duration > 0) params.append('duration', Math.round(duration).toString());
+            if (attempt.duration) params.append('duration', attempt.duration.toString());
 
             const res = await fetchWithRetry(`https://lrclib.net/api/get?${params.toString()}`, { headers }, 1);
             if (res && res.ok) {
                 const data = await res.json();
-                if (data && (data.syncedLyrics || data.plainLyrics)) {
+                if (data && data.syncedLyrics) {
+                    result = processLyricsResult(data);
+                    break;
+                } else if (data && data.plainLyrics && !result) {
                     result = processLyricsResult(data);
                 }
             }
         } catch (e) {}
+    }
+
+    // 2. Search Query Strategy (Fallback if /get did not find synced lyrics)
+    if (!result || !result.hasSynced) {
+        const noSlashTitle = cleanedTitle.replace(/[/_]/g, ' ').replace(/\s+/g, ' ').trim();
+        const splitTitlePart = cleanedTitle.includes('/') ? cleanedTitle.split('/')[0].trim() : '';
+
+        const searchCandidates = [
+            `${cleanedArtist} ${noSlashTitle}`.trim(),
+            noSlashTitle,
+            splitTitlePart ? `${cleanedArtist} ${splitTitlePart}`.trim() : null,
+            title.trim()
+        ].filter(Boolean);
+
+        const uniqueCandidates = [...new Set(searchCandidates)];
+
+        for (const candidate of uniqueCandidates) {
+            if (result && result.hasSynced) break;
+
+            try {
+                const res = await fetchWithRetry(`https://lrclib.net/api/search?q=${encodeURIComponent(candidate)}`, { headers }, 1);
+                if (res && res.ok) {
+                    const list = await res.json();
+                    if (Array.isArray(list) && list.length > 0) {
+                        const synced = list.filter(item => !!item.syncedLyrics);
+                        if (synced.length > 0) {
+                            // Filter candidates close to actual playback duration (+/- 7 seconds) to avoid wrong remix/live versions
+                            const closeSynced = (duration && duration > 0)
+                                ? synced.filter(item => Math.abs(item.duration - duration) <= 7)
+                                : synced;
+                            const pool = closeSynced.length > 0 ? closeSynced : synced;
+                            if (duration && duration > 0) {
+                                pool.sort((a, b) => Math.abs(a.duration - duration) - Math.abs(b.duration - duration));
+                            }
+                            result = processLyricsResult(pool[0]);
+                            break;
+                        } else if (!result) {
+                            const plain = list.filter(item => !!item.plainLyrics);
+                            if (plain.length > 0) {
+                                result = processLyricsResult(plain[0]);
+                            }
+                        }
+                    }
+                }
+                await sleep(150);
+            } catch (e) {
+                console.warn('[LyricsService] Candidate search error:', e.message);
+            }
+        }
     }
 
     if (!result) {

@@ -263,20 +263,21 @@ class MediaService extends EventEmitter {
                 this.process.stdin.write(payload);
             } catch (e) {}
         } else if (this.platform === 'darwin') {
-            const targetApp = this.activeMacApp || 'Spotify';
-            let jxaCmd = '';
+            const targetApp = (this.activeMacApp === 'Music') ? 'Music' : 'Spotify';
+            let appleScript = '';
             if (action === 'playpause') {
-                jxaCmd = `Application(${JSON.stringify(targetApp)}).playpause()`;
+                appleScript = `tell application "${targetApp}" to playpause`;
             } else if (action === 'next') {
-                jxaCmd = `Application(${JSON.stringify(targetApp)}).nextTrack()`;
+                appleScript = `tell application "${targetApp}" to next track`;
             } else if (action === 'previous') {
-                jxaCmd = `Application(${JSON.stringify(targetApp)}).previousTrack()`;
+                appleScript = `tell application "${targetApp}" to previous track`;
             } else if (action === 'seek' && typeof extra.position === 'number') {
-                jxaCmd = `Application(${JSON.stringify(targetApp)}).playerPosition = ${Number(extra.position)}`;
+                appleScript = `tell application "${targetApp}" to set player position to ${Number(extra.position)}`;
             }
-            if (jxaCmd) {
-                execFile('osascript', ['-l', 'JavaScript', '-e', jxaCmd], () => {
-                    setTimeout(() => this.pollMacOnce(), 120);
+            if (appleScript) {
+                execFile('osascript', ['-e', appleScript], (err) => {
+                    if (err) console.warn('[MediaService] macOS control error:', err.message);
+                    setTimeout(() => this.pollMacOnce(), 80);
                 });
             }
         } else if (this.platform === 'linux') {

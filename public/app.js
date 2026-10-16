@@ -458,10 +458,11 @@ function renderLyrics(lyrics) {
             div.classList.add('ripple-flash');
             setTimeout(() => div.classList.remove('ripple-flash'), 450);
             if (lyrics.hasSynced && window.electronAPI) {
-                const targetSec = Math.max(0, line.time - 0.1);
+                const targetSec = Math.max(0, line.time - 0.05);
                 window.electronAPI.controlMedia('seek', { position: targetSec });
-                lastKnownPosition = line.time;
+                lastKnownPosition = targetSec;
                 lastKnownTime = Date.now();
+                updateActiveLine(index);
             }
         });
 
@@ -513,18 +514,18 @@ function centerActiveLineInViewport(behavior = 'smooth') {
     const activeEl = document.getElementById(`line-${activeLineIndex}`);
     if (!activeEl || !lyricsViewport) return;
 
-    const containerHeight = lyricsViewport.clientHeight;
-    if (containerHeight <= 0) return;
-    const targetTop = Math.max(0, activeEl.offsetTop - (containerHeight / 2) + (activeEl.clientHeight / 2));
-
-    if (document.hasFocus() && behavior === 'smooth') {
-        try {
-            lyricsViewport.scrollTo({ top: targetTop, behavior: 'smooth' });
-        } catch (e) {
+    try {
+        activeEl.scrollIntoView({
+            behavior: behavior,
+            block: 'center',
+            inline: 'nearest'
+        });
+    } catch (e) {
+        const containerHeight = lyricsViewport.clientHeight;
+        if (containerHeight > 0) {
+            const targetTop = Math.max(0, activeEl.offsetTop - (containerHeight / 2) + (activeEl.clientHeight / 2));
             lyricsViewport.scrollTop = targetTop;
         }
-    } else {
-        lyricsViewport.scrollTop = targetTop;
     }
 }
 

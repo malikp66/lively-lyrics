@@ -298,6 +298,7 @@ function setupTray() {
 
 let lastMediaData = null;
 let currentLyricsLoaded = false;
+let currentLyricsSynced = false;
 
 async function loadLyrics(data, force = false) {
     if (!data || !data.title) return;
@@ -314,6 +315,7 @@ async function loadLyrics(data, force = false) {
             data.artworkUrl || ''
         );
         currentLyricsLoaded = !!(lyrics && (lyrics.hasSynced || lyrics.isPlain));
+        currentLyricsSynced = !!(lyrics && lyrics.hasSynced);
         if (mainWindow && !mainWindow.isDestroyed()) {
             mainWindow.webContents.send('lyrics-loaded', {
                 trackKey,
@@ -332,12 +334,13 @@ mediaService.on('mediaUpdate', async (data) => {
     mainWindow.webContents.send('media-update', data);
 
     if (data.active && data.title) {
-        lastMediaData = data;
         const trackKey = `${data.title} - ${data.artist}`.toLowerCase();
-        if (trackKey !== currentTrackKey || !currentLyricsLoaded) {
+        const needsDurationRetry = !currentLyricsSynced && data.duration > 0 && (!lastMediaData || !lastMediaData.duration);
+        if (trackKey !== currentTrackKey || !currentLyricsLoaded || needsDurationRetry) {
             currentTrackKey = trackKey;
             await loadLyrics(data);
         }
+        lastMediaData = data;
     }
 });
 
