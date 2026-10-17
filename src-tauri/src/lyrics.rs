@@ -160,9 +160,65 @@ struct LrclibTrack {
     id: Option<i64>,
     track_name: Option<String>,
     artist_name: Option<String>,
+    album_name: Option<String>,
     duration: Option<f64>,
     synced_lyrics: Option<String>,
     plain_lyrics: Option<String>,
+}
+
+fn score_candidate(track: &LrclibTrack, spotify_dur: f64, target_title: &str, target_artist: &str) -> f64 {
+    let mut score = 50.0;
+    let track_name = track.track_name.as_deref().unwrap_or("").to_lowercase();
+    let album_name = track.album_name.as_deref().unwrap_or("").to_lowercase();
+    let artist_name = track.artist_name.as_deref().unwrap_or("").to_lowercase();
+
+    // 1. Duration precision (primary discriminator between album track and video versions)
+    if spotify_dur > 0.0 {
+        if let Some(d) = track.duration {
+            let diff = (d - spotify_dur).abs();
+            if diff < 0.3 {
+                score += 160.0; // Near exact audio match
+            } else if diff < 1.2 {
+                score += 90.0;
+            } else if diff < 2.5 {
+                score += 40.0;
+            } else if diff < 5.0 {
+                score += 10.0;
+            } else {
+                score -= diff * 12.0; // Severe penalty for different song lengths
+            }
+        }
+    }
+
+    // 2. Video tag penalty: video versions have intro skits/dialogue causing 5-15s desync
+    let is_video = track_name.contains("video")
+        || track_name.contains("mv")
+        || track_name.contains("official video")
+        || album_name.contains("video");
+    let target_wants_video = target_title.to_lowercase().contains("video");
+    if is_video && !target_wants_video {
+        score -= 220.0;
+    }
+
+    // 3. Remix / Live penalty if current track is studio album version
+    let is_remix = track_name.contains("remix") || album_name.contains("remix");
+    let target_is_remix = target_title.to_lowercase().contains("remix");
+    if is_remix && !target_is_remix {
+        score -= 90.0;
+    }
+
+    let is_live = track_name.contains("live") || album_name.contains("live");
+    let target_is_live = target_title.to_lowercase().contains("live");
+    if is_live && !target_is_live {
+        score -= 90.0;
+    }
+
+    // 4. Clean artist similarity bonus
+    if !target_artist.is_empty() && (artist_name.contains(&target_artist.to_lowercase()) || target_artist.to_lowercase().contains(&artist_name)) {
+        score += 35.0;
+    }
+
+    score
 }
 
 pub async fn fetch_lyrics(
@@ -172,6 +228,7 @@ pub async fn fetch_lyrics(
     _album: &str,
     duration: f64,
     native_art: &str,
+    cycle_index: usize,
 ) -> LyricsLoaded {
     let cleaned_title = clean_song_title(title);
     let cleaned_artist = clean_artist(artist);
@@ -190,97 +247,32 @@ pub async fn fetch_lyrics(
         ("User-Agent", "LivelyLyrics/3.0.0 (https://github.com/malikp66/lively-lyrics)"),
     ];
 
-    // 1. Direct /api/get attempts
-    let get_attempts: Vec<(&str, &str, Option<i64>)> = vec![
-        (&cleaned_title, &cleaned_artist, if duration > 0.0 { Some(duration.round() as i64) } else { None }),
-        (&cleaned_title, &cleaned_artist, None),
-        (title.trim(), artist.trim(), None),
-    ];
+    let mut collected_tracks: Vec<LrclibTrack> = Vec::new();
 
-    for (t, a, d) in get_attempts {
-        if t.is_empty() || a.is_empty() {
-            continue;
-        }
-
-        let mut url = format!(
-            "https://lrclib.net/api/get?track_name={}&artist_name={}",
-            urlencoding::encode(t),
-            urlencoding::encode(a)
-        );
-        if let Some(dur) = d {
-            url.push_str(&format!("&duration={}", dur));
-        }
-
-        let mut req = client.get(&url);
-        for (k, v) in &headers {
-            req = req.header(*k, *v);
-        }
-
-        if let Ok(res) = req.timeout(Duration::from_secs(3)).send().await {
-            if res.status().is_success() {
-                if let Ok(track) = res.json::<LrclibTrack>().await {
-                    if let Some(synced) = track.synced_lyrics {
-                        if !synced.trim().is_empty() {
-                            let lines = parse_lrc(&synced);
-                            return LyricsLoaded {
-                                title: track.track_name.unwrap_or_else(|| title.to_string()),
-                                artist: track.artist_name.unwrap_or_else(|| artist.to_string()),
-                                has_synced: true,
-                                is_plain: false,
-                                lines,
-                                raw_lyrics: synced,
-                                artwork,
-                                message: None,
-                            };
-                        }
-                    }
-                    if let Some(plain) = track.plain_lyrics {
-                        if !plain.trim().is_empty() {
-                            let plain_lines: Vec<LyricLine> = plain
-                                .lines()
-                                .map(|l| l.trim().to_string())
-                                .filter(|l| !l.is_empty())
-                                .enumerate()
-                                .map(|(idx, text)| LyricLine {
-                                    time: (idx as f64) * 4.0,
-                                    text,
-                                })
-                                .collect();
-                            return LyricsLoaded {
-                                title: track.track_name.unwrap_or_else(|| title.to_string()),
-                                artist: track.artist_name.unwrap_or_else(|| artist.to_string()),
-                                has_synced: false,
-                                is_plain: true,
-                                lines: plain_lines,
-                                raw_lyrics: plain,
-                                artwork,
-                                message: None,
-                            };
-                        }
-                    }
-                }
-            }
-        }
+    // 1. Search endpoints (Search allows ranking multiple LRC uploads by duration precision)
+    let mut search_urls = Vec::new();
+    if !cleaned_title.is_empty() && !cleaned_artist.is_empty() {
+        search_urls.push(format!(
+            "https://lrclib.net/api/search?track_name={}&artist_name={}",
+            urlencoding::encode(&cleaned_title),
+            urlencoding::encode(&cleaned_artist)
+        ));
+    }
+    let query_artist_title = format!("{} {}", cleaned_artist, cleaned_title).trim().to_string();
+    if !query_artist_title.is_empty() {
+        search_urls.push(format!(
+            "https://lrclib.net/api/search?q={}",
+            urlencoding::encode(&query_artist_title)
+        ));
+    }
+    if !cleaned_title.is_empty() {
+        search_urls.push(format!(
+            "https://lrclib.net/api/search?q={}",
+            urlencoding::encode(&cleaned_title)
+        ));
     }
 
-    // 2. Fallback to /api/search?q=
-    let no_slash_title = cleaned_title.replace(['/', '_'], " ");
-    let candidates = vec![
-        format!("{} {}", cleaned_artist, no_slash_title).trim().to_string(),
-        no_slash_title.trim().to_string(),
-        title.trim().to_string(),
-    ];
-
-    for candidate in candidates {
-        if candidate.is_empty() {
-            continue;
-        }
-
-        let url = format!(
-            "https://lrclib.net/api/search?q={}",
-            urlencoding::encode(&candidate)
-        );
-
+    for url in search_urls {
         let mut req = client.get(&url);
         for (k, v) in &headers {
             req = req.header(*k, *v);
@@ -289,64 +281,120 @@ pub async fn fetch_lyrics(
         if let Ok(res) = req.timeout(Duration::from_secs(3)).send().await {
             if res.status().is_success() {
                 if let Ok(list) = res.json::<Vec<LrclibTrack>>().await {
-                    let mut synced: Vec<LrclibTrack> = list
-                        .iter()
-                        .filter(|item| item.synced_lyrics.as_ref().map_or(false, |s| !s.trim().is_empty()))
-                        .cloned()
-                        .collect();
-
-                    if !synced.is_empty() {
-                        if duration > 0.0 {
-                            synced.sort_by(|a, b| {
-                                let da = (a.duration.unwrap_or(0.0) - duration).abs();
-                                let db = (b.duration.unwrap_or(0.0) - duration).abs();
-                                da.partial_cmp(&db).unwrap_or(std::cmp::Ordering::Equal)
-                            });
-                        }
-
-                        let best = synced.remove(0);
-                        let raw = best.synced_lyrics.unwrap_or_default();
-                        let lines = parse_lrc(&raw);
-                        return LyricsLoaded {
-                            title: best.track_name.unwrap_or_else(|| title.to_string()),
-                            artist: best.artist_name.unwrap_or_else(|| artist.to_string()),
-                            has_synced: true,
-                            is_plain: false,
-                            lines,
-                            raw_lyrics: raw,
-                            artwork,
-                            message: None,
-                        };
-                    }
-
-                    // Fallback to plain lyrics if synced not available
-                    for item in &list {
-                        if let Some(plain) = &item.plain_lyrics {
-                            if !plain.trim().is_empty() {
-                                let plain_lines: Vec<LyricLine> = plain
-                                    .lines()
-                                    .map(|l| l.trim().to_string())
-                                    .filter(|l| !l.is_empty())
-                                    .enumerate()
-                                    .map(|(idx, text)| LyricLine {
-                                        time: (idx as f64) * 4.0,
-                                        text,
-                                    })
-                                    .collect();
-                                return LyricsLoaded {
-                                    title: item.track_name.clone().unwrap_or_else(|| title.to_string()),
-                                    artist: item.artist_name.clone().unwrap_or_else(|| artist.to_string()),
-                                    has_synced: false,
-                                    is_plain: true,
-                                    lines: plain_lines,
-                                    raw_lyrics: plain.clone(),
-                                    artwork,
-                                    message: None,
-                                };
-                            }
+                    for item in list {
+                        if !collected_tracks.iter().any(|t| t.id == item.id) {
+                            collected_tracks.push(item);
                         }
                     }
                 }
+            }
+        }
+        if !collected_tracks.is_empty() {
+            break;
+        }
+    }
+
+    // 2. Direct /api/get fallback if search produced no results
+    if collected_tracks.is_empty() {
+        let get_attempts: Vec<(&str, &str, Option<i64>)> = vec![
+            (&cleaned_title, &cleaned_artist, if duration > 0.0 { Some(duration.round() as i64) } else { None }),
+            (&cleaned_title, &cleaned_artist, None),
+            (title.trim(), artist.trim(), None),
+        ];
+
+        for (t, a, d) in get_attempts {
+            if t.is_empty() || a.is_empty() {
+                continue;
+            }
+
+            let mut url = format!(
+                "https://lrclib.net/api/get?track_name={}&artist_name={}",
+                urlencoding::encode(t),
+                urlencoding::encode(a)
+            );
+            if let Some(dur) = d {
+                url.push_str(&format!("&duration={}", dur));
+            }
+
+            let mut req = client.get(&url);
+            for (k, v) in &headers {
+                req = req.header(*k, *v);
+            }
+
+            if let Ok(res) = req.timeout(Duration::from_secs(3)).send().await {
+                if res.status().is_success() {
+                    if let Ok(track) = res.json::<LrclibTrack>().await {
+                        collected_tracks.push(track);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    // 3. Process collected tracks: Rank synced candidates by duration precision and cleanliness
+    let mut synced_tracks: Vec<LrclibTrack> = collected_tracks
+        .iter()
+        .filter(|item| item.synced_lyrics.as_ref().map_or(false, |s| !s.trim().is_empty()))
+        .cloned()
+        .collect();
+
+    if !synced_tracks.is_empty() {
+        // Sort candidates by score descending
+        synced_tracks.sort_by(|a, b| {
+            let score_a = score_candidate(a, duration, title, artist);
+            let score_b = score_candidate(b, duration, title, artist);
+            score_b.partial_cmp(&score_a).unwrap_or(std::cmp::Ordering::Equal)
+        });
+
+        // Cycle through candidates if user triggers re-sync
+        let chosen_idx = cycle_index % synced_tracks.len();
+        let best = &synced_tracks[chosen_idx];
+        let raw = best.synced_lyrics.clone().unwrap_or_default();
+        let lines = parse_lrc(&raw);
+
+        let candidate_info = if synced_tracks.len() > 1 {
+            Some(format!("Sinkronisasi opsi {} dari {}", chosen_idx + 1, synced_tracks.len()))
+        } else {
+            None
+        };
+
+        return LyricsLoaded {
+            title: best.track_name.clone().unwrap_or_else(|| title.to_string()),
+            artist: best.artist_name.clone().unwrap_or_else(|| artist.to_string()),
+            has_synced: true,
+            is_plain: false,
+            lines,
+            raw_lyrics: raw,
+            artwork,
+            message: candidate_info,
+        };
+    }
+
+    // 4. Plain lyrics fallback
+    for item in &collected_tracks {
+        if let Some(plain) = &item.plain_lyrics {
+            if !plain.trim().is_empty() {
+                let plain_lines: Vec<LyricLine> = plain
+                    .lines()
+                    .map(|l| l.trim().to_string())
+                    .filter(|l| !l.is_empty())
+                    .enumerate()
+                    .map(|(idx, text)| LyricLine {
+                        time: (idx as f64) * 4.0,
+                        text,
+                    })
+                    .collect();
+                return LyricsLoaded {
+                    title: item.track_name.clone().unwrap_or_else(|| title.to_string()),
+                    artist: item.artist_name.clone().unwrap_or_else(|| artist.to_string()),
+                    has_synced: false,
+                    is_plain: true,
+                    lines: plain_lines,
+                    raw_lyrics: plain.clone(),
+                    artwork,
+                    message: Some("Lirik teks biasa (tidak bertanda waktu).".to_string()),
+                };
             }
         }
     }
@@ -377,9 +425,30 @@ mod tests {
             "Pulang Malu Tak Pulang Rindu",
             351.24,
             "",
+            0,
         ).await;
         println!("TEST RESULT: title={}, has_synced={}, lines={}", res.title, res.has_synced, res.lines.len());
         assert!(res.has_synced || !res.lines.is_empty(), "Lyrics should be found");
+    }
+
+    #[tokio::test]
+    async fn test_the_weeknd_reminder_sync() {
+        let client = reqwest::Client::new();
+        let res = fetch_lyrics(
+            &client,
+            "Reminder",
+            "The Weeknd",
+            "Starboy",
+            218.88,
+            "",
+            0,
+        ).await;
+        println!("TEST REMINDER: title={}, lines={}, first_line_time={:?}", res.title, res.lines.len(), res.lines.first().map(|l| l.time));
+        assert!(res.has_synced, "Reminder should have synced lyrics");
+        // Verify first line starts around 11 seconds (album track), NOT 23 seconds (video)
+        if let Some(first) = res.lines.first() {
+            assert!(first.time < 15.0, "First line should start ~11s, got {}", first.time);
+        }
     }
 }
 

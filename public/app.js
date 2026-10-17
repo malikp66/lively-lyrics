@@ -1130,6 +1130,23 @@ function setInactiveOpacity(val) {
 }
 
 // Offset Controls
+let offsetToastTimer = null;
+function showOffsetToast(msg) {
+    let toast = document.getElementById('offset-toast');
+    if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'offset-toast';
+        toast.className = 'offset-toast';
+        document.body.appendChild(toast);
+    }
+    toast.innerHTML = `<span class="toast-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg></span><span>${msg}</span>`;
+    toast.classList.add('show');
+    if (offsetToastTimer) clearTimeout(offsetToastTimer);
+    offsetToastTimer = setTimeout(() => {
+        toast.classList.remove('show');
+    }, 1200);
+}
+
 btnOffsetM5.addEventListener('click', () => adjustOffset(-0.5));
 btnOffsetM1.addEventListener('click', () => adjustOffset(-0.1));
 btnOffsetP1.addEventListener('click', () => adjustOffset(+0.1));
@@ -1137,18 +1154,39 @@ btnOffsetP5.addEventListener('click', () => adjustOffset(+0.5));
 btnOffsetReset.addEventListener('click', () => setOffset(0));
 
 function adjustOffset(delta) {
-    setOffset(userOffset + delta);
+    setOffset(userOffset + delta, true);
 }
 
-function setOffset(val) {
+function setOffset(val, notify = false) {
     userOffset = Math.round(val * 100) / 100;
     localStorage.setItem('lyric_offset', userOffset);
     updateOffsetDisplay();
+    if (notify) {
+        const sign = userOffset > 0 ? '+' : '';
+        showOffsetToast(`Offset Lirik: ${sign}${userOffset.toFixed(2)}s`);
+    }
 }
 
 function updateOffsetDisplay() {
     offsetValEl.textContent = (userOffset >= 0 ? '+' : '') + userOffset.toFixed(2) + 's';
 }
+
+// Global Keyboard Shortcuts for Offset Fine-tuning: [ (-0.5s), ] (+0.5s), \ (Reset)
+window.addEventListener('keydown', (e) => {
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable)) {
+        return;
+    }
+    if (e.key === '[') {
+        e.preventDefault();
+        adjustOffset(-0.5);
+    } else if (e.key === ']') {
+        e.preventDefault();
+        adjustOffset(+0.5);
+    } else if (e.key === '\\') {
+        e.preventDefault();
+        setOffset(0, true);
+    }
+});
 
 // Manual Lyrics Search
 btnManualSearch.addEventListener('click', performManualSearch);

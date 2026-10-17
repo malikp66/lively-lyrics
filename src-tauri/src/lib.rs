@@ -13,6 +13,7 @@ struct AppState {
     http_client: reqwest::Client,
     active_source: Mutex<String>,
     last_track_id: Mutex<String>,
+    lyrics_cycle_index: Mutex<usize>,
     is_click_through: Mutex<bool>,
     current_media: Mutex<Option<models::MediaUpdate>>,
     current_lyrics: Mutex<Option<models::LyricsEventPayload>>,
@@ -39,11 +40,14 @@ async fn resync_media(
     app: tauri::AppHandle,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<models::LyricsEventPayload>, String> {
-    // Reset track ID to force re-fetch
-    {
+    // Reset track ID and advance cycle to try next candidate
+    let cycle = {
         let mut last_id = state.last_track_id.lock().unwrap();
         *last_id = String::new();
-    }
+        let mut c = state.lyrics_cycle_index.lock().unwrap();
+        *c = (*c + 1) % 10;
+        *c
+    };
 
     if let Some(media) = media::poll_media_state() {
         {
@@ -59,6 +63,7 @@ async fn resync_media(
             &media.album,
             media.duration,
             &media.artwork_url,
+            cycle,
         )
         .await;
         let payload = models::LyricsEventPayload {
@@ -197,6 +202,7 @@ pub fn run() {
             .unwrap_or_default(),
         active_source: Mutex::new("Spotify".to_string()),
         last_track_id: Mutex::new(String::new()),
+        lyrics_cycle_index: Mutex::new(0),
         is_click_through: Mutex::new(false),
         current_media: Mutex::new(None),
         current_lyrics: Mutex::new(None),
@@ -268,6 +274,7 @@ pub fn run() {
                             let mut last_id = state_clone.last_track_id.lock().unwrap();
                             if *last_id != media.track_id {
                                 *last_id = media.track_id.clone();
+                                *state_clone.lyrics_cycle_index.lock().unwrap() = 0;
                                 true
                             } else {
                                 false
@@ -307,7 +314,8 @@ pub fn run() {
                             let art = media.artwork_url.clone();
 
                             tauri::async_runtime::spawn(async move {
-                                let lyrics = lyrics::fetch_lyrics(&client, &title, &artist, &album, dur, &art).await;
+                                let cycle = *s.lyrics_cycle_index.lock().unwrap();
+                                let lyrics = lyrics::fetch_lyrics(&client, &title, &artist, &album, dur, &art, cycle).await;
                                 let payload = models::LyricsEventPayload {
                                     track_key: format!("{} - {}", title, artist).to_lowercase(),
                                     lyrics,
