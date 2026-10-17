@@ -38,7 +38,13 @@
 
         // Media controls
         controlMedia: (action, extra) => {
-            invoke('control_media', { action, extra: typeof extra === 'number' ? extra : null });
+            let extraVal = null;
+            if (typeof extra === 'number') {
+                extraVal = extra;
+            } else if (extra && typeof extra.position === 'number') {
+                extraVal = extra.position;
+            }
+            invoke('control_media', { action, extra: extraVal });
         },
         resyncMedia: () => {
             invoke('resync_media');
@@ -46,13 +52,18 @@
 
         // Window controls
         setClickThrough: (enabled) => {
-            invoke('set_click_through', { enabled });
+            invoke('set_click_through', { enabled: !!enabled });
         },
         setAlwaysOnTop: (enabled) => {
-            invoke('set_always_on_top', { enabled });
+            invoke('set_always_on_top', { enabled: !!enabled });
         },
         setWindowOpacity: (opacity) => {
-            invoke('set_window_opacity', { opacity });
+            const clamped = Math.max(0.15, Math.min(1.0, Number(opacity) || 1.0));
+            const container = document.getElementById('app-container');
+            if (container) {
+                container.style.opacity = clamped;
+            }
+            invoke('set_window_opacity', { opacity: clamped });
         },
         minimizeWindow: () => {
             invoke('minimize_window');
@@ -60,8 +71,14 @@
         closeWindow: () => {
             invoke('close_window');
         },
-        resizeWindow: (width, height) => {
-            invoke('resize_window', { width, height });
+        resizeWindow: (w, h) => {
+            let width = w;
+            let height = h;
+            if (typeof w === 'object' && w !== null) {
+                width = w.width;
+                height = w.height;
+            }
+            invoke('resize_window', { width: Number(width), height: Number(height) });
         },
 
         // Manual lyrics search fallback
@@ -88,4 +105,19 @@
             window.electronAPI.platform = plat;
         }
     }).catch(() => {});
+
+    // In-window keyboard shortcut fallback
+    window.addEventListener('keydown', (e) => {
+        const isCmdOrCtrl = e.metaKey || e.ctrlKey;
+        if (isCmdOrCtrl && e.altKey && e.key.toLowerCase() === 'g') {
+            e.preventDefault();
+            const btnGhost = document.getElementById('btn-ghost');
+            const isNowGhost = btnGhost ? !btnGhost.classList.contains('active') : true;
+            invoke('set_click_through', { enabled: isNowGhost });
+        } else if (isCmdOrCtrl && e.altKey && e.key.toLowerCase() === 'l') {
+            e.preventDefault();
+            const btnOnly = document.getElementById('btn-only-lyrics');
+            if (btnOnly) btnOnly.click();
+        }
+    });
 })();

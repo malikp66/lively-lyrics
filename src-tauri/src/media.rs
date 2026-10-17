@@ -94,10 +94,12 @@ pub fn poll_media_state() -> Option<MediaUpdate> {
                     let track_id = format!("{}:{}:{}", source, title, artist);
 
                     return Some(MediaUpdate {
+                        active: true,
+                        app_id: source.clone(),
                         title,
                         artist,
                         album,
-                        album_art,
+                        artwork_url: album_art,
                         status,
                         position,
                         duration,
@@ -109,7 +111,7 @@ pub fn poll_media_state() -> Option<MediaUpdate> {
                 }
             }
         }
-        None
+        Some(MediaUpdate::inactive())
     }
 
     #[cfg(target_os = "linux")]
@@ -144,10 +146,12 @@ pub fn poll_media_state() -> Option<MediaUpdate> {
                 let track_id = format!("{}:{}:{}", source, title, artist);
 
                 return Some(MediaUpdate {
+                    active: true,
+                    app_id: source.clone(),
                     title,
                     artist,
                     album,
-                    album_art: art,
+                    artwork_url: art,
                     status,
                     position,
                     duration,
@@ -158,7 +162,7 @@ pub fn poll_media_state() -> Option<MediaUpdate> {
                 });
             }
         }
-        None
+        Some(MediaUpdate::inactive())
     }
 
     #[cfg(target_os = "windows")]
@@ -195,46 +199,50 @@ pub fn poll_media_state() -> Option<MediaUpdate> {
         let output = Command::new("powershell")
             .args(["-NoProfile", "-NonInteractive", "-Command", script])
             .output()
-            .ok()?;
+            .ok();
 
-        if output.status.success() {
-            let stdout = String::from_utf8_lossy(&output.stdout);
-            if let Ok(res) = serde_json::from_str::<JxaPollResponse>(stdout.trim()) {
-                if res.active {
-                    let title = res.title.unwrap_or_default();
-                    let artist = res.artist.unwrap_or_default();
-                    let album = res.album.unwrap_or_default();
-                    let status = res.status.unwrap_or_else(|| "Paused".to_string());
-                    let is_playing = status == "Playing";
-                    let position = res.position.unwrap_or(0.0);
-                    let duration = res.duration.unwrap_or(0.0);
-                    let album_art = res.artwork_url.unwrap_or_default();
-                    let source = "SMTC".to_string();
+        if let Some(out) = output {
+            if out.status.success() {
+                let stdout = String::from_utf8_lossy(&out.stdout);
+                if let Ok(res) = serde_json::from_str::<JxaPollResponse>(stdout.trim()) {
+                    if res.active {
+                        let title = res.title.unwrap_or_default();
+                        let artist = res.artist.unwrap_or_default();
+                        let album = res.album.unwrap_or_default();
+                        let status = res.status.unwrap_or_else(|| "Paused".to_string());
+                        let is_playing = status == "Playing";
+                        let position = res.position.unwrap_or(0.0);
+                        let duration = res.duration.unwrap_or(0.0);
+                        let album_art = res.artwork_url.unwrap_or_default();
+                        let source = "SMTC".to_string();
 
-                    let now = SystemTime::now()
-                        .duration_since(UNIX_EPOCH)
-                        .unwrap_or_default()
-                        .as_millis() as u64;
+                        let now = SystemTime::now()
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap_or_default()
+                            .as_millis() as u64;
 
-                    let track_id = format!("{}:{}:{}", source, title, artist);
+                        let track_id = format!("{}:{}:{}", source, title, artist);
 
-                    return Some(MediaUpdate {
-                        title,
-                        artist,
-                        album,
-                        album_art,
-                        status,
-                        position,
-                        duration,
-                        is_playing,
-                        track_id,
-                        source,
-                        last_updated: now,
-                    });
+                        return Some(MediaUpdate {
+                            active: true,
+                            app_id: source.clone(),
+                            title,
+                            artist,
+                            album,
+                            artwork_url: album_art,
+                            status,
+                            position,
+                            duration,
+                            is_playing,
+                            track_id,
+                            source,
+                            last_updated: now,
+                        });
+                    }
                 }
             }
         }
-        None
+        Some(MediaUpdate::inactive())
     }
 }
 
@@ -243,7 +251,7 @@ pub fn control_media(action: &str, extra: Option<f64>, active_app: &str) {
     {
         let target = if active_app == "Music" { "Music" } else { "Spotify" };
         let script = match action {
-            "play" | "pause" | "playPause" => format!("tell application \"{}\" to playpause", target),
+            "play" | "pause" | "playpause" | "playPause" => format!("tell application \"{}\" to playpause", target),
             "next" => format!("tell application \"{}\" to next track", target),
             "prev" | "previous" => format!("tell application \"{}\" to previous track", target),
             "seek" => {
@@ -259,7 +267,7 @@ pub fn control_media(action: &str, extra: Option<f64>, active_app: &str) {
     #[cfg(target_os = "linux")]
     {
         let _ = match action {
-            "play" | "pause" | "playPause" => Command::new("playerctl").arg("play-pause").output(),
+            "play" | "pause" | "playpause" | "playPause" => Command::new("playerctl").arg("play-pause").output(),
             "next" => Command::new("playerctl").arg("next").output(),
             "prev" | "previous" => Command::new("playerctl").arg("previous").output(),
             "seek" => {
@@ -274,7 +282,7 @@ pub fn control_media(action: &str, extra: Option<f64>, active_app: &str) {
     {
         // Media key simulation or powershell command
         let ps_cmd = match action {
-            "play" | "pause" | "playPause" => "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]179)",
+            "play" | "pause" | "playpause" | "playPause" => "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]179)",
             "next" => "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]176)",
             "prev" | "previous" => "$w = New-Object -ComObject WScript.Shell; $w.SendKeys([char]177)",
             _ => return,
