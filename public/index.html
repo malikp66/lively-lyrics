@@ -127,15 +127,15 @@
         </div>
 
         <!-- Comprehensive Settings Modal -->
-        <div id="settings-panel" class="settings-modal hidden no-drag">
+        <div id="settings-panel" class="settings-modal hidden">
             <div class="modal-card">
-                <div class="modal-header">
-                    <div class="modal-title-row">
-                        <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;"></i>
-                        <span class="modal-title">Pengaturan LivelyLyrics</span>
-                        <span class="modal-version" id="app-version-badge">v2.2.3</span>
+                <div class="modal-header" data-tauri-drag-region>
+                    <div class="modal-title-row" data-tauri-drag-region>
+                        <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;" data-tauri-drag-region></i>
+                        <span class="modal-title" data-tauri-drag-region>Pengaturan LivelyLyrics</span>
+                        <span class="modal-version" id="app-version-badge" data-tauri-drag-region>v2.2.3</span>
                     </div>
-                    <button id="btn-close-settings" class="btn-close-modal" title="Tutup">
+                    <button id="btn-close-settings" class="btn-close-modal no-drag" title="Tutup">
                         <i class="ph-bold ph-x"></i>
                     </button>
                 </div>

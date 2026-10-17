@@ -756,13 +756,6 @@ let savedOpacityBeforeSettings = null;
 function openSettings() {
     settingsPanel.classList.remove('hidden');
 
-    // Temporarily ensure window is 100% solid opaque so desktop wallpaper / code behind never bleeds through
-    const currentOpacity = parseInt(localStorage.getItem('window_opacity') || '85', 10);
-    savedOpacityBeforeSettings = currentOpacity;
-    if (window.electronAPI) {
-        window.electronAPI.setWindowOpacity(1.0);
-    }
-
     // Expand window smoothly for comfortable settings layout
     if (window.electronAPI) {
         window.electronAPI.resizeWindow(480, 390);
@@ -774,12 +767,6 @@ function openSettings() {
 
 function closeSettings() {
     settingsPanel.classList.add('hidden');
-
-    // Restore saved opacity to user's desired preference
-    if (savedOpacityBeforeSettings !== null && window.electronAPI) {
-        window.electronAPI.setWindowOpacity(savedOpacityBeforeSettings / 100);
-        savedOpacityBeforeSettings = null;
-    }
 
     // Restore active mode window size
     if (window.electronAPI) {

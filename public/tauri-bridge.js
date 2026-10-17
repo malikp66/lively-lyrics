@@ -120,4 +120,51 @@
             if (btnOnly) btnOnly.click();
         }
     });
+
+    // Native window dragging on mousedown for Tauri (main card & settings modal)
+    window.addEventListener('mousedown', (e) => {
+        if (e.button !== 0) return;
+
+        const target = e.target;
+        if (!target) return;
+
+        // Exclude interactive elements and scroll areas from initiating drag
+        if (
+            target.closest('button') ||
+            target.closest('input') ||
+            target.closest('select') ||
+            target.closest('a') ||
+            target.closest('.no-drag') ||
+            target.closest('.btn-icon') ||
+            target.closest('.pill-btn') ||
+            target.closest('.tab-btn') ||
+            target.closest('.dock-btn') ||
+            target.closest('.color-picker-input') ||
+            target.closest('.glass-slider') ||
+            target.closest('.settings-body-scroll') ||
+            target.closest('.lyrics-scroll') ||
+            target.closest('.lyrics-flow-container') ||
+            target.closest('.scrubber-bar-container') ||
+            target.closest('.scrubber-track') ||
+            target.closest('.scrubber-progress') ||
+            target.closest('.live-eq')
+        ) {
+            return;
+        }
+
+        // Check if clicked in any draggable area
+        if (
+            target.closest('[data-tauri-drag-region]') ||
+            target.closest('.drag-header') ||
+            target.closest('.drag-region') ||
+            target.closest('.modal-header') ||
+            target.closest('.modal-title-row') ||
+            target.closest('.track-info-layout') ||
+            target.closest('.track-copy') ||
+            target.closest('#drag-header') ||
+            target.closest('.app-container.mode-only-lyrics')
+        ) {
+            invoke('start_dragging').catch(() => {});
+        }
+    });
 })();

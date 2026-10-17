@@ -141,6 +141,11 @@ fn close_window(window: tauri::Window) -> Result<(), String> {
 }
 
 #[tauri::command]
+fn start_dragging(window: tauri::Window) -> Result<(), String> {
+    window.start_dragging().map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 fn resize_window(window: tauri::Window, width: f64, height: f64) -> Result<(), String> {
     window
         .set_size(tauri::LogicalSize::new(width, height))
@@ -215,6 +220,7 @@ pub fn run() {
             minimize_window,
             close_window,
             resize_window,
+            start_dragging,
             get_app_version,
             get_platform
         ])
