@@ -4,6 +4,7 @@
     --lyric-active-color: #ffffff;
     --lyric-inactive-color: rgba(255, 255, 255, 0.72);
     --bg-base: rgba(14, 18, 28, 0.42);
+    --bg-liquid-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(24, 28, 44, 0.32) 50%, rgba(12, 16, 26, 0.52) 100%);
     --bg-glass-gradient: linear-gradient(135deg, rgba(255, 255, 255, 0.12) 0%, rgba(20, 26, 40, 0.45) 50%, rgba(10, 14, 24, 0.65) 100%);
     --bg-surface: rgba(255, 255, 255, 0.08);
     --bg-surface-hover: rgba(255, 255, 255, 0.15);
@@ -133,6 +134,64 @@ body.stroke-crisp {
 }
 
 /* Background Style Presets - Works in both Normal Mode & Only-Lyrics Mode */
+body.bg-liquid .app-container,
+body.bg-liquid .app-container.mode-only-lyrics {
+    background: var(--bg-liquid-gradient) !important;
+    backdrop-filter: blur(var(--window-blur, 36px)) saturate(215%) brightness(105%) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur, 36px)) saturate(215%) brightness(105%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.16) !important;
+    box-shadow: 
+        inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
+        0 24px 48px -12px rgba(0, 0, 0, 0.52),
+        0 8px 18px -4px rgba(0, 0, 0, 0.32) !important;
+}
+
+body.bg-liquid .app-container::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.88;
+    background: linear-gradient(
+        105deg,
+        rgba(225, 205, 180, 0.28) 0%,
+        rgba(225, 205, 180, 0.08) 18%,
+        rgba(68, 70, 92, 0.14) 26%,
+        rgba(35, 40, 58, 0.40) 58%,
+        rgba(145, 175, 205, 0.12) 76%,
+        rgba(165, 195, 225, 0.28) 100%
+    );
+    mix-blend-mode: screen;
+}
+
+body.bg-liquid .app-container::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 8%;
+    right: 8%;
+    height: 1.2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.75) 30%,
+        rgba(255, 255, 255, 0.95) 50%,
+        rgba(255, 255, 255, 0.75) 70%,
+        transparent 100%
+    );
+    filter: blur(0.5px);
+    pointer-events: none;
+    z-index: 2;
+}
+
+body.bg-liquid .app-container.mode-only-lyrics {
+    border-radius: 9999px !important;
+}
+
 body.bg-frosted .app-container,
 body.bg-frosted .app-container.mode-only-lyrics {
     background: var(--bg-glass-gradient) !important;

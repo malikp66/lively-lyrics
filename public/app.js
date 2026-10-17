@@ -18,7 +18,7 @@ let userOffset = parseFloat(localStorage.getItem('lyric_offset') || '0');
 let userTheme = localStorage.getItem('lyric_theme') || 'spotify';
 let userFontSize = localStorage.getItem('lyric_font_size') || 'medium';
 let userAlign = localStorage.getItem('lyric_align') || 'center';
-let userBgStyle = localStorage.getItem('lyric_bg_style') || 'frosted';
+let userBgStyle = localStorage.getItem('lyric_bg_style') || 'liquid';
 let userCustomBgColor = localStorage.getItem('lyric_custom_bg_color') || '#0f172a';
 let userWindowBlur = localStorage.getItem('lyric_window_blur') || '28';
 let userFontFamily = localStorage.getItem('lyric_font_family') || 'jakarta';
@@ -956,7 +956,7 @@ function setBgStyle(style) {
     userBgStyle = style;
     localStorage.setItem('lyric_bg_style', style);
     bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === style));
-    bodyEl.classList.remove('bg-frosted', 'bg-obsidian', 'bg-minimal', 'bg-custom');
+    bodyEl.classList.remove('bg-liquid', 'bg-frosted', 'bg-obsidian', 'bg-minimal', 'bg-custom');
     bodyEl.classList.add(`bg-${style}`);
 }
 
