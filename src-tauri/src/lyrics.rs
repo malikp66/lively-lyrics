@@ -153,7 +153,7 @@ pub async fn fetch_artwork(client: &reqwest::Client, title: &str, artist: &str) 
     None
 }
 
-#[derive(Deserialize)]
+#[derive(Clone, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct LrclibTrack {
     #[allow(dead_code)]
@@ -290,8 +290,9 @@ pub async fn fetch_lyrics(
             if res.status().is_success() {
                 if let Ok(list) = res.json::<Vec<LrclibTrack>>().await {
                     let mut synced: Vec<LrclibTrack> = list
-                        .into_iter()
+                        .iter()
                         .filter(|item| item.synced_lyrics.as_ref().map_or(false, |s| !s.trim().is_empty()))
+                        .cloned()
                         .collect();
 
                     if !synced.is_empty() {
@@ -317,6 +318,34 @@ pub async fn fetch_lyrics(
                             message: None,
                         };
                     }
+
+                    // Fallback to plain lyrics if synced not available
+                    for item in &list {
+                        if let Some(plain) = &item.plain_lyrics {
+                            if !plain.trim().is_empty() {
+                                let plain_lines: Vec<LyricLine> = plain
+                                    .lines()
+                                    .map(|l| l.trim().to_string())
+                                    .filter(|l| !l.is_empty())
+                                    .enumerate()
+                                    .map(|(idx, text)| LyricLine {
+                                        time: (idx as f64) * 4.0,
+                                        text,
+                                    })
+                                    .collect();
+                                return LyricsLoaded {
+                                    title: item.track_name.clone().unwrap_or_else(|| title.to_string()),
+                                    artist: item.artist_name.clone().unwrap_or_else(|| artist.to_string()),
+                                    has_synced: false,
+                                    is_plain: true,
+                                    lines: plain_lines,
+                                    raw_lyrics: plain.clone(),
+                                    artwork,
+                                    message: None,
+                                };
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -333,3 +362,24 @@ pub async fn fetch_lyrics(
         message: Some("Lirik belum tersedia untuk lagu ini. Tekan Sync Ulang untuk mencari kembali.".to_string()),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_pulang_malu() {
+        let client = reqwest::Client::new();
+        let res = fetch_lyrics(
+            &client,
+            "Pulang Malu Tak Pulang Rindu",
+            "ANDRI AR",
+            "Pulang Malu Tak Pulang Rindu",
+            351.24,
+            "",
+        ).await;
+        println!("TEST RESULT: title={}, has_synced={}, lines={}", res.title, res.has_synced, res.lines.len());
+        assert!(res.has_synced || !res.lines.is_empty(), "Lyrics should be found");
+    }
+}
+

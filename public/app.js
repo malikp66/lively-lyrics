@@ -368,9 +368,13 @@ if (window.electronAPI) {
             lastKnownTime = Date.now();
         }
 
+        const currentTrackIdentifier = `${titleText} - ${artistText}`.toLowerCase();
         if (previousTitle !== data.title && data.title) {
-            currentTrackKey = '';
-            renderLyrics({ loading: true, message: `Memuat lirik: ${data.title}...` });
+            const hasMatchingLyrics = currentLyrics && (currentTrackKey === currentTrackIdentifier || currentLyrics.title === data.title) && currentLyrics.lines && currentLyrics.lines.length > 0;
+            if (!hasMatchingLyrics) {
+                currentTrackKey = '';
+                renderLyrics({ loading: true, message: `Memuat lirik: ${data.title}...` });
+            }
         }
 
         if (data.duration > 0) {
@@ -378,7 +382,10 @@ if (window.electronAPI) {
         }
     });
 
-    window.electronAPI.onLyricsLoaded(({ trackKey, lyrics }) => {
+    window.electronAPI.onLyricsLoaded((payload) => {
+        if (!payload) return;
+        const trackKey = payload.trackKey || '';
+        const lyrics = payload.lyrics || payload;
         currentTrackKey = trackKey;
         currentLyrics = lyrics;
         activeLineIndex = -1;

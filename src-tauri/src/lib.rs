@@ -14,6 +14,18 @@ struct AppState {
     active_source: Mutex<String>,
     last_track_id: Mutex<String>,
     is_click_through: Mutex<bool>,
+    current_media: Mutex<Option<models::MediaUpdate>>,
+    current_lyrics: Mutex<Option<models::LyricsEventPayload>>,
+}
+
+#[tauri::command]
+fn get_current_media(state: State<'_, Arc<AppState>>) -> Option<models::MediaUpdate> {
+    state.current_media.lock().unwrap().clone()
+}
+
+#[tauri::command]
+fn get_current_lyrics(state: State<'_, Arc<AppState>>) -> Option<models::LyricsEventPayload> {
+    state.current_lyrics.lock().unwrap().clone()
 }
 
 #[tauri::command]
@@ -26,7 +38,7 @@ fn control_media(state: State<'_, Arc<AppState>>, action: String, extra: Option<
 async fn resync_media(
     app: tauri::AppHandle,
     state: State<'_, Arc<AppState>>,
-) -> Result<(), String> {
+) -> Result<Option<models::LyricsEventPayload>, String> {
     // Reset track ID to force re-fetch
     {
         let mut last_id = state.last_track_id.lock().unwrap();
@@ -34,6 +46,10 @@ async fn resync_media(
     }
 
     if let Some(media) = media::poll_media_state() {
+        {
+            let mut cm = state.current_media.lock().unwrap();
+            *cm = Some(media.clone());
+        }
         let _ = app.emit("media-update", &media);
         let client = state.http_client.clone();
         let lyrics = lyrics::fetch_lyrics(
@@ -49,12 +65,17 @@ async fn resync_media(
             track_key: format!("{} - {}", media.title, media.artist).to_lowercase(),
             lyrics,
         };
+        {
+            let mut cl = state.current_lyrics.lock().unwrap();
+            *cl = Some(payload.clone());
+        }
         let _ = app.emit("lyrics-loaded", &payload);
 
         let mut last_id = state.last_track_id.lock().unwrap();
         *last_id = media.track_id;
+        return Ok(Some(payload));
     }
-    Ok(())
+    Ok(None)
 }
 
 #[tauri::command]
@@ -177,6 +198,8 @@ pub fn run() {
         active_source: Mutex::new("Spotify".to_string()),
         last_track_id: Mutex::new(String::new()),
         is_click_through: Mutex::new(false),
+        current_media: Mutex::new(None),
+        current_lyrics: Mutex::new(None),
     });
 
     let ghost_shortcut = Shortcut::from_str("CommandOrControl+Alt+G").expect("valid ghost shortcut");
@@ -213,6 +236,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             control_media,
             resync_media,
+            get_current_media,
+            get_current_lyrics,
             search_lyrics_manual,
             set_click_through,
             set_always_on_top,
@@ -234,6 +259,11 @@ pub fn run() {
                     std::thread::sleep(Duration::from_millis(900));
 
                     if let Some(media) = media::poll_media_state() {
+                        {
+                            let mut cm = state_clone.current_media.lock().unwrap();
+                            *cm = Some(media.clone());
+                        }
+
                         let track_changed = {
                             let mut last_id = state_clone.last_track_id.lock().unwrap();
                             if *last_id != media.track_id {
@@ -252,10 +282,24 @@ pub fn run() {
                         // Emit media update to webview
                         let _ = handle.emit("media-update", &media);
 
-                        // If track changed, fetch new lyrics
-                        if track_changed && !media.title.is_empty() {
+                        // If track changed or lyrics not loaded for this active track, fetch lyrics
+                        let needs_lyrics = {
+                            if track_changed {
+                                true
+                            } else if !media.title.is_empty() {
+                                let cl = state_clone.current_lyrics.lock().unwrap();
+                                cl.as_ref().map_or(true, |p| {
+                                    p.track_key != format!("{} - {}", media.title, media.artist).to_lowercase()
+                                })
+                            } else {
+                                false
+                            }
+                        };
+
+                        if needs_lyrics && !media.title.is_empty() {
                             let client = state_clone.http_client.clone();
                             let h = handle.clone();
+                            let s = state_clone.clone();
                             let title = media.title.clone();
                             let artist = media.artist.clone();
                             let album = media.album.clone();
@@ -268,6 +312,10 @@ pub fn run() {
                                     track_key: format!("{} - {}", title, artist).to_lowercase(),
                                     lyrics,
                                 };
+                                {
+                                    let mut cl = s.current_lyrics.lock().unwrap();
+                                    *cl = Some(payload.clone());
+                                }
                                 let _ = h.emit("lyrics-loaded", &payload);
                             });
                         }

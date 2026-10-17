@@ -22,9 +22,15 @@
         // Receive events
         onMediaUpdate: (callback) => {
             listen('media-update', (event) => callback(event.payload));
+            invoke('get_current_media').then((media) => {
+                if (media && media.active) callback(media);
+            }).catch(() => {});
         },
         onLyricsLoaded: (callback) => {
             listen('lyrics-loaded', (event) => callback(event.payload));
+            invoke('get_current_lyrics').then((payload) => {
+                if (payload && payload.lyrics) callback(payload);
+            }).catch(() => {});
         },
         onClickThroughChanged: (callback) => {
             listen('click-through-changed', (event) => callback(event.payload));
@@ -47,7 +53,7 @@
             invoke('control_media', { action, extra: extraVal });
         },
         resyncMedia: () => {
-            invoke('resync_media');
+            invoke('resync_media').catch(() => {});
         },
 
         // Window controls
