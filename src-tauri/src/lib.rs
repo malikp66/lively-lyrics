@@ -178,11 +178,10 @@ pub fn run() {
             let handle = app.handle().clone();
             let state_clone = app_state.clone();
 
-            // Background async media polling task
-            tokio::spawn(async move {
-                let mut ticker = tokio::time::interval(Duration::from_millis(900));
+            // Background media polling thread
+            std::thread::spawn(move || {
                 loop {
-                    ticker.tick().await;
+                    std::thread::sleep(Duration::from_millis(900));
 
                     if let Some(media) = media::poll_media_state() {
                         let track_changed = {
@@ -213,7 +212,7 @@ pub fn run() {
                             let dur = media.duration;
                             let art = media.album_art.clone();
 
-                            tokio::spawn(async move {
+                            tauri::async_runtime::spawn(async move {
                                 let lyrics = lyrics::fetch_lyrics(&client, &title, &artist, &album, dur, &art).await;
                                 let _ = h.emit("lyrics-loaded", &lyrics);
                             });
