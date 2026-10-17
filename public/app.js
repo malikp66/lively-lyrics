@@ -368,6 +368,11 @@ if (window.electronAPI) {
             lastKnownTime = Date.now();
         }
 
+        if (previousTitle !== data.title && data.title) {
+            currentTrackKey = '';
+            renderLyrics({ loading: true, message: `Memuat lirik: ${data.title}...` });
+        }
+
         if (data.duration > 0) {
             totalDurationEl.textContent = formatTime(data.duration);
         }
@@ -429,22 +434,29 @@ function renderLyrics(lyrics) {
     lyricsContainer.innerHTML = '';
 
     if (!lyrics || !lyrics.lines || lyrics.lines.length === 0) {
+        lyricsContainer.classList.add('has-placeholder');
+        if (lyricsViewport) lyricsViewport.classList.add('has-placeholder');
+        const isLoading = lyrics && lyrics.loading;
         lyricsContainer.innerHTML = `
             <div class="stage-placeholder">
                 <div class="music-bars-anim">
                     <span></span><span></span><span></span><span></span>
                 </div>
                 <p class="placeholder-text">${lyrics && lyrics.message ? lyrics.message : 'Lirik belum tersedia untuk lagu ini.'}</p>
+                ${!isLoading ? `
                 <button class="btn-placeholder-retry" id="btn-placeholder-retry">
                     <i class="ph-bold ph-arrows-clockwise"></i>
                     <span>Cari Ulang Lirik (${resyncShortcut})</span>
-                </button>
+                </button>` : ''}
             </div>
         `;
         const retryBtn = document.getElementById('btn-placeholder-retry');
         if (retryBtn) retryBtn.addEventListener('click', triggerResync);
         return;
     }
+
+    lyricsContainer.classList.remove('has-placeholder');
+    if (lyricsViewport) lyricsViewport.classList.remove('has-placeholder');
 
     const fragment = document.createDocumentFragment();
 
