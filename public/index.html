@@ -44,8 +44,8 @@
         <div id="ambient-backdrop" class="ambient-backdrop"></div>
 
         <!-- Floating Drag Header -->
-        <header class="drag-header" id="drag-header">
-            <div class="drag-region">
+        <header class="drag-header" id="drag-header" data-tauri-drag-region>
+            <div class="drag-region" data-tauri-drag-region>
                 <div class="header-track-avatar" id="header-track-avatar" title="Lagu yang sedang diputar">
                     <img id="header-avatar-img" class="header-avatar-img hidden" alt="Artwork" />
                     <div id="header-avatar-fallback" class="header-avatar-fallback">
@@ -570,6 +570,7 @@
         </footer>
     </div>
 
+    <script src="tauri-bridge.js"></script>
     <script src="app.js"></script>
 </body>
 </html>
