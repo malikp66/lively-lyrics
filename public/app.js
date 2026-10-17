@@ -798,7 +798,35 @@ function closeSettings() {
         }
     }
 
+    // Force WebKit compositor invalidation so headers & controls repaint properly
+    requestAnimationFrame(() => {
+        const dragH = document.getElementById('drag-header');
+        if (dragH) {
+            dragH.style.display = 'none';
+            dragH.offsetHeight; // trigger reflow
+            dragH.style.display = '';
+        }
+        if (appContainer) {
+            appContainer.offsetHeight;
+        }
+    });
+
     setTimeout(() => centerActiveLineInViewport('auto'), 60);
+}
+
+// Robust mouse hover tracking to guarantee header visibility across all modes
+if (appContainer) {
+    appContainer.addEventListener('mouseenter', () => {
+        appContainer.classList.add('is-hovered');
+    });
+    appContainer.addEventListener('mousemove', () => {
+        if (!appContainer.classList.contains('is-hovered')) {
+            appContainer.classList.add('is-hovered');
+        }
+    });
+    appContainer.addEventListener('mouseleave', () => {
+        appContainer.classList.remove('is-hovered');
+    });
 }
 
 btnSettings.addEventListener('click', () => {
