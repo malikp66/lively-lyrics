@@ -128,17 +128,17 @@
         const target = e.target;
         if (!target) return;
 
-        // Exclude interactive elements and scroll areas from initiating drag
+        // Exclude interactive controls and scroll areas from initiating drag
         if (
             target.closest('button') ||
             target.closest('input') ||
             target.closest('select') ||
             target.closest('a') ||
-            target.closest('.no-drag') ||
             target.closest('.btn-icon') ||
             target.closest('.pill-btn') ||
             target.closest('.tab-btn') ||
             target.closest('.dock-btn') ||
+            target.closest('.btn-close-modal') ||
             target.closest('.color-picker-input') ||
             target.closest('.glass-slider') ||
             target.closest('.settings-body-scroll') ||
@@ -164,7 +164,11 @@
             target.closest('#drag-header') ||
             target.closest('.app-container.mode-only-lyrics')
         ) {
-            invoke('start_dragging').catch(() => {});
+            if (window.__TAURI_INTERNALS__ && typeof window.__TAURI_INTERNALS__.invoke === 'function') {
+                window.__TAURI_INTERNALS__.invoke('plugin:window|start_dragging').catch(() => {});
+            } else if (typeof invoke === 'function') {
+                invoke('start_dragging').catch(() => {});
+            }
         }
     });
 })();

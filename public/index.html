@@ -44,17 +44,17 @@
         <div id="ambient-backdrop" class="ambient-backdrop"></div>
 
         <!-- Floating Drag Header -->
-        <header class="drag-header" id="drag-header" data-tauri-drag-region>
-            <div class="drag-region" data-tauri-drag-region>
-                <div class="header-track-avatar" id="header-track-avatar" title="Lagu yang sedang diputar">
+        <header class="drag-header" id="drag-header" data-tauri-drag-region="deep">
+            <div class="drag-region" data-tauri-drag-region="deep">
+                <div class="header-track-avatar" id="header-track-avatar" title="Lagu yang sedang diputar" data-tauri-drag-region="deep">
                     <img id="header-avatar-img" class="header-avatar-img hidden" alt="Artwork" />
                     <div id="header-avatar-fallback" class="header-avatar-fallback">
                         <i class="ph-fill ph-music-notes"></i>
                     </div>
                     <span class="header-avatar-status" id="connection-dot"></span>
                 </div>
-                <div class="header-metadata">
-                    <span class="track-ticker-header" id="track-header-ticker">Menunggu Spotify...</span>
+                <div class="header-metadata" data-tauri-drag-region="deep">
+                    <span class="track-ticker-header" id="track-header-ticker" data-tauri-drag-region="deep">Menunggu Spotify...</span>
                 </div>
             </div>
 
@@ -129,13 +129,13 @@
         <!-- Comprehensive Settings Modal -->
         <div id="settings-panel" class="settings-modal hidden">
             <div class="modal-card">
-                <div class="modal-header" data-tauri-drag-region>
-                    <div class="modal-title-row" data-tauri-drag-region>
-                        <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;" data-tauri-drag-region></i>
-                        <span class="modal-title" data-tauri-drag-region>Pengaturan LivelyLyrics</span>
-                        <span class="modal-version" id="app-version-badge" data-tauri-drag-region>v2.2.3</span>
+                <div class="modal-header" data-tauri-drag-region="deep">
+                    <div class="modal-title-row" data-tauri-drag-region="deep">
+                        <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;" data-tauri-drag-region="deep"></i>
+                        <span class="modal-title" data-tauri-drag-region="deep">Pengaturan LivelyLyrics</span>
+                        <span class="modal-version" id="app-version-badge" data-tauri-drag-region="deep">v2.2.3</span>
                     </div>
-                    <button id="btn-close-settings" class="btn-close-modal no-drag" title="Tutup">
+                    <button id="btn-close-settings" class="btn-close-modal no-drag" data-tauri-drag-region="false" title="Tutup">
                         <i class="ph-bold ph-x"></i>
                     </button>
                 </div>
@@ -504,33 +504,33 @@
         </div>
 
         <!-- Track Header Card (Cover Art, Info, Scrubber) -->
-        <section class="track-header-card no-drag" id="track-header-card">
-            <div class="track-info-layout">
+        <section class="track-header-card" id="track-header-card">
+            <div class="track-info-layout" data-tauri-drag-region="deep">
                 <!-- Album Artwork with fallback icon -->
-                <div class="artwork-wrapper" id="artwork-wrapper">
+                <div class="artwork-wrapper" id="artwork-wrapper" data-tauri-drag-region="deep">
                     <img id="track-cover-art" class="cover-art-img hidden" alt="Cover Art" src="" />
-                    <div id="cover-placeholder" class="cover-placeholder">
+                    <div id="cover-placeholder" class="cover-placeholder" data-tauri-drag-region="deep">
                         <i class="ph-duotone ph-disc" style="font-size: 22px;"></i>
                     </div>
                 </div>
 
                 <!-- Text Details -->
-                <div class="track-copy">
-                    <div id="track-name" class="track-name-display" title="Menunggu Spotify...">Menunggu Spotify...</div>
-                    <div id="artist-name" class="artist-name-display">Putar lagu apa saja di Spotify</div>
+                <div class="track-copy" data-tauri-drag-region="deep">
+                    <div id="track-name" class="track-name-display" data-tauri-drag-region="deep" title="Menunggu Spotify...">Menunggu Spotify...</div>
+                    <div id="artist-name" class="artist-name-display" data-tauri-drag-region="deep">Putar lagu apa saja di Spotify</div>
                 </div>
 
                 <!-- Playback Status Pill with Mini Live EQ -->
-                <div id="playback-status-badge" class="badge-status">
+                <div id="playback-status-badge" class="badge-status" data-tauri-drag-region="deep">
                     <span id="live-eq" class="live-eq hidden">
                         <span></span><span></span><span></span>
                     </span>
-                    <span id="playback-status-text">Standby</span>
+                    <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
                 </div>
             </div>
 
             <!-- Scrubber Timeline with Hover Preview Tooltip -->
-            <div class="scrubber-bar-container" id="scrubber-container">
+            <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
                 <div id="scrubber-tooltip" class="scrubber-tooltip hidden">0:00</div>
                 <div class="scrubber-track">
                     <div class="scrubber-progress" id="scrubber-progress"></div>
