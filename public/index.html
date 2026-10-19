@@ -15,7 +15,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&family=Outfit:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body class="theme-spotify font-medium align-center bg-liquid">
-    <div id="app-container" class="app-container mode-card">
+    <div class="window-shell">
+        <div id="app-container" class="app-container mode-card">
         <!-- Startup Splash Loading Screen (Liquid Frosted Glass) -->
         <div id="splash-screen" class="splash-screen" data-tauri-drag-region="deep">
             <div class="splash-ambient-orb"></div>
@@ -84,10 +85,6 @@
                 <i id="dropdown-icon-resync" class="ph-bold ph-arrows-clockwise"></i>
                 <span>Sync Ulang (Ctrl+R)</span>
             </button>
-            <button class="dropdown-item" id="dropdown-item-toggle-lyrics">
-                <i id="dropdown-icon-lyrics" class="ph-bold ph-microphone"></i>
-                <span id="dropdown-text-lyrics">Mode Hanya Lirik</span>
-            </button>
             <div class="dropdown-divider"></div>
             <div class="dropdown-row-actions">
                 <button class="dropdown-mini-btn" id="dropdown-item-minimize" title="Minimize Jendela">
@@ -106,32 +103,109 @@
             <span id="ghost-badge-text"><i class="ph-fill ph-ghost"></i> GHOST MODE ON &bull; Tekan <b id="ghost-shortcut-label">Ctrl+Alt+G</b> untuk keluar</span>
         </div>
 
-        <!-- Comprehensive Settings Modal -->
-        <div id="settings-panel" class="settings-modal hidden">
-            <div class="modal-card">
-                <div class="modal-header" data-tauri-drag-region="deep">
-                    <div class="modal-title-row" data-tauri-drag-region="deep">
-                        <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;" data-tauri-drag-region="deep"></i>
-                        <span class="modal-title" data-tauri-drag-region="deep">Pengaturan LivelyLyrics</span>
-                        <span class="modal-version" id="app-version-badge" data-tauri-drag-region="deep">v3.0.0</span>
+        <!-- Main Island Content (2-Column Horizontal Split Layout) -->
+        <div class="island-main-split" data-tauri-drag-region="deep">
+            <!-- Left Column: Player Module (Vertically Centered) -->
+            <section class="island-player-panel" id="track-header-card" data-tauri-drag-region="deep">
+                <!-- Row 1: Artwork + Song Details -->
+                <div class="track-info-layout" data-tauri-drag-region="deep">
+                    <div class="artwork-wrapper" id="artwork-wrapper" data-tauri-drag-region="deep">
+                        <img id="track-cover-art" class="cover-art-img hidden" alt="Cover Art" src="" />
+                        <div id="cover-placeholder" class="cover-placeholder" data-tauri-drag-region="deep">
+                            <i class="ph-duotone ph-disc"></i>
+                        </div>
                     </div>
-                    <button id="btn-close-settings" class="btn-close-modal no-drag" data-tauri-drag-region="false" title="Tutup">
-                        <i class="ph-bold ph-x"></i>
+
+                    <div class="track-copy" data-tauri-drag-region="deep">
+                        <div id="track-name" class="track-name-display" data-tauri-drag-region="deep" title="Menunggu Spotify...">Menunggu Spotify...</div>
+                        <div id="artist-name" class="artist-name-display" data-tauri-drag-region="deep">Putar lagu apa saja di Spotify</div>
+                    </div>
+                </div>
+
+                <!-- Row 2: Scrubber Timeline Bar -->
+                <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
+                    <span id="current-time" class="time-stamp">00:00</span>
+                    <div class="scrubber-track" id="scrubber-track">
+                        <div class="scrubber-progress" id="scrubber-progress"></div>
+                        <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
+                    </div>
+                    <span id="total-duration" class="time-stamp" title="Klik untuk beralih Total Durasi / Sisa Waktu">00:00</span>
+                </div>
+
+                <!-- Row 3: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->
+                <footer class="playback-dock no-drag" id="playback-dock">
+                    <button id="btn-three-dots-player" class="dock-btn" title="Menu Opsi">
+                        <i class="ph-bold ph-dots-three"></i>
                     </button>
-                </div>
+                    <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
+                        <i class="ph-fill ph-skip-back"></i>
+                    </button>
+                    <button id="btn-playpause" class="dock-btn dock-btn-main" title="Play / Pause">
+                        <i id="play-icon" class="ph-fill ph-play"></i>
+                        <i id="pause-icon" class="ph-fill ph-pause hidden"></i>
+                    </button>
+                    <button id="btn-next" class="dock-btn" title="Lagu Selanjutnya">
+                        <i class="ph-fill ph-skip-forward"></i>
+                    </button>
+                    <button id="btn-lyrics-toggle" class="dock-btn dock-btn-karaoke" title="Mode Hanya Lirik (Karaoke)">
+                        <i id="icon-karaoke-dock" class="ph-bold ph-microphone"></i>
+                    </button>
+                    <!-- Hidden compatibility references -->
+                    <button id="btn-collapse-player" class="hidden"></button>
+                    <button id="btn-resync" class="hidden"><i id="icon-resync-header"></i></button>
+                </footer>
 
-                <!-- Navigation Tabs -->
-                <div class="settings-tabs">
-                    <button class="tab-btn active" data-tab="tab-appearance"><i class="ph-bold ph-palette"></i> Tampilan</button>
-                    <button class="tab-btn" data-tab="tab-sync"><i class="ph-bold ph-arrows-clockwise"></i> Sinkronisasi</button>
-                    <button class="tab-btn" data-tab="tab-window"><i class="ph-bold ph-app-window"></i> Jendela</button>
-                    <button class="tab-btn" data-tab="tab-updates"><i class="ph-bold ph-sparkle"></i> Pembaruan</button>
+                <!-- Compatibility anchor for status badge (kept in DOM for JS handlers) -->
+                <div id="playback-status-badge" class="badge-status hidden" style="display: none;">
+                    <span id="live-eq" class="live-eq hidden"><span></span><span></span><span></span></span>
+                    <span id="playback-status-text">Standby</span>
                 </div>
+            </section>
 
-                <!-- Dedicated Non-Colliding Scrollable Body -->
-                <div class="settings-body-scroll">
-                    <!-- Tab 1: Appearance -->
-                    <div id="tab-appearance" class="tab-content active">
+            <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
+            <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
+                <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
+                <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
+                    <i class="ph-bold ph-dots-three"></i>
+                </button>
+                <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
+                    <div class="stage-placeholder">
+                        <div class="music-bars-anim">
+                            <span></span><span></span><span></span><span></span>
+                        </div>
+                        <p class="placeholder-text">Lirik akan sinkron secara otomatis saat Anda memutar lagu.</p>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div> <!-- End #app-container -->
+
+    <!-- Detached Apple-Style Settings Popout Window (Separated from Music Card) -->
+    <div id="settings-panel" class="settings-popout-window hidden no-drag" data-tauri-drag-region="false">
+        <div class="modal-card">
+            <div class="modal-header" data-tauri-drag-region="deep">
+                <div class="modal-title-row" data-tauri-drag-region="deep">
+                    <i class="ph-bold ph-sliders-horizontal" style="color: rgba(255, 255, 255, 0.7); font-size: 15px;" data-tauri-drag-region="deep"></i>
+                    <span class="modal-title" data-tauri-drag-region="deep">Pengaturan LivelyLyrics</span>
+                    <span class="modal-version" id="app-version-badge" data-tauri-drag-region="deep">v3.0.0</span>
+                </div>
+                <button id="btn-close-settings" class="btn-close-modal no-drag" data-tauri-drag-region="false" title="Tutup Pengaturan (Esc)">
+                    <i class="ph-bold ph-x"></i>
+                </button>
+            </div>
+
+            <!-- Navigation Tabs -->
+            <div class="settings-tabs">
+                <button class="tab-btn active" data-tab="tab-appearance"><i class="ph-bold ph-palette"></i> Tampilan</button>
+                <button class="tab-btn" data-tab="tab-sync"><i class="ph-bold ph-arrows-clockwise"></i> Sinkronisasi</button>
+                <button class="tab-btn" data-tab="tab-window"><i class="ph-bold ph-app-window"></i> Jendela</button>
+                <button class="tab-btn" data-tab="tab-updates"><i class="ph-bold ph-sparkle"></i> Pembaruan</button>
+            </div>
+
+            <!-- Dedicated Scrollable Body -->
+            <div class="settings-body-scroll">
+                <!-- Tab 1: Appearance -->
+                <div id="tab-appearance" class="tab-content active">
                     <!-- SECTION 1: BACKGROUND CUSTOMIZATION -->
                     <div class="settings-section-header">
                         <span class="section-title"><i class="ph-bold ph-paint-brush"></i> Latar Belakang & Efek Kaca</span>
@@ -533,87 +607,10 @@
                         <i class="ph-fill ph-lightbulb" style="color: #fbbf24;"></i> <b>Auto-Update:</b> LivelyLyrics secara otomatis mengecek rilis terbaru saat aplikasi dibuka, sehingga Anda selalu mendapatkan fitur dan perbaikan terbaru.
                     </div>
                 </div>
-                </div> <!-- End .settings-body-scroll -->
-            </div>
+            </div> <!-- End .settings-body-scroll -->
         </div>
-
-        <!-- Main Island Content (2-Column Horizontal Split Layout) -->
-        <div class="island-main-split" data-tauri-drag-region="deep">
-            <!-- Left Column: Player Module (Vertically Centered) -->
-            <section class="island-player-panel" id="track-header-card" data-tauri-drag-region="deep">
-                <!-- Row 1: Artwork + Song Details -->
-                <div class="track-info-layout" data-tauri-drag-region="deep">
-                    <div class="artwork-wrapper" id="artwork-wrapper" data-tauri-drag-region="deep">
-                        <img id="track-cover-art" class="cover-art-img hidden" alt="Cover Art" src="" />
-                        <div id="cover-placeholder" class="cover-placeholder" data-tauri-drag-region="deep">
-                            <i class="ph-duotone ph-disc"></i>
-                        </div>
-                    </div>
-
-                    <div class="track-copy" data-tauri-drag-region="deep">
-                        <div id="track-name" class="track-name-display" data-tauri-drag-region="deep" title="Menunggu Spotify...">Menunggu Spotify...</div>
-                        <div id="artist-name" class="artist-name-display" data-tauri-drag-region="deep">Putar lagu apa saja di Spotify</div>
-                    </div>
-                </div>
-
-                <!-- Row 2: Scrubber Timeline Bar -->
-                <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
-                    <span id="current-time" class="time-stamp">00:00</span>
-                    <div class="scrubber-track" id="scrubber-track">
-                        <div class="scrubber-progress" id="scrubber-progress"></div>
-                        <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
-                    </div>
-                    <span id="total-duration" class="time-stamp" title="Klik untuk beralih Total Durasi / Sisa Waktu">00:00</span>
-                </div>
-
-                <!-- Row 3: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->
-                <footer class="playback-dock no-drag" id="playback-dock">
-                    <button id="btn-three-dots-player" class="dock-btn" title="Menu Opsi">
-                        <i class="ph-bold ph-dots-three"></i>
-                    </button>
-                    <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
-                        <i class="ph-fill ph-skip-back"></i>
-                    </button>
-                    <button id="btn-playpause" class="dock-btn dock-btn-main" title="Play / Pause">
-                        <i id="play-icon" class="ph-fill ph-play"></i>
-                        <i id="pause-icon" class="ph-fill ph-pause hidden"></i>
-                    </button>
-                    <button id="btn-next" class="dock-btn" title="Lagu Selanjutnya">
-                        <i class="ph-fill ph-skip-forward"></i>
-                    </button>
-                    <button id="btn-lyrics-toggle" class="dock-btn dock-btn-karaoke" title="Mode Hanya Lirik (Karaoke)">
-                        <i id="icon-karaoke-dock" class="ph-bold ph-microphone"></i>
-                    </button>
-                    <!-- Hidden compatibility references -->
-                    <button id="btn-collapse-player" class="hidden"></button>
-                    <button id="btn-resync" class="hidden"><i id="icon-resync-header"></i></button>
-                </footer>
-
-                <!-- Compatibility anchor for status badge (kept in DOM for JS handlers) -->
-                <div id="playback-status-badge" class="badge-status hidden" style="display: none;">
-                    <span id="live-eq" class="live-eq hidden"><span></span><span></span><span></span></span>
-                    <span id="playback-status-text">Standby</span>
-                </div>
-            </section>
-
-            <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
-            <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
-                <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
-                <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
-                    <i class="ph-bold ph-dots-three"></i>
-                </button>
-                <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
-                    <div class="stage-placeholder">
-                        <div class="music-bars-anim">
-                            <span></span><span></span><span></span><span></span>
-                        </div>
-                        <p class="placeholder-text">Lirik akan sinkron secara otomatis saat Anda memutar lagu.</p>
-                    </div>
-                </div>
-            </main>
-        </div>
-    </div>
-
+    </div> <!-- End #settings-panel -->
+</div> <!-- End .window-shell -->
     <script src="tauri-bridge.js"></script>
     <script src="app.js"></script>
 </body>

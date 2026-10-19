@@ -361,12 +361,26 @@ body {
     opacity: 0 !important;
 }
 
-/* App Outer Container (True Aero Glassmorphism with Strict Corner Clipping) */
+/* Shell Wrapper for Floating Miniplayer Card & Detached Settings Popout */
+.window-shell {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-sizing: border-box;
+    position: relative;
+    background: transparent !important;
+}
+
+/* App Outer Container (Floating Synced Lyrics Card) */
 .app-container {
     position: relative;
     z-index: 1;
     width: 100%;
-    height: 100%;
+    max-width: 520px;
+    height: 140px;
+    flex-shrink: 0;
     box-sizing: border-box;
     background: var(--bg-glass-gradient);
     backdrop-filter: blur(var(--window-blur, 28px)) saturate(190%) contrast(105%);
@@ -935,82 +949,116 @@ select,
     display: inline-flex !important;
 }
 
-/* Quick Dropdown Menu - iOS 26 Liquid Glass Material */
+/* Quick Dropdown Menu - Apple macOS Sequoia Liquid Glass Material */
 .quick-dropdown-menu {
     position: absolute;
     z-index: 10000;
-    min-width: 168px;
-    background: rgba(14, 20, 32, 0.94);
-    backdrop-filter: blur(36px) saturate(210%);
-    -webkit-backdrop-filter: blur(36px) saturate(210%);
-    border: 1px solid rgba(255, 255, 255, 0.22);
+    min-width: 176px;
+    background: linear-gradient(
+        145deg,
+        rgba(30, 36, 52, 0.88) 0%,
+        rgba(18, 22, 34, 0.94) 100%
+    ) !important;
+    backdrop-filter: blur(48px) saturate(220%) contrast(106%) brightness(105%) !important;
+    -webkit-backdrop-filter: blur(48px) saturate(220%) contrast(106%) brightness(105%) !important;
+    border: 1px solid rgba(255, 255, 255, 0.18) !important;
     box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.35),
-        0 14px 38px rgba(0, 0, 0, 0.65),
-        0 4px 12px rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
-    padding: 4px;
+        inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
+        0 20px 48px rgba(0, 0, 0, 0.70),
+        0 6px 16px rgba(0, 0, 0, 0.40);
+    border-radius: 14px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    animation: dropdownPop 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+    gap: 3px;
+    animation: appleDropdownPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
-    max-height: calc(100vh - 12px);
     box-sizing: border-box;
+    overflow: hidden;
 }
 
-@keyframes dropdownPop {
-    from { opacity: 0; transform: scale(0.94) translateY(-4px); }
-    to { opacity: 1; transform: scale(1) translateY(0); }
+.quick-dropdown-menu::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 10%;
+    right: 10%;
+    height: 1.2px;
+    background: linear-gradient(
+        90deg,
+        transparent 0%,
+        rgba(255, 255, 255, 0.70) 30%,
+        rgba(255, 255, 255, 0.95) 50%,
+        rgba(255, 255, 255, 0.70) 70%,
+        transparent 100%
+    );
+    filter: blur(0.5px);
+    pointer-events: none;
+    z-index: 5;
+}
+
+@keyframes appleDropdownPop {
+    from { 
+        opacity: 0; 
+        transform: scale(0.92) translateY(-4px); 
+    }
+    to { 
+        opacity: 1; 
+        transform: scale(1) translateY(0); 
+    }
 }
 
 .dropdown-item {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     width: 100%;
-    padding: 5px 8px;
+    padding: 7px 10px;
     border: none;
     background: transparent;
-    color: rgba(255, 255, 255, 0.9);
-    font-size: 11px;
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 11.5px;
     font-weight: 600;
-    border-radius: 7px;
+    font-family: var(--font-ui);
+    letter-spacing: -0.01em;
+    border-radius: 8px;
     cursor: pointer;
     text-align: left;
-    transition: all 0.15s ease;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     box-sizing: border-box;
-    line-height: 1.2;
 }
 
 .dropdown-item i {
-    font-size: 13px;
-    color: var(--accent-color);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.85);
     flex-shrink: 0;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, color 0.15s ease;
 }
 
 .dropdown-item:hover {
-    background: rgba(255, 255, 255, 0.14);
+    background: rgba(255, 255, 255, 0.12);
     color: #ffffff;
 }
 
 .dropdown-item:hover i {
-    transform: scale(1.1);
+    transform: scale(1.12);
+    color: var(--accent-color);
 }
 
 .dropdown-divider {
     height: 1px;
-    background: rgba(255, 255, 255, 0.10);
-    margin: 2px 2px;
+    background: rgba(255, 255, 255, 0.08);
+    margin: 3px 2px;
 }
 
 .dropdown-row-actions {
     display: flex;
     align-items: center;
-    gap: 4px;
+    gap: 5px;
     width: 100%;
-    margin-top: 1px;
+    margin-top: 2px;
 }
 
 .dropdown-mini-btn {
@@ -1018,30 +1066,33 @@ select,
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 4px;
-    padding: 4px 6px;
-    border: none;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.85);
+    gap: 5px;
+    padding: 5.5px 8px;
+    border: 1px solid rgba(255, 255, 255, 0.10);
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.88);
     font-size: 10.5px;
     font-weight: 600;
-    border-radius: 6px;
+    font-family: var(--font-ui);
+    border-radius: 8px;
     cursor: pointer;
-    transition: all 0.15s ease;
-    line-height: 1.2;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.15);
 }
 
 .dropdown-mini-btn i {
-    font-size: 11.5px;
+    font-size: 12px;
 }
 
 .dropdown-mini-btn:hover {
-    background: rgba(255, 255, 255, 0.18);
+    background: rgba(255, 255, 255, 0.16);
+    border-color: rgba(255, 255, 255, 0.18);
     color: #ffffff;
 }
 
 .dropdown-mini-btn.dropdown-mini-danger:hover {
-    background: rgba(239, 68, 68, 0.32);
+    background: rgba(239, 68, 68, 0.28);
+    border-color: rgba(239, 68, 68, 0.40);
     color: #fca5a5;
 }
 
@@ -1562,33 +1613,40 @@ select,
 
 /* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
 /* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
-/* Settings Modal Overlay - iOS 26 Liquid Glass Material */
+/* Settings Popout Window - Apple macOS Sequoia Liquid Glass Floating Card */
+.settings-popout-window,
 .settings-modal {
-    position: absolute;
-    inset: 0;
+    width: 100%;
+    max-width: 520px;
+    height: 380px;
+    margin-top: 10px;
     background: linear-gradient(
         140deg,
-        rgba(32, 40, 58, 0.76) 0%,
-        rgba(18, 24, 36, 0.84) 42%,
-        rgba(12, 16, 26, 0.88) 100%
+        rgba(30, 36, 52, 0.90) 0%,
+        rgba(18, 22, 34, 0.95) 42%,
+        rgba(12, 16, 26, 0.98) 100%
     ) !important;
-    backdrop-filter: blur(48px) saturate(220%) contrast(106%) brightness(105%) !important;
-    -webkit-backdrop-filter: blur(48px) saturate(220%) contrast(106%) brightness(105%) !important;
-    border-radius: inherit;
-    border: 1px solid rgba(255, 255, 255, 0.18) !important;
+    backdrop-filter: blur(52px) saturate(220%) contrast(106%) brightness(105%) !important;
+    -webkit-backdrop-filter: blur(52px) saturate(220%) contrast(106%) brightness(105%) !important;
+    border-radius: 18px;
+    border: 1px solid rgba(255, 255, 255, 0.20) !important;
     box-shadow: 
         inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
         inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
-        0 28px 64px rgba(0, 0, 0, 0.75);
-    z-index: 100;
+        0 24px 60px rgba(0, 0, 0, 0.80),
+        0 8px 24px rgba(0, 0, 0, 0.45);
+    z-index: 1000;
     display: flex;
     flex-direction: column;
-    animation: modalIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: popoutIn 0.22s cubic-bezier(0.16, 1, 0.3, 1);
     overflow: hidden;
-    isolation: isolate;
+    position: relative;
+    box-sizing: border-box;
+    flex-shrink: 0;
 }
 
+.settings-popout-window::after,
 .settings-modal::after {
     content: '';
     position: absolute;
@@ -1609,9 +1667,15 @@ select,
     z-index: 5;
 }
 
-@keyframes modalIn {
-    from { opacity: 0; transform: scale(0.98); }
-    to { opacity: 1; transform: scale(1); }
+@keyframes popoutIn {
+    from { 
+        opacity: 0; 
+        transform: translateY(12px) scale(0.97); 
+    }
+    to { 
+        opacity: 1; 
+        transform: translateY(0) scale(1); 
+    }
 }
 
 .modal-card {
@@ -1666,28 +1730,33 @@ select,
 }
 
 .btn-close-modal {
-    background: rgba(255, 255, 255, 0.08);
-    border: 1px solid rgba(255, 255, 255, 0.14);
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.22);
-    color: rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.12);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 8px;
-    width: 26px;
-    height: 26px;
-    font-size: 13px;
+    border-radius: 50%;
+    width: 28px;
+    height: 28px;
+    font-size: 13.5px;
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    transition: all 0.15s ease;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
+    z-index: 100;
 }
 
 .btn-close-modal:hover {
     color: #ffffff;
-    background: rgba(239, 68, 68, 0.25);
-    border-color: rgba(239, 68, 68, 0.5);
-    transform: scale(1.05);
+    background: rgba(239, 68, 68, 0.35);
+    border-color: rgba(239, 68, 68, 0.55);
+    transform: scale(1.08);
+}
+
+.btn-close-modal:active {
+    transform: scale(0.94);
 }
 
 /* Settings Tabs - iOS Liquid Glass Pill Track */

@@ -995,23 +995,18 @@ document.addEventListener('click', (e) => {
 
 // Dropdown item actions
 if (dropdownItemSettings) {
-    dropdownItemSettings.addEventListener('click', () => {
+    dropdownItemSettings.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
-        if (settingsPanel) settingsPanel.classList.remove('hidden');
+        openSettings();
     });
 }
 
 if (dropdownItemResync) {
-    dropdownItemResync.addEventListener('click', () => {
+    dropdownItemResync.addEventListener('click', (e) => {
+        e.stopPropagation();
         if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
         triggerResync();
-    });
-}
-
-if (dropdownItemToggleLyrics) {
-    dropdownItemToggleLyrics.addEventListener('click', () => {
-        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
-        setOnlyLyricsMode(!isOnlyLyricsMode);
     });
 }
 
@@ -1062,15 +1057,20 @@ function setMode(compact) {
     setTimeout(() => centerActiveLineInViewport('auto'), 60);
 }
 
-// Settings Modal & Tabs
+// Settings Popout Window & Tabs
 let savedOpacityBeforeSettings = null;
 
 function openSettings() {
+    if (!settingsPanel) return;
     settingsPanel.classList.remove('hidden');
 
-    // Expand window smoothly for comfortable settings layout
+    // Expand window smoothly so music card and settings popout float together
     if (window.electronAPI) {
-        window.electronAPI.resizeWindow(480, 390);
+        if (isOnlyLyricsMode) {
+            window.electronAPI.resizeWindow(480, 510);
+        } else {
+            window.electronAPI.resizeWindow(520, 530);
+        }
     }
 
     const scrollContainer = document.querySelector('.settings-body-scroll');
@@ -1078,9 +1078,10 @@ function openSettings() {
 }
 
 function closeSettings() {
+    if (!settingsPanel) return;
     settingsPanel.classList.add('hidden');
 
-    // Restore active mode window size
+    // Restore active miniplayer card window size
     if (window.electronAPI) {
         if (isOnlyLyricsMode) {
             window.electronAPI.resizeWindow(380, 120);
@@ -1102,7 +1103,10 @@ function closeSettings() {
         }
     });
 
-    setTimeout(() => centerActiveLineInViewport('auto'), 60);
+    setTimeout(() => {
+        centerActiveLineInViewport('auto');
+        syncLoop();
+    }, 60);
 }
 
 // Robust mouse hover tracking to guarantee header visibility across all modes
@@ -1120,20 +1124,34 @@ if (appContainer) {
     });
 }
 
-btnSettings.addEventListener('click', () => {
-    if (settingsPanel.classList.contains('hidden')) {
-        openSettings();
-    } else {
-        closeSettings();
-    }
-});
+if (btnSettings) {
+    btnSettings.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (settingsPanel && settingsPanel.classList.contains('hidden')) {
+            openSettings();
+        } else {
+            closeSettings();
+        }
+    });
+}
 
-btnSettingsPill.addEventListener('click', openSettings);
-btnCloseSettings.addEventListener('click', closeSettings);
+if (btnSettingsPill) {
+    btnSettingsPill.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openSettings();
+    });
+}
+
+if (btnCloseSettings) {
+    btnCloseSettings.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeSettings();
+    });
+}
 
 // ESC key to close settings modal
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !settingsPanel.classList.contains('hidden')) {
+    if (e.key === 'Escape' && settingsPanel && !settingsPanel.classList.contains('hidden')) {
         closeSettings();
     }
 });
