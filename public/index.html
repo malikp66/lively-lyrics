@@ -81,6 +81,27 @@
             </div>
         </header>
 
+        <!-- Unified Quick Three-Dots Dropdown Menu -->
+        <div id="quick-dropdown-menu" class="quick-dropdown-menu hidden no-drag" data-tauri-drag-region="false">
+            <button class="dropdown-item" id="dropdown-item-settings">
+                <i class="ph-bold ph-gear-six"></i>
+                <span>Pengaturan</span>
+            </button>
+            <button class="dropdown-item" id="dropdown-item-toggle-lyrics">
+                <i id="dropdown-icon-lyrics" class="ph-bold ph-subtitles"></i>
+                <span id="dropdown-text-lyrics">Mode Hanya Lirik</span>
+            </button>
+            <div class="dropdown-divider"></div>
+            <button class="dropdown-item" id="dropdown-item-minimize">
+                <i class="ph-bold ph-minus"></i>
+                <span>Minimize</span>
+            </button>
+            <button class="dropdown-item dropdown-item-danger" id="dropdown-item-close">
+                <i class="ph-bold ph-x"></i>
+                <span>Tutup</span>
+            </button>
+        </div>
+
         <!-- Ghost Mode Floating Banner Notice -->
         <div id="ghost-badge" class="ghost-badge hidden">
             <span id="ghost-badge-text"><i class="ph-fill ph-ghost"></i> GHOST MODE ON &bull; Tekan <b id="ghost-shortcut-label">Ctrl+Alt+G</b> untuk keluar</span>
@@ -500,16 +521,10 @@
                         <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
                     </div>
 
-                    <!-- Application Controls in Song Detail Top-Right -->
+                    <!-- Application Options Dropdown Trigger in Song Detail Top-Right -->
                     <div class="player-header-actions no-drag" data-tauri-drag-region="false">
-                        <button id="btn-settings" class="panel-btn-action" title="Pengaturan & Penampilan">
-                            <i class="ph-bold ph-gear-six"></i>
-                        </button>
-                        <button id="btn-minimize" class="panel-btn-action" title="Minimize">
-                            <i class="ph-bold ph-minus"></i>
-                        </button>
-                        <button id="btn-close" class="panel-btn-action panel-btn-close" title="Tutup">
-                            <i class="ph-bold ph-x"></i>
+                        <button id="btn-three-dots-player" class="panel-btn-action" title="Menu Opsi (Pengaturan, Mode, Minimize, Tutup)">
+                            <i class="ph-bold ph-dots-three-vertical"></i>
                         </button>
                     </div>
                 </div>
@@ -565,6 +580,11 @@
                 <!-- Floating Button to Expand Left Panel when Collapsed -->
                 <button id="btn-expand-player" class="btn-expand-floating hidden no-drag" title="Tampilkan Panel Lagu">
                     <i class="ph-bold ph-sidebar-simple"></i>
+                </button>
+
+                <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
+                <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
+                    <i class="ph-bold ph-dots-three-vertical"></i>
                 </button>
                 <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
                     <div class="stage-placeholder">

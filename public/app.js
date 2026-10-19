@@ -87,6 +87,18 @@ const btnCompact = document.getElementById('btn-compact');
 const btnSettings = document.getElementById('btn-settings');
 const btnMinimize = document.getElementById('btn-minimize');
 const btnClose = document.getElementById('btn-close');
+
+// Three Dots & Dropdown Menu Elements
+const btnThreeDotsPlayer = document.getElementById('btn-three-dots-player');
+const btnThreeDotsLyrics = document.getElementById('btn-three-dots-lyrics');
+const quickDropdownMenu = document.getElementById('quick-dropdown-menu');
+const dropdownItemSettings = document.getElementById('dropdown-item-settings');
+const dropdownItemToggleLyrics = document.getElementById('dropdown-item-toggle-lyrics');
+const dropdownIconLyrics = document.getElementById('dropdown-icon-lyrics');
+const dropdownTextLyrics = document.getElementById('dropdown-text-lyrics');
+const dropdownItemMinimize = document.getElementById('dropdown-item-minimize');
+const dropdownItemClose = document.getElementById('dropdown-item-close');
+
 const btnPlayPause = document.getElementById('btn-playpause');
 const playIcon = document.getElementById('play-icon');
 const pauseIcon = document.getElementById('pause-icon');
@@ -546,18 +558,20 @@ function centerActiveLineInViewport(behavior = 'smooth') {
     const activeEl = document.getElementById(`line-${activeLineIndex}`);
     if (!activeEl || !lyricsViewport) return;
 
+    const viewportHeight = lyricsViewport.clientHeight;
+    if (viewportHeight <= 0) return;
+
+    const activeTop = activeEl.offsetTop;
+    const activeHeight = activeEl.offsetHeight;
+    const targetScrollTop = activeTop - (viewportHeight / 2) + (activeHeight / 2);
+
     try {
-        activeEl.scrollIntoView({
-            behavior: behavior,
-            block: 'center',
-            inline: 'nearest'
+        lyricsViewport.scrollTo({
+            top: Math.max(0, targetScrollTop),
+            behavior: behavior
         });
     } catch (e) {
-        const containerHeight = lyricsViewport.clientHeight;
-        if (containerHeight > 0) {
-            const targetTop = Math.max(0, activeEl.offsetTop - (containerHeight / 2) + (activeEl.clientHeight / 2));
-            lyricsViewport.scrollTop = targetTop;
-        }
+        lyricsViewport.scrollTop = Math.max(0, targetScrollTop);
     }
 }
 
@@ -724,17 +738,23 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Only Lyrics Mode Toggle
-btnOnlyLyrics.addEventListener('click', () => {
-    setOnlyLyricsMode(!isOnlyLyricsMode);
-});
+if (btnOnlyLyrics) {
+    btnOnlyLyrics.addEventListener('click', () => {
+        setOnlyLyricsMode(!isOnlyLyricsMode);
+    });
+}
 
-btnExitOnlyLyrics.addEventListener('click', () => {
-    setOnlyLyricsMode(false);
-});
+if (btnExitOnlyLyrics) {
+    btnExitOnlyLyrics.addEventListener('click', () => {
+        setOnlyLyricsMode(false);
+    });
+}
 
-toggleOnlyLyricsSetting.addEventListener('change', (e) => {
-    setOnlyLyricsMode(e.target.checked);
-});
+if (toggleOnlyLyricsSetting) {
+    toggleOnlyLyricsSetting.addEventListener('change', (e) => {
+        setOnlyLyricsMode(e.target.checked);
+    });
+}
 
 function setOnlyLyricsMode(enabled) {
     isOnlyLyricsMode = enabled;
@@ -746,10 +766,33 @@ function setOnlyLyricsMode(enabled) {
     if (onlyLyricsExitPill) onlyLyricsExitPill.classList.toggle('hidden', !enabled);
     if (normalWindowActions) normalWindowActions.classList.toggle('hidden', enabled);
 
+    // Toggle visibility of three dots button in only-lyrics mode
+    if (btnThreeDotsLyrics) {
+        btnThreeDotsLyrics.classList.toggle('hidden', !enabled);
+    }
+
+    // Update Dropdown Menu Item label & icon
+    if (dropdownTextLyrics) {
+        dropdownTextLyrics.textContent = enabled ? 'Kembali ke Mode Normal' : 'Mode Hanya Lirik';
+    }
+    if (dropdownIconLyrics) {
+        dropdownIconLyrics.className = enabled ? 'ph-bold ph-arrows-out-simple' : 'ph-bold ph-subtitles';
+    }
+
+    // Close any open dropdown menu
+    if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+
     if (enabled) {
         if (window.electronAPI) window.electronAPI.resizeWindow(380, 120);
     } else {
-        if (window.electronAPI) window.electronAPI.resizeWindow(520, 140);
+        const targetWidth = isPlayerPanelCollapsed ? 350 : 520;
+        if (window.electronAPI) {
+            window.electronAPI.resizeWindow(targetWidth, 140);
+            window.electronAPI.setAlwaysOnTop(isAlwaysOnTop);
+        }
+        if (!isPlayerPanelCollapsed && trackHeaderCard) {
+            trackHeaderCard.classList.remove('collapsed');
+        }
     }
 
     // Re-center active lyric line immediately after layout/resize settles
@@ -760,6 +803,79 @@ function setOnlyLyricsMode(enabled) {
     setTimeout(() => {
         centerActiveLineInViewport('smooth');
     }, 180);
+}
+
+// Quick Three-Dots Dropdown Interaction
+function toggleQuickDropdown(anchorBtn) {
+    if (!quickDropdownMenu) return;
+    const isCurrentlyOpen = !quickDropdownMenu.classList.contains('hidden');
+    if (isCurrentlyOpen) {
+        quickDropdownMenu.classList.add('hidden');
+        return;
+    }
+
+    const containerRect = appContainer.getBoundingClientRect();
+    const btnRect = anchorBtn.getBoundingClientRect();
+
+    const top = btnRect.bottom - containerRect.top + 5;
+    const rightOffset = containerRect.right - btnRect.right;
+
+    quickDropdownMenu.style.top = `${top}px`;
+    quickDropdownMenu.style.right = `${Math.max(8, rightOffset)}px`;
+    quickDropdownMenu.style.left = 'auto';
+
+    quickDropdownMenu.classList.remove('hidden');
+}
+
+if (btnThreeDotsPlayer) {
+    btnThreeDotsPlayer.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleQuickDropdown(btnThreeDotsPlayer);
+    });
+}
+
+if (btnThreeDotsLyrics) {
+    btnThreeDotsLyrics.addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleQuickDropdown(btnThreeDotsLyrics);
+    });
+}
+
+// Close dropdown on outside click
+document.addEventListener('click', (e) => {
+    if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) return;
+    if (!quickDropdownMenu.contains(e.target) && e.target !== btnThreeDotsPlayer && e.target !== btnThreeDotsLyrics) {
+        quickDropdownMenu.classList.add('hidden');
+    }
+});
+
+// Dropdown item actions
+if (dropdownItemSettings) {
+    dropdownItemSettings.addEventListener('click', () => {
+        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        if (settingsPanel) settingsPanel.classList.remove('hidden');
+    });
+}
+
+if (dropdownItemToggleLyrics) {
+    dropdownItemToggleLyrics.addEventListener('click', () => {
+        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        setOnlyLyricsMode(!isOnlyLyricsMode);
+    });
+}
+
+if (dropdownItemMinimize) {
+    dropdownItemMinimize.addEventListener('click', () => {
+        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        if (window.electronAPI) window.electronAPI.minimizeWindow();
+    });
+}
+
+if (dropdownItemClose) {
+    dropdownItemClose.addEventListener('click', () => {
+        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        if (window.electronAPI) window.electronAPI.closeWindow();
+    });
 }
 
 if (btnCloseOnlyLyrics) {

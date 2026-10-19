@@ -278,7 +278,7 @@ pub async fn fetch_lyrics(
             req = req.header(*k, *v);
         }
 
-        if let Ok(res) = req.timeout(Duration::from_secs(3)).send().await {
+        if let Ok(res) = req.timeout(Duration::from_secs(8)).send().await {
             if res.status().is_success() {
                 if let Ok(list) = res.json::<Vec<LrclibTrack>>().await {
                     for item in list {
@@ -321,7 +321,7 @@ pub async fn fetch_lyrics(
                 req = req.header(*k, *v);
             }
 
-            if let Ok(res) = req.timeout(Duration::from_secs(3)).send().await {
+            if let Ok(res) = req.timeout(Duration::from_secs(8)).send().await {
                 if res.status().is_success() {
                     if let Ok(track) = res.json::<LrclibTrack>().await {
                         collected_tracks.push(track);

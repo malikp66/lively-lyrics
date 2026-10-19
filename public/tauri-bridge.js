@@ -153,7 +153,8 @@
             target.closest('.scrubber-bar-container') ||
             target.closest('.scrubber-track') ||
             target.closest('.scrubber-progress') ||
-            target.closest('.live-eq')
+            target.closest('.live-eq') ||
+            target.closest('.quick-dropdown-menu')
         ) {
             return;
         }
