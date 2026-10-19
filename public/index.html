@@ -85,18 +85,20 @@
                 <span>Sync Ulang (Ctrl+R)</span>
             </button>
             <button class="dropdown-item" id="dropdown-item-toggle-lyrics">
-                <i id="dropdown-icon-lyrics" class="ph-bold ph-subtitles"></i>
+                <i id="dropdown-icon-lyrics" class="ph-bold ph-microphone"></i>
                 <span id="dropdown-text-lyrics">Mode Hanya Lirik</span>
             </button>
             <div class="dropdown-divider"></div>
-            <button class="dropdown-item" id="dropdown-item-minimize">
-                <i class="ph-bold ph-minus"></i>
-                <span>Minimize</span>
-            </button>
-            <button class="dropdown-item dropdown-item-danger" id="dropdown-item-close">
-                <i class="ph-bold ph-x"></i>
-                <span>Tutup</span>
-            </button>
+            <div class="dropdown-row-actions">
+                <button class="dropdown-mini-btn" id="dropdown-item-minimize" title="Minimize Jendela">
+                    <i class="ph-bold ph-minus"></i>
+                    <span>Minimize</span>
+                </button>
+                <button class="dropdown-mini-btn dropdown-mini-danger" id="dropdown-item-close" title="Tutup Aplikasi">
+                    <i class="ph-bold ph-x"></i>
+                    <span>Tutup</span>
+                </button>
+            </div>
         </div>
 
         <!-- Ghost Mode Floating Banner Notice -->
@@ -138,26 +140,56 @@
                     <!-- Glass Background Style Preset -->
                     <div class="setting-row">
                         <div class="setting-label">
-                            <span>Gaya Kaca Latar Belakang</span>
+                            <span>Mode Latar Belakang Jendela</span>
                         </div>
                         <div class="segmented-control" id="bg-style-control">
                             <button class="bg-style-btn active" data-bgstyle="liquid">Liquid Glass</button>
-                            <button class="bg-style-btn" data-bgstyle="frosted">Frosted</button>
-                            <button class="bg-style-btn" data-bgstyle="obsidian">Obsidian</button>
+                            <button class="bg-style-btn" data-bgstyle="solid">Warna Solid</button>
+                            <button class="bg-style-btn" data-bgstyle="gradient">Gradien Estetik</button>
                             <button class="bg-style-btn" data-bgstyle="minimal">Minimal</button>
-                            <button class="bg-style-btn" data-bgstyle="custom">Custom</button>
                         </div>
                     </div>
 
-                    <!-- Custom Tint Color Picker (Reveals when 'custom' selected or usable anytime) -->
-                    <div class="setting-row" id="row-bg-custom-tint">
+                    <!-- Panel Opsi Warna Solid (Muncul saat 'solid' dipilih) -->
+                    <div class="setting-row" id="row-bg-solid-options">
                         <div class="setting-label">
-                            <span>Warna Tint Kaca Kustom</span>
-                            <span id="bg-color-hex" class="setting-tag monospace">#0f172a</span>
+                            <span>Warna Solid Elegan</span>
+                            <span id="solid-color-hex-val" class="setting-tag monospace">#070a12</span>
                         </div>
-                        <div class="color-picker-row">
-                            <input type="color" id="bg-custom-color" value="#0f172a" class="color-input">
-                            <span class="color-picker-hint">Pilih warna latar belakang favorit Anda</span>
+                        <div class="theme-picker-row">
+                            <div class="segmented-control" style="flex: 1;" id="solid-preset-control">
+                                <button class="solid-preset-btn active" data-solidcolor="#05070c">OLED Black</button>
+                                <button class="solid-preset-btn" data-solidcolor="#0f172a">Slate</button>
+                                <button class="solid-preset-btn" data-solidcolor="#131127">Midnight</button>
+                                <button class="solid-preset-btn" data-solidcolor="#081a14">Forest</button>
+                                <button class="solid-preset-btn" data-solidcolor="#1e0a17">Wine</button>
+                            </div>
+                            <div class="custom-color-pill" title="Pilih Warna Solid Bebas">
+                                <input type="color" id="bg-custom-solid-color" value="#05070c" class="color-input-mini">
+                                <span>Custom</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Panel Opsi Gradien Estetik & Tombol Acak (Muncul saat 'gradient' dipilih) -->
+                    <div class="setting-row" id="row-bg-gradient-options">
+                        <div class="setting-label">
+                            <span>Gradien Warna Estetik</span>
+                            <span id="gradient-name-val" class="setting-tag">Aurora Glow</span>
+                        </div>
+                        <div class="gradient-control-group">
+                            <button id="btn-random-gradient" class="btn-gradient-shuffle" type="button">
+                                <i class="ph-bold ph-shuffle"></i>
+                                <span>🎲 Acak Gradien Keren</span>
+                            </button>
+                            <div class="gradient-chips-grid" id="gradient-chips-container">
+                                <button class="gradient-chip active" data-gradient-idx="0" title="Aurora Glow" style="background: linear-gradient(135deg, #09203f 0%, #1e453e 50%, #14352a 100%);"></button>
+                                <button class="gradient-chip" data-gradient-idx="1" title="Neon Cyber" style="background: linear-gradient(135deg, #120e38 0%, #1a2550 50%, #0d3b48 100%);"></button>
+                                <button class="gradient-chip" data-gradient-idx="2" title="Sunset Velvet" style="background: linear-gradient(135deg, #2e1026 0%, #4a1936 50%, #662243 100%);"></button>
+                                <button class="gradient-chip" data-gradient-idx="3" title="Deep Ocean" style="background: linear-gradient(135deg, #071b26 0%, #0d2b3a 50%, #143642 100%);"></button>
+                                <button class="gradient-chip" data-gradient-idx="4" title="Cosmic Purple" style="background: linear-gradient(135deg, #190a2c 0%, #291244 50%, #3d1b5a 100%);"></button>
+                                <button class="gradient-chip" data-gradient-idx="5" title="Nordic Night" style="background: linear-gradient(135deg, #101726 0%, #16243b 50%, #1e3352 100%);"></button>
+                            </div>
                         </div>
                     </div>
 
@@ -524,14 +556,14 @@
                     </div>
                 </div>
 
-                <!-- Row 2: Scrubber Timeline Bar (03:33 === -01:24) -->
+                <!-- Row 2: Scrubber Timeline Bar -->
                 <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
                     <span id="current-time" class="time-stamp">00:00</span>
-                    <div class="scrubber-track">
+                    <div class="scrubber-track" id="scrubber-track">
                         <div class="scrubber-progress" id="scrubber-progress"></div>
+                        <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
                     </div>
-                    <span id="total-duration" class="time-stamp">-00:00</span>
-                    <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
+                    <span id="total-duration" class="time-stamp" title="Klik untuk beralih Total Durasi / Sisa Waktu">00:00</span>
                 </div>
 
                 <!-- Row 3: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->

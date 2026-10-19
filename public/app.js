@@ -20,6 +20,9 @@ let userFontSize = localStorage.getItem('lyric_font_size') || 'medium';
 let userAlign = localStorage.getItem('lyric_align') || 'center';
 let userBgStyle = localStorage.getItem('lyric_bg_style') || 'liquid';
 let userCustomBgColor = localStorage.getItem('lyric_custom_bg_color') || '#0f172a';
+let userSolidColor = localStorage.getItem('lyric_solid_color') || '#05070c';
+let userGradientIndex = parseInt(localStorage.getItem('lyric_gradient_index') || '0', 10);
+let showRemainingDuration = localStorage.getItem('show_remaining_duration') === 'true';
 let userWindowBlur = localStorage.getItem('lyric_window_blur') || '28';
 let userFontFamily = localStorage.getItem('lyric_font_family') || 'jakarta';
 let userFontWeight = localStorage.getItem('lyric_font_weight') || '700';
@@ -36,6 +39,22 @@ let isOnlyLyricsMode = localStorage.getItem('only_lyrics_mode') === 'true';
 let autoHideControls = localStorage.getItem('autohide_controls') !== 'false';
 let ambientGlowEnabled = localStorage.getItem('ambient_glow') !== 'false';
 let isAlwaysOnTop = true;
+
+// Aesthetic Gradient Presets (for solid randomizing and chips)
+const aestheticGradients = [
+    { name: 'Aurora Glow', css: 'linear-gradient(135deg, #09203f 0%, #1e453e 50%, #14352a 100%)' },
+    { name: 'Neon Cyber', css: 'linear-gradient(135deg, #120e38 0%, #1a2550 50%, #0d3b48 100%)' },
+    { name: 'Sunset Velvet', css: 'linear-gradient(135deg, #2e1026 0%, #4a1936 50%, #662243 100%)' },
+    { name: 'Deep Ocean', css: 'linear-gradient(135deg, #071b26 0%, #0d2b3a 50%, #143642 100%)' },
+    { name: 'Cosmic Purple', css: 'linear-gradient(135deg, #190a2c 0%, #291244 50%, #3d1b5a 100%)' },
+    { name: 'Nordic Night', css: 'linear-gradient(135deg, #101726 0%, #16243b 50%, #1e3352 100%)' },
+    { name: 'Electric Violet', css: 'linear-gradient(135deg, #2b1055 0%, #4c1d95 50%, #7597de 100%)' },
+    { name: 'Midnight Emerald', css: 'linear-gradient(135deg, #022c22 0%, #064e3b 50%, #0f766e 100%)' },
+    { name: 'Crimson Ember', css: 'linear-gradient(135deg, #450a0a 0%, #7f1d1d 50%, #991b1b 100%)' },
+    { name: 'Abyssal Blue', css: 'linear-gradient(135deg, #030712 0%, #0c4a6e 50%, #0284c7 100%)' },
+    { name: 'Twilight Rose', css: 'linear-gradient(135deg, #4c0519 0%, #831843 50%, #db2777 100%)' },
+    { name: 'Golden Nebula', css: 'linear-gradient(135deg, #1c1917 0%, #451a03 50%, #78350f 100%)' }
+];
 
 // Available Fonts Configuration
 const availableFonts = ['jakarta', 'inter', 'outfit', 'playfair', 'mono'];
@@ -64,6 +83,7 @@ const artistNameEl = document.getElementById('artist-name');
 const playbackBadge = document.getElementById('playback-status-badge');
 const scrubberProgress = document.getElementById('scrubber-progress');
 const scrubberContainer = document.getElementById('scrubber-container');
+const scrubberTrack = document.getElementById('scrubber-track');
 const currentTimeEl = document.getElementById('current-time');
 const totalDurationEl = document.getElementById('total-duration');
 const lyricsViewport = document.getElementById('lyrics-viewport');
@@ -164,6 +184,14 @@ const textForceResync = document.getElementById('text-force-resync');
 
 // New Appearance Customization Elements
 const bgStyleBtns = document.querySelectorAll('.bg-style-btn');
+const rowBgSolidOptions = document.getElementById('row-bg-solid-options');
+const rowBgGradientOptions = document.getElementById('row-bg-gradient-options');
+const solidPresetBtns = document.querySelectorAll('.solid-preset-btn');
+const bgCustomSolidColor = document.getElementById('bg-custom-solid-color');
+const solidColorHexVal = document.getElementById('solid-color-hex-val');
+const btnRandomGradient = document.getElementById('btn-random-gradient');
+const gradientChipsContainer = document.getElementById('gradient-chips-container');
+const gradientNameVal = document.getElementById('gradient-name-val');
 const bgCustomColor = document.getElementById('bg-custom-color');
 const bgColorHex = document.getElementById('bg-color-hex');
 const blurSlider = document.getElementById('blur-slider');
@@ -276,6 +304,8 @@ function applySavedPreferences() {
         try { setInactiveTextColor(userInactiveColor); } catch (e) {}
         try { setBgStyle(userBgStyle); } catch (e) {}
         try { setCustomBgColor(userCustomBgColor); } catch (e) {}
+        try { setSolidColor(userSolidColor); } catch (e) {}
+        try { setGradientIndex(userGradientIndex); } catch (e) {}
         try { setWindowBlur(userWindowBlur); } catch (e) {}
         try { setFontFamily(userFontFamily); } catch (e) {}
         try { setFontSize(userFontSize); } catch (e) {}
@@ -556,8 +586,12 @@ function syncLoop() {
         scrubberProgress.style.width = `${progressPercent}%`;
         currentTimeEl.textContent = formatTime(currentPos);
         if (currentMedia.duration > 0) {
-            const remaining = Math.max(0, currentMedia.duration - currentPos);
-            totalDurationEl.textContent = `-${formatTime(remaining)}`;
+            if (showRemainingDuration) {
+                const remaining = Math.max(0, currentMedia.duration - currentPos);
+                totalDurationEl.textContent = `-${formatTime(remaining)}`;
+            } else {
+                totalDurationEl.textContent = formatTime(currentMedia.duration);
+            }
         }
 
         if (currentLyrics && currentLyrics.hasSynced && currentLyrics.lines.length > 0) {
@@ -630,11 +664,13 @@ function updateActiveLine(newIdx) {
     }
 }
 
-// Scrubber Hover Tooltip
-if (scrubberContainer && scrubberTooltip) {
-    scrubberContainer.addEventListener('mousemove', (e) => {
+// Scrubber Hover Tooltip (Attached directly to track for pixel-perfect timing)
+const activeScrubberTrack = scrubberTrack || scrubberContainer;
+if (activeScrubberTrack && scrubberTooltip) {
+    activeScrubberTrack.addEventListener('mousemove', (e) => {
         if (!currentMedia || !currentMedia.duration) return;
-        const rect = scrubberContainer.getBoundingClientRect();
+        const rect = activeScrubberTrack.getBoundingClientRect();
+        if (rect.width <= 0) return;
         const hoverX = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
         const percent = hoverX / rect.width;
         const hoverTime = percent * currentMedia.duration;
@@ -644,23 +680,38 @@ if (scrubberContainer && scrubberTooltip) {
         scrubberTooltip.classList.remove('hidden');
     });
 
-    scrubberContainer.addEventListener('mouseleave', () => {
+    activeScrubberTrack.addEventListener('mouseleave', () => {
         scrubberTooltip.classList.add('hidden');
     });
 }
 
-// Scrubber Click
-scrubberContainer.addEventListener('click', (e) => {
-    if (!currentMedia || !currentMedia.duration || !window.electronAPI) return;
-    const rect = scrubberContainer.getBoundingClientRect();
-    const clickX = e.clientX - rect.left;
-    const percent = Math.max(0, Math.min(1, clickX / rect.width));
-    const targetSeconds = percent * currentMedia.duration;
+// Scrubber Click & Seek (Accurate from 0:00 to 100% of duration)
+if (activeScrubberTrack) {
+    activeScrubberTrack.addEventListener('click', (e) => {
+        if (!currentMedia || !currentMedia.duration || !window.electronAPI) return;
+        const rect = activeScrubberTrack.getBoundingClientRect();
+        if (rect.width <= 0) return;
+        const clickX = Math.max(0, Math.min(rect.width, e.clientX - rect.left));
+        const percent = Math.max(0, Math.min(1, clickX / rect.width));
+        const targetSeconds = percent * currentMedia.duration;
 
-    window.electronAPI.controlMedia('seek', { position: targetSeconds });
-    lastKnownPosition = targetSeconds;
-    lastKnownTime = Date.now();
-});
+        window.electronAPI.controlMedia('seek', { position: targetSeconds });
+        lastKnownPosition = targetSeconds;
+        lastKnownTime = Date.now();
+        syncLoop();
+    });
+}
+
+// Click Total Duration to toggle Remaining / Total Duration
+if (totalDurationEl) {
+    totalDurationEl.style.cursor = 'pointer';
+    totalDurationEl.title = 'Klik untuk ganti durasi penuh / sisa waktu';
+    totalDurationEl.addEventListener('click', () => {
+        showRemainingDuration = !showRemainingDuration;
+        localStorage.setItem('show_remaining_duration', showRemainingDuration);
+        syncLoop();
+    });
+}
 
 // Media Control Buttons
 btnPlayPause.addEventListener('click', () => {
@@ -859,8 +910,8 @@ function toggleQuickDropdown(anchorBtn) {
     const btnRect = anchorBtn.getBoundingClientRect();
 
     if (anchorBtn === btnThreeDotsPlayer) {
-        // Tampilkan ke ATAS tombol dock di pojok kiri bawah
-        const bottomOffset = containerRect.bottom - btnRect.top + 6;
+        // Tampilkan ke ATAS tombol dock di pojok kiri bawah (anti-cutoff)
+        const bottomOffset = Math.max(34, containerRect.bottom - btnRect.top + 4);
         const leftOffset = Math.max(8, btnRect.left - containerRect.left);
         quickDropdownMenu.style.top = 'auto';
         quickDropdownMenu.style.bottom = `${bottomOffset}px`;
@@ -868,7 +919,7 @@ function toggleQuickDropdown(anchorBtn) {
         quickDropdownMenu.style.right = 'auto';
     } else {
         // Tampilkan ke BAWAH tombol floating lyrics di pojok kanan atas
-        const topOffset = btnRect.bottom - containerRect.top + 6;
+        const topOffset = Math.max(6, btnRect.bottom - containerRect.top + 4);
         const rightOffset = Math.max(8, containerRect.right - btnRect.right);
         quickDropdownMenu.style.top = `${topOffset}px`;
         quickDropdownMenu.style.bottom = 'auto';
@@ -1193,12 +1244,93 @@ bgStyleBtns.forEach(btn => {
 });
 
 function setBgStyle(style) {
-    userBgStyle = style;
-    localStorage.setItem('lyric_bg_style', style);
-    bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === style));
-    bodyEl.classList.remove('bg-liquid', 'bg-frosted', 'bg-obsidian', 'bg-minimal', 'bg-custom');
-    bodyEl.classList.add(`bg-${style}`);
+    userBgStyle = style || 'liquid';
+    localStorage.setItem('lyric_bg_style', userBgStyle);
+    bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === userBgStyle));
+
+    bodyEl.classList.remove('bg-liquid', 'bg-solid', 'bg-gradient', 'bg-frosted', 'bg-obsidian', 'bg-minimal', 'bg-custom');
+    bodyEl.classList.add(`bg-${userBgStyle}`);
+
+    // Show/hide sub-option panels based on selected background mode
+    if (rowBgSolidOptions) {
+        rowBgSolidOptions.style.display = (userBgStyle === 'solid') ? 'flex' : 'none';
+    }
+    if (rowBgGradientOptions) {
+        rowBgGradientOptions.style.display = (userBgStyle === 'gradient') ? 'flex' : 'none';
+    }
 }
+
+// Solid Color Mode Presets & Custom Picker
+function setSolidColor(hex) {
+    if (!hex) return;
+    userSolidColor = hex;
+    localStorage.setItem('lyric_solid_color', hex);
+    document.documentElement.style.setProperty('--active-solid-color', hex);
+    if (solidColorHexVal) solidColorHexVal.textContent = hex;
+    if (bgCustomSolidColor) bgCustomSolidColor.value = hex;
+
+    solidPresetBtns.forEach(btn => {
+        const btnHex = btn.dataset.solidcolor || btn.dataset.solid;
+        btn.classList.toggle('active', btnHex && btnHex.toLowerCase() === hex.toLowerCase());
+    });
+}
+
+solidPresetBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+        const color = btn.dataset.solidcolor || btn.dataset.solid;
+        if (color) setSolidColor(color);
+    });
+});
+
+if (bgCustomSolidColor) {
+    bgCustomSolidColor.addEventListener('input', (e) => {
+        setSolidColor(e.target.value);
+    });
+}
+
+// Aesthetic Gradient Mode & Random Shuffler
+function setGradientIndex(idx) {
+    if (idx < 0 || idx >= aestheticGradients.length) idx = 0;
+    userGradientIndex = idx;
+    localStorage.setItem('lyric_gradient_index', idx);
+
+    const grad = aestheticGradients[idx];
+    document.documentElement.style.setProperty('--active-gradient-color', grad.css);
+    if (gradientNameVal) gradientNameVal.textContent = grad.name;
+
+    const chips = document.querySelectorAll('.gradient-chip');
+    chips.forEach(chip => {
+        const chipIdx = parseInt(chip.dataset.gradientIdx, 10);
+        chip.classList.toggle('active', chipIdx === idx);
+    });
+}
+
+function shuffleRandomGradient() {
+    let nextIdx = Math.floor(Math.random() * aestheticGradients.length);
+    if (nextIdx === userGradientIndex && aestheticGradients.length > 1) {
+        nextIdx = (nextIdx + 1) % aestheticGradients.length;
+    }
+    setGradientIndex(nextIdx);
+
+    if (btnRandomGradient) {
+        btnRandomGradient.classList.remove('pulse');
+        void btnRandomGradient.offsetWidth;
+        btnRandomGradient.classList.add('pulse');
+        setTimeout(() => btnRandomGradient.classList.remove('pulse'), 400);
+    }
+}
+
+if (btnRandomGradient) {
+    btnRandomGradient.addEventListener('click', shuffleRandomGradient);
+}
+
+// Wire pre-rendered gradient chips in index.html
+document.querySelectorAll('.gradient-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const idx = parseInt(chip.dataset.gradientIdx, 10);
+        if (!isNaN(idx)) setGradientIndex(idx);
+    });
+});
 
 // Custom Tint Background Color
 if (bgCustomColor) {

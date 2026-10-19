@@ -191,25 +191,120 @@ body.bg-liquid .app-container::after {
     z-index: 2;
 }
 
-body.bg-liquid .app-container.mode-only-lyrics {
-    border-radius: var(--radius-window) !important;
+body.bg-liquid .app-container {
+    background: var(--bg-liquid-gradient) !important;
+    backdrop-filter: blur(var(--window-blur, 36px)) saturate(215%) brightness(105%) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur, 36px)) saturate(215%) brightness(105%) !important;
 }
 
-body.bg-frosted .app-container,
-body.bg-frosted .app-container.mode-only-lyrics {
-    background: var(--bg-glass-gradient) !important;
+body.bg-solid .app-container {
+    background: var(--active-solid-color, #05070c) !important;
+    backdrop-filter: blur(var(--window-blur, 20px)) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur, 20px)) !important;
 }
-body.bg-obsidian .app-container,
-body.bg-obsidian .app-container.mode-only-lyrics {
-    background: linear-gradient(135deg, rgba(22, 28, 42, 0.55) 0%, rgba(8, 10, 16, 0.88) 100%) !important;
+
+body.bg-solid .ambient-backdrop {
+    opacity: 0.1 !important;
 }
-body.bg-minimal .app-container,
-body.bg-minimal .app-container.mode-only-lyrics {
-    background: rgba(14, 18, 28, 0.35) !important;
+
+body.bg-gradient .app-container {
+    background: var(--active-gradient-color, linear-gradient(135deg, #09203f 0%, #1e453e 50%, #14352a 100%)) !important;
+    backdrop-filter: blur(var(--window-blur, 22px)) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur, 22px)) saturate(180%) !important;
 }
-body.bg-custom .app-container,
-body.bg-custom .app-container.mode-only-lyrics {
-    background: var(--custom-bg-color, rgba(15, 23, 42, 0.65)) !important;
+
+body.bg-gradient .ambient-backdrop {
+    opacity: 0.12 !important;
+}
+
+body.bg-minimal .app-container {
+    background: rgba(12, 16, 24, 0.45) !important;
+    backdrop-filter: blur(var(--window-blur, 20px)) !important;
+    -webkit-backdrop-filter: blur(var(--window-blur, 20px)) !important;
+}
+
+/* Background Customization Controls */
+.solid-preset-btn {
+    flex: 1;
+    padding: 6px 4px;
+    font-size: 10.5px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+}
+
+.solid-preset-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.solid-preset-btn.active {
+    background: rgba(255, 255, 255, 0.18);
+    color: #ffffff;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+}
+
+.gradient-control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.btn-gradient-shuffle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 8px 12px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, rgba(30, 215, 96, 0.22) 0%, rgba(34, 211, 238, 0.22) 100%);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-gradient-shuffle:hover {
+    background: linear-gradient(135deg, rgba(30, 215, 96, 0.35) 0%, rgba(34, 211, 238, 0.35) 100%);
+    box-shadow: 0 4px 16px var(--accent-glow);
+    transform: translateY(-1px);
+}
+
+.gradient-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 6px;
+    width: 100%;
+}
+
+.gradient-chip {
+    height: 24px;
+    border-radius: 6px;
+    border: 1.5px solid rgba(255, 255, 255, 0.22);
+    cursor: pointer;
+    transition: all 0.18s ease;
+    padding: 0;
+}
+
+.gradient-chip:hover {
+    transform: scale(1.08);
+    border-color: #ffffff;
+}
+
+.gradient-chip.active {
+    border-color: var(--accent-color);
+    box-shadow: 0 0 10px var(--accent-glow);
+    transform: scale(1.05);
 }
 
 * {
@@ -844,22 +939,24 @@ select,
 .quick-dropdown-menu {
     position: absolute;
     z-index: 10000;
-    min-width: 175px;
-    background: rgba(16, 22, 34, 0.94);
-    backdrop-filter: blur(28px) saturate(200%);
-    -webkit-backdrop-filter: blur(28px) saturate(200%);
-    border: 1px solid rgba(255, 255, 255, 0.18);
+    min-width: 172px;
+    background: rgba(14, 20, 32, 0.88);
+    backdrop-filter: blur(36px) saturate(210%);
+    -webkit-backdrop-filter: blur(36px) saturate(210%);
+    border: 1px solid rgba(255, 255, 255, 0.20);
     box-shadow: 
         inset 0 1px 0 rgba(255, 255, 255, 0.35),
         0 14px 38px rgba(0, 0, 0, 0.65),
         0 4px 12px rgba(0, 0, 0, 0.4);
-    border-radius: 12px;
+    border-radius: 14px;
     padding: 5px;
     display: flex;
     flex-direction: column;
     gap: 2px;
     animation: dropdownPop 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     user-select: none;
+    -webkit-mask-image: -webkit-radial-gradient(white, black);
+    mask-image: radial-gradient(white, black);
 }
 
 @keyframes dropdownPop {
@@ -870,13 +967,13 @@ select,
 .dropdown-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 9px;
     width: 100%;
-    padding: 7px 10px;
+    padding: 6px 9px;
     border: none;
     background: transparent;
     color: rgba(255, 255, 255, 0.88);
-    font-size: 11.5px;
+    font-size: 11px;
     font-weight: 600;
     border-radius: 8px;
     cursor: pointer;
@@ -886,9 +983,10 @@ select,
 }
 
 .dropdown-item i {
-    font-size: 14px;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 13.5px;
+    color: var(--accent-color);
     flex-shrink: 0;
+    transition: transform 0.15s ease;
 }
 
 .dropdown-item:hover {
@@ -897,22 +995,52 @@ select,
 }
 
 .dropdown-item:hover i {
-    color: #ffffff;
-}
-
-.dropdown-item.dropdown-item-danger:hover {
-    background: rgba(239, 68, 68, 0.28);
-    color: #fca5a5;
-}
-
-.dropdown-item.dropdown-item-danger:hover i {
-    color: #fca5a5;
+    transform: scale(1.1);
 }
 
 .dropdown-divider {
     height: 1px;
     background: rgba(255, 255, 255, 0.10);
-    margin: 3px 0;
+    margin: 3px 2px;
+}
+
+.dropdown-row-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    width: 100%;
+    margin-top: 1px;
+}
+
+.dropdown-mini-btn {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    padding: 5px 6px;
+    border: none;
+    background: rgba(255, 255, 255, 0.07);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 10.5px;
+    font-weight: 600;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.dropdown-mini-btn i {
+    font-size: 12px;
+}
+
+.dropdown-mini-btn:hover {
+    background: rgba(255, 255, 255, 0.16);
+    color: #ffffff;
+}
+
+.dropdown-mini-btn.dropdown-mini-danger:hover {
+    background: rgba(239, 68, 68, 0.28);
+    color: #fca5a5;
 }
 
 .track-info-layout {
@@ -1056,8 +1184,8 @@ select,
     align-items: center;
     gap: 8px;
     width: 100%;
-    margin: 4px 0 2px 0;
-    cursor: pointer;
+    margin: 2px 0;
+    cursor: default;
     padding: 3px 0;
     position: relative;
     user-select: none;
@@ -1080,41 +1208,27 @@ select,
 
 #total-duration {
     text-align: right;
-    min-width: 36px;
+    min-width: 32px;
+    cursor: pointer;
+    transition: color 0.15s ease;
 }
 
-/* Scrubber Time Hover Preview Tooltip */
-.scrubber-tooltip {
-    position: absolute;
-    bottom: 22px;
-    transform: translateX(-50%);
-    background: rgba(12, 16, 26, 0.92);
-    backdrop-filter: blur(12px);
-    border: 1px solid var(--border-glass-highlight);
-    color: #ffffff;
-    font-family: var(--font-ui);
-    font-size: 10px;
-    font-weight: 700;
-    padding: 2px 7px;
-    border-radius: 6px;
-    pointer-events: none;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
-    transition: opacity 0.12s ease;
-    z-index: 15;
+#total-duration:hover {
+    color: var(--accent-color);
 }
 
 .scrubber-track {
     flex: 1;
-    height: 3.5px;
+    height: 4px;
     background: rgba(255, 255, 255, 0.18);
     border-radius: 999px;
     position: relative;
-    overflow: hidden;
+    cursor: pointer;
     transition: height 0.15s ease;
 }
 
-.scrubber-bar-container:hover .scrubber-track {
-    height: 5px;
+.scrubber-track:hover {
+    height: 6px;
 }
 
 .scrubber-progress {
@@ -1123,7 +1237,29 @@ select,
     background: #ffffff;
     border-radius: 999px;
     box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
-    transition: width 0.15s linear;
+    pointer-events: none;
+    transition: width 0.08s linear;
+}
+
+/* Scrubber Time Hover Preview Tooltip - Anchored directly to track */
+.scrubber-tooltip {
+    position: absolute;
+    bottom: 11px;
+    transform: translateX(-50%);
+    background: rgba(14, 20, 32, 0.94);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.22);
+    color: #ffffff;
+    font-family: var(--font-ui);
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 6px;
+    pointer-events: none;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+    white-space: nowrap;
+    z-index: 25;
 }
 
 /* Lyrics Stage & Flow */
