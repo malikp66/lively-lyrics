@@ -10,7 +10,7 @@
   <!-- Primary Project Badges -->
   <p>
     <a href="https://github.com/malikp66/lively-lyrics/releases">
-      <img src="https://img.shields.io/badge/Release-v3.0.0-1ed760?style=for-the-badge&logo=spotify&logoColor=white" alt="Release v3.0.0" />
+      <img src="https://img.shields.io/badge/Release-v3.1.0-1ed760?style=for-the-badge&logo=spotify&logoColor=white" alt="Release v3.1.0" />
     </a>
     <a href="https://www.rust-lang.org/">
       <img src="https://img.shields.io/badge/Rust-1.80+-dea584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust 1.80+" />
@@ -89,7 +89,11 @@ Aplikasi desktop pemutar musik resmi seperti Spotify memiliki keterbatasan saat 
 
 **LivelyLyrics memecahkan semua masalah tersebut:**
 - 🦀 **Migrasi Rust + Tauri v2**: Penggunaan memori terpangkas drastis menjadi **< 35 MB RAM** dengan startup instan di bawah 1 detik.
-- 🍏 **iOS 26 Liquid Glassmorphism**: Desain kaca cair multi-layer dengan specular highlight border, refraction backdrop blur, pill capsule controls, dan ambient glow adaptif.
+- 🍏 **Apple Liquid Glassmorphism**: Desain kaca cair multi-layer dengan specular highlight border, refraction backdrop blur, pill capsule controls, dan ambient glow adaptif.
+- 🪟 **Detached Settings Popout (Smart Proximity)**: Jendela Pengaturan mandiri terpisah dengan algoritma penempatan dinamis yang otomatis menempel di sekitar miniplayer (atas/bawah dengan gap 10px) dan bebas bercak shadow.
+- 🎤 **Only-Lyrics Mode 2.0 (Motion Reveal)**: Mode subtitle lirik cerdas dengan auto-hide saat idle agar lirik tidak terhalang, dan meluncur turun secara instan saat kursor bergerak.
+- 🎛️ **Quick Three-Dots Menu**: Menu opsi cepat (Pengaturan, Sync Ulang, Minimize, Tutup) yang serasi baik pada mode kartu maupun mode subtitle.
+- 🔤 **Auto-Marquee Bounce**: Judul lagu dan nama artis beranimasi horizontal bolak-balik otomatis bila melebihi lebar wadah.
 - 🎯 **Duration-Precision Scoring Engine**: Algoritma pencocokan durasi otomatis (< 0.3 detik) dan penalti entri video/MV klip untuk mencegah delay lirik.
 - 🔁 **Candidate Cycling pada Re-sync**: Cukup klik tombol sync ulang untuk otomatis beralih ke kandidat pengunggah lirik alternatif bila diperlukan.
 - ⌨️ **Instant Offset Hotkeys**: Tombol pintas `[` (-0.5s), `]` (+0.5s), dan `\` (Reset) disertai floating iOS Liquid Capsule Toast.
@@ -102,14 +106,18 @@ Aplikasi desktop pemutar musik resmi seperti Spotify memiliki keterbatasan saat 
 | Fitur | Deskripsi |
 | :--- | :--- |
 | 🦀 **Rust Core Engine** | Backend berkecepatan tinggi berbasis Rust & Tauri v2; hemat daya, footprint biner ringkas, dan performa mulus tanpa beban. |
-| 🍏 **iOS 26 Liquid Glass UI** | Visual material kaca cair dengan efek specular rim light, corner radius halus khas iOS, dan typography responsif. |
+| 🍏 **Apple Liquid Glass UI** | Visual material kaca cair dengan efek specular rim light, corner radius halus khas Apple, dan typography responsif tanpa seleksi kursor yang mengganggu. |
+| 🪟 **Detached Settings Window** | Jendela Pengaturan mandiri yang menempel secara presisi di dekat miniplayer tanpa melompat jauh ke tengah layar. |
+| 🎤 **Only-Lyrics Subtitle 2.0** | Mode minimalis subtitle melayang dengan header 3-bagian (icon mic karaoke aktif hijau, metadata lagu draggable, dan menu opsi) yang auto-hide saat idle. |
+| 🎛️ **Quick Three-Dots Menu** | Menu dropdown cepat untuk mengakses Pengaturan, Sinkronisasi Ulang, Minimize, dan Tutup jendela. |
+| 🔤 **Auto-Marquee Display** | Teks judul dan nama artis yang panjang otomatis beranimasi bolak-balik halus agar selalu terbaca utuh. |
+| 🎨 **4 Mode Latar Belakang** | *Liquid Glass*, *Warna Solid* (dengan tombol Randomizer warna), *Gradien Estetik* (10 preset), dan *Minimal*. |
 | 🪟 **Floating Always-On-Top** | Jendela tetap berada di lapisan paling atas layar (termasuk di atas *Full-Screen Workspace* pada macOS). |
 | 👻 **Ghost Mode (Click-Through)** | Aktifkan dengan shortcut `Ctrl+Alt+G` (`Cmd+Option+G` di Mac). Kursor mouse menembus jendela langsung ke aplikasi di belakangnya. |
 | ⏱️ **Duration-Precision Lyrics Engine** | Memfilter dan menilai kandidat lirik LRCLIB berdasarkan kecocokan durasi lagu Spotify secara presisi serta mengeliminasi delay video klip YouTube. |
 | 🔄 **Alternate Candidate Cycling** | Tekan tombol **Sync Ulang** (`Cmd+R` / `Ctrl+R`) untuk berganti antar kandidat lirik `.lrc` yang tersedia di database. |
 | ⌨️ **Real-Time Offset Hotkeys** | Tekan `[` (-0.5s), `]` (+0.5s), atau `\` (Reset 0s) dengan visual pop-up **iOS Liquid Capsule Toast** secara real-time. |
 | 🎯 **Interactive Seek** | Klik baris lirik mana pun atau klik timeline scrubber untuk melompati pemutaran lagu langsung ke detik tersebut. |
-| 💬 **Only-Lyrics (Pure Subtitle)** | Mode minimalis subtitle melayang tanpa cover art dan tombol navigasi; ideal untuk game atau menonton presentasi. |
 | 🌈 **Adaptive Ambient Glow** | Pancaran cahaya ambient lembut di belakang card yang beradaptasi secara otomatis dengan warna dominan cover art album. |
 | ✍️ **Deep Typography Styling** | 5 pilihan font studio (`Plus Jakarta Sans`, `Inter`, `Outfit`, `Playfair Display`, `JetBrains Mono`), kustomisasi ukuran, ketebalan, *UPPERCASE*, *Italic*, *Neon Glow*, hingga *Crisp Outline*. |
 | 📍 **Smart Window Memory** | Mengingat posisi koordinat dan ukuran jendela terakhir secara otomatis di setiap sesi. |
@@ -118,13 +126,12 @@ Aplikasi desktop pemutar musik resmi seperti Spotify memiliki keterbatasan saat 
 
 ## 🖥️ Mode Tampilan Fleksibel
 
-LivelyLyrics menyediakan **3 mode tampilan adaptif** yang dapat disesuaikan dengan kebutuhan Anda:
+LivelyLyrics menyediakan mode tampilan adaptif yang dapat disesuaikan dengan kebutuhan Anda:
 
 | Mode | Karakteristik Visual | Komponen yang Ditampilkan | Ideal Untuk |
 | :--- | :--- | :--- | :--- |
-| 🎴 **Card Mode**<br>*(Expanded Default)* | Jendela iOS 26 Liquid Glass dengan visual dan kontrol komprehensif | Artwork album HD, live equalizer, scrubber interaktif dengan time preview, kontrol playback, dan aliran lirik penuh | Multitasking santai, mendengarkan musik di desktop |
-| 💊 **Compact Mode**<br>*(Dynamic Island)* | Kapsul horizontal ramping hemat ruang | Mini cover art, info lagu, scrubber mini, dan baris lirik aktif | Diletakkan di sudut layar saat coding atau menulis |
-| 💬 **Only-Lyrics Mode**<br>*(Pure Subtitle)* | Pita lirik subtitle transparan melayang tanpa chrome/border tebal | Baris lirik aktif yang auto-scroll di tengah layar dengan toolbar melayang otomatis saat kursor mendekat | Bermain game, menonton video, atau membaca dokumen |
+| 🎴 **Card Mode**<br>*(Expanded Default)* | Jendela Apple Liquid Glass split 2-kolom dengan visual dan kontrol komprehensif | Kolom kiri: Artwork album HD, auto-marquee judul & artis, timeline scrubber interaktif dengan time preview, dock kontrol (Three Dots, Prev, Play/Pause, Next, Karaoke Mic). Kolom kanan: panggung lirik vertikal menyanyi | Multitasking santai, mendengarkan musik di desktop |
+| 💬 **Only-Lyrics Mode**<br>*(Karaoke Subtitle 2.0)* | Pita lirik subtitle transparan melayang bebas halangan dengan tinggi viewport 100% | Baris lirik aktif auto-scroll di tengah layar dengan header pintar 3-bagian (mic aktif hijau, cover/judul draggable, three dots) yang otomatis auto-hide saat idle dan muncul seketika saat kursor digerakkan | Bermain game, menonton video, coding, atau membaca dokumen |
 
 ---
 
@@ -141,17 +148,21 @@ Pintasan keyboard otomatis menyesuaikan dengan platform Anda (**Windows/Linux** 
 | **Majukan Lirik (+0.5 Detik)** | <kbd>]</kbd> | <kbd>]</kbd> |
 | **Reset Offset Lirik (0.00s)** | <kbd>\</kbd> | <kbd>\</kbd> |
 | **Play / Pause Pemutaran** | <kbd>Space</kbd> | <kbd>Space</kbd> |
-| **Buka / Tutup Pengaturan** | Klik ikon `⚙️` / <kbd>Esc</kbd> | Klik ikon `⚙️` / <kbd>Esc</kbd> |
+| **Buka / Tutup Pengaturan** | Menu Three Dots `...` / <kbd>Esc</kbd> | Menu Three Dots `...` / <kbd>Esc</kbd> |
 
 ---
 
 ## 🎨 Kustomisasi Tampilan & Teks
 
-Buka panel **Pengaturan** melalui ikon slider (`⚙️`) untuk mempersonalisasi tampilan secara *real-time*:
+Buka panel **Pengaturan** melalui menu *three dots* (`...`) untuk mempersonalisasi tampilan secara *real-time*:
 
 ### 1. Gaya Material & Latar Belakang (Glassmorphism)
-- **Gaya Kaca**: *iOS Liquid Glass*, *Frosted Glass*, *Obsidian Dark*, *Minimal*, atau *Custom Tint* (HEX picker bebas).
-- **Transparansi Jendela**: Slider `15%` hingga `100%` (otomatis menjadi solid saat panel Pengaturan dibuka agar teks opsi selalu jelas terbaca).
+- **Mode Latar Belakang Jendela**:
+  - *Liquid Glass*: Efek kaca cair Apple multi-layer dengan specular highlight dan refractive blur.
+  - *Warna Solid*: Latar belakang solid pekat elegan dengan tombol Randomizer warna untuk menemukan palet warna baru sekali klik.
+  - *Gradien Estetik*: 10 preset gradien artistik (*Aurora Glow*, *Neon Cyber*, *Deep Ocean*, *Sunset Velvet*, *Cosmic Purple*, *Nordic Night*, dll).
+  - *Minimal*: Transparansi ultra-tipis hemat daya dan distraction-free.
+- **Transparansi Jendela**: Slider `15%` hingga `100%`.
 - **Intensitas Blur Kaca**: Slider `0px` hingga `45px`.
 
 ### 2. Tipografi & Gaya Lirik
@@ -244,7 +255,7 @@ npm run dist:linux  # Linux (.AppImage & .deb)
 <details>
 <summary><b>Mengapa lirik lagu tertentu sempat terlambat beberapa detik, dan bagaimana solusinya?</b></summary>
 <br>
-Hal ini biasanya terjadi jika lirik diunggah dari video klip YouTube (yang memiliki intro dialog/helikopter 10-15 detik) alih-alih audio album resmi. LivelyLyrics v3.0.0 kini memiliki <b>Duration-Precision Scoring</b> yang otomatis memilih versi audio studio bersih. Jika masih ada selisih, cukup tekan tombol <b>Sync Ulang (Cmd+R / Ctrl+R)</b> untuk berganti ke kandidat lirik berikutnya, atau gunakan hotkey <code>[</code> dan <code>]</code> untuk fine-tune offset.
+Hal ini biasanya terjadi jika lirik diunggah dari video klip YouTube (yang memiliki intro dialog/helikopter 10-15 detik) alih-alih audio album resmi. LivelyLyrics v3.1.0 kini memiliki <b>Duration-Precision Scoring</b> yang otomatis memilih versi audio studio bersih. Jika masih ada selisih, cukup tekan tombol <b>Sync Ulang (Cmd+R / Ctrl+R)</b> untuk berganti ke kandidat lirik berikutnya, atau gunakan hotkey <code>[</code> dan <code>]</code> untuk fine-tune offset.
 </details>
 
 <details>

@@ -96,7 +96,7 @@ async fn search_lyrics_manual(
 
     let res = client
         .get(&url)
-        .header("User-Agent", "LivelyLyrics/3.0.0")
+        .header("User-Agent", "LivelyLyrics/3.1.0")
         .timeout(Duration::from_secs(5))
         .send()
         .await
@@ -245,7 +245,7 @@ fn close_settings_window(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 fn get_app_version() -> String {
-    "3.0.0".to_string()
+    "3.1.0".to_string()
 }
 
 #[tauri::command]
