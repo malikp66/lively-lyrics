@@ -516,20 +516,13 @@
         <div class="island-main-split" data-tauri-drag-region="deep">
             <!-- Left Column: Player Module -->
             <section class="island-player-panel" id="track-header-card" data-tauri-drag-region="deep">
-                <!-- Top Row: Status Badge & Window Controls in Top-Right of Song Details -->
+                <!-- Top Row: Status Badge in Song Details -->
                 <div class="player-panel-header" data-tauri-drag-region="deep">
                     <div id="playback-status-badge" class="badge-status hidden" data-tauri-drag-region="deep">
                         <span id="live-eq" class="live-eq hidden">
                             <span></span><span></span><span></span>
                         </span>
                         <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
-                    </div>
-
-                    <!-- Application Options Dropdown Trigger in Song Detail Top-Right -->
-                    <div class="player-header-actions no-drag" data-tauri-drag-region="false">
-                        <button id="btn-three-dots-player" class="panel-btn-action" title="Menu Opsi (Pengaturan, Mode, Minimize, Tutup)">
-                            <i class="ph-bold ph-dots-three-vertical"></i>
-                        </button>
                     </div>
                 </div>
 
@@ -558,8 +551,11 @@
                     <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
                 </div>
 
-                <!-- Row 4: Pure Playback Controls (Prev, Play/Pause, Next) -->
+                <!-- Row 4: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->
                 <footer class="playback-dock no-drag" id="playback-dock">
+                    <button id="btn-three-dots-player" class="dock-btn" title="Menu Opsi">
+                        <i class="ph-bold ph-dots-three"></i>
+                    </button>
                     <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
                         <i class="ph-fill ph-skip-back"></i>
                     </button>
@@ -570,24 +566,20 @@
                     <button id="btn-next" class="dock-btn" title="Lagu Selanjutnya">
                         <i class="ph-fill ph-skip-forward"></i>
                     </button>
+                    <button id="btn-lyrics-toggle" class="dock-btn dock-btn-karaoke" title="Mode Hanya Lirik (Karaoke)">
+                        <i id="icon-karaoke-dock" class="ph-bold ph-microphone"></i>
+                    </button>
                     <!-- Hidden compatibility references -->
                     <button id="btn-collapse-player" class="hidden"></button>
                     <button id="btn-resync" class="hidden"><i id="icon-resync-header"></i></button>
                 </footer>
             </section>
 
-            <!-- Interactive Split Divider with Animated Chevron Micro-Pill -->
-            <div class="island-split-divider no-drag" id="island-divider" data-tauri-drag-region="false" title="Sembunyikan / Tampilkan Panel Lagu">
-                <button class="divider-chevron-btn" id="btn-divider-toggle" title="Toggle Panel Lagu (Mode Lirik Fokus)">
-                    <i id="divider-chevron-icon" class="ph-bold ph-caret-left"></i>
-                </button>
-            </div>
-
             <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
             <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
                 <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
                 <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
-                    <i class="ph-bold ph-dots-three-vertical"></i>
+                    <i class="ph-bold ph-dots-three"></i>
                 </button>
                 <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
                     <div class="stage-placeholder">

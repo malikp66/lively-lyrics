@@ -100,16 +100,36 @@ const dropdownTextLyrics = document.getElementById('dropdown-text-lyrics');
 const dropdownItemMinimize = document.getElementById('dropdown-item-minimize');
 const dropdownItemClose = document.getElementById('dropdown-item-close');
 
-// Animated Split Divider with Chevron Toggle
-const islandDivider = document.getElementById('island-divider');
-const btnDividerToggle = document.getElementById('btn-divider-toggle');
-const dividerChevronIcon = document.getElementById('divider-chevron-icon');
-
+// Playback Dock Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke Toggle)
+const btnLyricsToggle = document.getElementById('btn-lyrics-toggle');
+const iconKaraokeDock = document.getElementById('icon-karaoke-dock');
 const btnPlayPause = document.getElementById('btn-playpause');
 const playIcon = document.getElementById('play-icon');
 const pauseIcon = document.getElementById('pause-icon');
 const btnPrev = document.getElementById('btn-prev');
 const btnNext = document.getElementById('btn-next');
+
+// Auto-Marquee Horizontal Bounce for Track Title & Artist when overflowed
+function updateMarquee(element) {
+    if (!element || !element.parentElement) return;
+    element.classList.remove('marquee-active');
+    element.style.removeProperty('--marquee-distance');
+    element.style.removeProperty('--marquee-duration');
+
+    requestAnimationFrame(() => {
+        const containerWidth = element.parentElement.clientWidth;
+        const textWidth = element.scrollWidth;
+        const overflow = textWidth - containerWidth;
+
+        if (overflow > 4) {
+            const distance = -(overflow + 8);
+            const duration = Math.max(5, Math.min(14, overflow / 20 + 4));
+            element.style.setProperty('--marquee-distance', `${distance}px`);
+            element.style.setProperty('--marquee-duration', `${duration}s`);
+            element.classList.add('marquee-active');
+        }
+    });
+}
 
 // Settings Modal Elements
 const settingsPanel = document.getElementById('settings-panel');
@@ -373,6 +393,10 @@ if (window.electronAPI) {
         trackNameEl.textContent = titleText;
         artistNameEl.textContent = artistText;
         trackHeaderTicker.textContent = `${titleText} — ${artistText}`;
+
+        // Trigger marquee check for long titles and artists
+        updateMarquee(trackNameEl);
+        updateMarquee(artistNameEl);
 
         if (data.artworkUrl && (!currentLyrics || !currentLyrics.artwork)) {
             updateHeaderAvatar(data.artworkUrl);
@@ -768,6 +792,14 @@ function setOnlyLyricsMode(enabled) {
     if (btnOnlyLyrics) btnOnlyLyrics.classList.toggle('active', enabled);
     if (toggleOnlyLyricsSetting) toggleOnlyLyricsSetting.checked = enabled;
 
+    // Update dock karaoke toggle button
+    if (btnLyricsToggle) {
+        btnLyricsToggle.classList.toggle('active', enabled);
+    }
+    if (iconKaraokeDock) {
+        iconKaraokeDock.className = enabled ? 'ph-fill ph-microphone' : 'ph-bold ph-microphone';
+    }
+
     appContainer.classList.toggle('mode-only-lyrics', enabled);
     if (onlyLyricsExitPill) onlyLyricsExitPill.classList.toggle('hidden', !enabled);
     if (normalWindowActions) normalWindowActions.classList.toggle('hidden', enabled);
@@ -782,7 +814,7 @@ function setOnlyLyricsMode(enabled) {
         dropdownTextLyrics.textContent = enabled ? 'Kembali ke Mode Normal' : 'Mode Hanya Lirik';
     }
     if (dropdownIconLyrics) {
-        dropdownIconLyrics.className = enabled ? 'ph-bold ph-arrows-out-simple' : 'ph-bold ph-subtitles';
+        dropdownIconLyrics.className = enabled ? 'ph-bold ph-arrows-out-simple' : 'ph-bold ph-microphone';
     }
 
     // Close any open dropdown menu
@@ -791,14 +823,17 @@ function setOnlyLyricsMode(enabled) {
     if (enabled) {
         if (window.electronAPI) window.electronAPI.resizeWindow(380, 120);
     } else {
-        const targetWidth = isPlayerPanelCollapsed ? 350 : 520;
         if (window.electronAPI) {
-            window.electronAPI.resizeWindow(targetWidth, 140);
+            window.electronAPI.resizeWindow(520, 140);
             window.electronAPI.setAlwaysOnTop(isAlwaysOnTop);
         }
-        if (!isPlayerPanelCollapsed && trackHeaderCard) {
+        if (trackHeaderCard) {
             trackHeaderCard.classList.remove('collapsed');
         }
+        setTimeout(() => {
+            updateMarquee(trackNameEl);
+            updateMarquee(artistNameEl);
+        }, 150);
     }
 
     // Re-center active lyric line immediately after layout/resize settles
@@ -813,7 +848,7 @@ function setOnlyLyricsMode(enabled) {
 
 // Quick Three-Dots Dropdown Interaction
 function toggleQuickDropdown(anchorBtn) {
-    if (!quickDropdownMenu) return;
+    if (!quickDropdownMenu || !anchorBtn) return;
     const isCurrentlyOpen = !quickDropdownMenu.classList.contains('hidden');
     if (isCurrentlyOpen) {
         quickDropdownMenu.classList.add('hidden');
@@ -823,12 +858,23 @@ function toggleQuickDropdown(anchorBtn) {
     const containerRect = appContainer.getBoundingClientRect();
     const btnRect = anchorBtn.getBoundingClientRect();
 
-    const top = btnRect.bottom - containerRect.top + 5;
-    const rightOffset = containerRect.right - btnRect.right;
-
-    quickDropdownMenu.style.top = `${top}px`;
-    quickDropdownMenu.style.right = `${Math.max(8, rightOffset)}px`;
-    quickDropdownMenu.style.left = 'auto';
+    if (anchorBtn === btnThreeDotsPlayer) {
+        // Tampilkan ke ATAS tombol dock di pojok kiri bawah
+        const bottomOffset = containerRect.bottom - btnRect.top + 6;
+        const leftOffset = Math.max(8, btnRect.left - containerRect.left);
+        quickDropdownMenu.style.top = 'auto';
+        quickDropdownMenu.style.bottom = `${bottomOffset}px`;
+        quickDropdownMenu.style.left = `${leftOffset}px`;
+        quickDropdownMenu.style.right = 'auto';
+    } else {
+        // Tampilkan ke BAWAH tombol floating lyrics di pojok kanan atas
+        const topOffset = btnRect.bottom - containerRect.top + 6;
+        const rightOffset = Math.max(8, containerRect.right - btnRect.right);
+        quickDropdownMenu.style.top = `${topOffset}px`;
+        quickDropdownMenu.style.bottom = 'auto';
+        quickDropdownMenu.style.right = `${rightOffset}px`;
+        quickDropdownMenu.style.left = 'auto';
+    }
 
     quickDropdownMenu.classList.remove('hidden');
 }
@@ -847,10 +893,17 @@ if (btnThreeDotsLyrics) {
     });
 }
 
+if (btnLyricsToggle) {
+    btnLyricsToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setOnlyLyricsMode(!isOnlyLyricsMode);
+    });
+}
+
 // Close dropdown on outside click
 document.addEventListener('click', (e) => {
     if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) return;
-    if (!quickDropdownMenu.contains(e.target) && e.target !== btnThreeDotsPlayer && e.target !== btnThreeDotsLyrics) {
+    if (!quickDropdownMenu.contains(e.target) && !e.target.closest('#btn-three-dots-player') && !e.target.closest('#btn-three-dots-lyrics')) {
         quickDropdownMenu.classList.add('hidden');
     }
 });
@@ -1480,58 +1533,18 @@ if (btnClose) {
     });
 }
 
-// =========================================
-// PLAYER PANEL MINIMIZE / COLLAPSE ANIMATION (VIA DIVIDER CHEVRON)
-// =========================================
-let isPlayerPanelCollapsed = localStorage.getItem('player_panel_collapsed') === 'true';
-
-function setPlayerPanelCollapsed(collapsed) {
-    isPlayerPanelCollapsed = collapsed;
-    localStorage.setItem('player_panel_collapsed', collapsed);
-
-    if (trackHeaderCard) {
-        trackHeaderCard.classList.toggle('collapsed', collapsed);
-    }
-    if (islandDivider) {
-        islandDivider.classList.toggle('collapsed', collapsed);
-    }
-    if (dividerChevronIcon) {
-        dividerChevronIcon.className = collapsed ? 'ph-bold ph-caret-right' : 'ph-bold ph-caret-left';
-    }
-    if (btnDividerToggle) {
-        btnDividerToggle.title = collapsed ? 'Tampilkan Panel Lagu (Kembali ke Normal)' : 'Sembunyikan Panel Lagu (Mode Lirik Fokus)';
-    }
-
-    if (window.electronAPI && typeof window.electronAPI.resizeWindow === 'function') {
-        if (collapsed) {
-            window.electronAPI.resizeWindow(350, 140);
-        } else {
-            window.electronAPI.resizeWindow(520, 140);
-        }
-    }
-
-    setTimeout(() => {
-        centerActiveLineInViewport('auto');
-    }, 80);
-    setTimeout(() => {
-        centerActiveLineInViewport('smooth');
-    }, 200);
-}
-
-if (btnDividerToggle) {
-    btnDividerToggle.addEventListener('click', (e) => {
-        e.stopPropagation();
-        setPlayerPanelCollapsed(!isPlayerPanelCollapsed);
-    });
-}
-
-if (islandDivider) {
-    islandDivider.addEventListener('click', (e) => {
-        if (e.target.closest('#btn-divider-toggle')) return;
-        setPlayerPanelCollapsed(!isPlayerPanelCollapsed);
-    });
-}
-
 // Run preferences initialization now that everything is attached and defined
 applySavedPreferences();
+
+// Window resize listener to recalculate marquee on size changes
+window.addEventListener('resize', () => {
+    updateMarquee(trackNameEl);
+    updateMarquee(artistNameEl);
+});
+
+// Initial marquee evaluation
+setTimeout(() => {
+    updateMarquee(trackNameEl);
+    updateMarquee(artistNameEl);
+}, 300);
 

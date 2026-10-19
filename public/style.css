@@ -815,7 +815,7 @@ select,
     justify-content: space-between;
     padding: 10px 14px 10px 14px;
     box-sizing: border-box;
-    border-right: none;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
     position: relative;
     background: transparent;
     transition: width 0.34s cubic-bezier(0.16, 1, 0.3, 1),
@@ -836,110 +836,6 @@ select,
     border-right: none !important;
     pointer-events: none !important;
     transform: translateX(-24px) scale(0.95);
-}
-
-/* Interactive Split Divider with Animated Chevron Micro-Pill */
-.island-split-divider {
-    width: 14px;
-    margin: 0 -7px;
-    position: relative;
-    z-index: 25;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-    transition: all 0.32s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.island-split-divider::before {
-    content: '';
-    position: absolute;
-    top: 12px;
-    bottom: 12px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 1px;
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.02) 0%,
-        rgba(255, 255, 255, 0.18) 25%,
-        rgba(255, 255, 255, 0.18) 75%,
-        rgba(255, 255, 255, 0.02) 100%
-    );
-    transition: all 0.25s ease;
-}
-
-.island-split-divider:hover::before {
-    background: linear-gradient(
-        to bottom,
-        rgba(255, 255, 255, 0.08) 0%,
-        var(--accent-glow) 50%,
-        rgba(255, 255, 255, 0.08) 100%
-    );
-    width: 1.5px;
-    box-shadow: 0 0 8px var(--accent-glow);
-}
-
-.divider-chevron-btn {
-    position: relative;
-    z-index: 3;
-    width: 15px;
-    height: 30px;
-    border-radius: 999px;
-    background: rgba(16, 22, 34, 0.88);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: 
-        0 4px 12px rgba(0, 0, 0, 0.5),
-        inset 0 1px 0 rgba(255, 255, 255, 0.35);
-    color: rgba(255, 255, 255, 0.78);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    padding: 0;
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
-    backdrop-filter: blur(16px);
-    -webkit-backdrop-filter: blur(16px);
-}
-
-.divider-chevron-btn i {
-    font-size: 11px;
-    transition: transform 0.38s cubic-bezier(0.16, 1, 0.3, 1), color 0.2s ease;
-}
-
-.island-split-divider:hover .divider-chevron-btn,
-.divider-chevron-btn:hover {
-    background: rgba(24, 32, 50, 0.98);
-    border-color: var(--accent-color);
-    color: #ffffff;
-    box-shadow: 
-        0 6px 20px var(--accent-glow),
-        inset 0 1px 0 rgba(255, 255, 255, 0.55);
-    transform: scale(1.15);
-}
-
-/* Motion State: Collapsed (Mode Lirik Fokus) */
-.island-split-divider.collapsed {
-    position: absolute;
-    left: 4px;
-    top: 0;
-    bottom: 0;
-    margin: 0;
-    width: 18px;
-    z-index: 35;
-}
-
-.island-split-divider.collapsed::before {
-    opacity: 0;
-}
-
-.island-split-divider.collapsed .divider-chevron-btn i {
-    transform: rotate(180deg);
-}
-
-/* Sembunyikan divider pada pure subtitle only-lyrics mode */
-.mode-only-lyrics .island-split-divider {
-    display: none !important;
 }
 
 /* Panel Header Row (Status Badge Left, Window Controls in Top-Right of Song Details) */
@@ -1171,6 +1067,8 @@ select,
     flex-direction: column;
     justify-content: center;
     min-width: 0;
+    mask-image: linear-gradient(to right, black 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to right, black 86%, transparent 100%);
 }
 
 .track-name-display {
@@ -1182,6 +1080,10 @@ select,
     text-overflow: ellipsis;
     letter-spacing: -0.01em;
     line-height: 1.25;
+    display: inline-block;
+    width: max-content;
+    max-width: 100%;
+    will-change: transform;
 }
 
 .artist-name-display {
@@ -1193,6 +1095,27 @@ select,
     text-overflow: ellipsis;
     margin-top: 2px;
     line-height: 1.2;
+    display: inline-block;
+    width: max-content;
+    max-width: 100%;
+    will-change: transform;
+}
+
+.track-name-display.marquee-active,
+.artist-name-display.marquee-active {
+    max-width: none;
+    overflow: visible;
+    text-overflow: clip;
+    animation: trackMarqueeBounce var(--marquee-duration, 8s) ease-in-out infinite alternate;
+}
+
+@keyframes trackMarqueeBounce {
+    0%, 20% {
+        transform: translateX(0);
+    }
+    80%, 100% {
+        transform: translateX(var(--marquee-distance, -40px));
+    }
 }
 
 .badge-status {
@@ -1521,46 +1444,22 @@ select,
     height: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 18px;
+    justify-content: space-between;
     padding: 0 4px;
     background: transparent !important;
     border: none !important;
     box-shadow: none !important;
     flex-shrink: 0;
-}
-
-.dock-btn-quote {
-    background: transparent;
-    border: none;
-    color: rgba(255, 255, 255, 0.7);
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    font-size: 15px;
-    transition: all 0.18s ease;
-}
-
-.dock-btn-quote:hover {
-    color: #ffffff;
-    background: rgba(255, 255, 255, 0.12);
-}
-
-.dock-btn-quote.active {
-    color: var(--accent-color);
-    background: rgba(255, 255, 255, 0.14);
+    width: 100%;
+    box-sizing: border-box;
 }
 
 .dock-btn {
     background: transparent;
     border: none;
-    color: rgba(255, 255, 255, 0.88);
-    width: 30px;
-    height: 30px;
+    color: rgba(255, 255, 255, 0.85);
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
@@ -1569,7 +1468,7 @@ select,
     margin: 0;
     line-height: 1;
     cursor: pointer;
-    font-size: 15px;
+    font-size: 16px;
     transition: all 0.18s ease;
 }
 
@@ -1583,13 +1482,13 @@ select,
     background: transparent;
     color: #ffffff;
     border: none;
-    width: 32px;
-    height: 32px;
+    width: 34px;
+    height: 34px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    font-size: 19px;
+    font-size: 20px;
     cursor: pointer;
     transition: all 0.18s ease;
 }
@@ -1598,6 +1497,21 @@ select,
     color: #ffffff;
     background: rgba(255, 255, 255, 0.18);
     transform: scale(1.12);
+}
+
+.dock-btn-karaoke {
+    font-size: 15.5px;
+}
+
+.dock-btn-karaoke.active {
+    color: var(--accent-color);
+    background: rgba(30, 215, 96, 0.16);
+    box-shadow: 0 0 10px var(--accent-glow);
+}
+
+.dock-btn-karaoke.active:hover {
+    color: #ffffff;
+    background: var(--accent-color);
 }
 
 /* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
