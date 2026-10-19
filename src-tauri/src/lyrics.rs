@@ -166,31 +166,106 @@ struct LrclibTrack {
     plain_lyrics: Option<String>,
 }
 
+pub fn get_lyrics_timestamp_span(lrc_text: &str) -> Option<(f64, f64, usize)> {
+    let mut first: Option<f64> = None;
+    let mut last: Option<f64> = None;
+    let mut count = 0;
+
+    for line in lrc_text.lines() {
+        for caps in TIME_REGEX.captures_iter(line) {
+            let min: f64 = caps.get(1).and_then(|m| m.as_str().parse().ok()).unwrap_or(0.0);
+            let sec: f64 = caps.get(2).and_then(|m| m.as_str().parse().ok()).unwrap_or(0.0);
+            let ms: f64 = if let Some(m) = caps.get(3) {
+                let s = m.as_str();
+                let padded = format!("{:0<3}", s);
+                let slice = &padded[..3.min(padded.len())];
+                slice.parse::<f64>().unwrap_or(0.0) / 1000.0
+            } else {
+                0.0
+            };
+            let t = min * 60.0 + sec + ms;
+            if first.is_none() || Some(t) < first {
+                first = Some(t);
+            }
+            if last.is_none() || Some(t) > last {
+                last = Some(t);
+            }
+            count += 1;
+        }
+    }
+
+    match (first, last) {
+        (Some(f), Some(l)) => Some((f, l, count)),
+        _ => None,
+    }
+}
+
 fn score_candidate(track: &LrclibTrack, spotify_dur: f64, target_title: &str, target_artist: &str) -> f64 {
     let mut score = 50.0;
     let track_name = track.track_name.as_deref().unwrap_or("").to_lowercase();
     let album_name = track.album_name.as_deref().unwrap_or("").to_lowercase();
     let artist_name = track.artist_name.as_deref().unwrap_or("").to_lowercase();
 
-    // 1. Duration precision (primary discriminator between album track and video versions)
-    if spotify_dur > 0.0 {
-        if let Some(d) = track.duration {
-            let diff = (d - spotify_dur).abs();
-            if diff < 0.3 {
-                score += 160.0; // Near exact audio match
-            } else if diff < 1.2 {
-                score += 90.0;
-            } else if diff < 2.5 {
-                score += 40.0;
-            } else if diff < 5.0 {
-                score += 10.0;
-            } else {
-                score -= diff * 12.0; // Severe penalty for different song lengths
+    // 1. Check actual lyrics timestamps & completeness
+    if let Some(synced) = &track.synced_lyrics {
+        if let Some((first_t, last_t, line_count)) = get_lyrics_timestamp_span(synced) {
+            if spotify_dur > 45.0 {
+                let coverage = last_t / spotify_dur;
+
+                // Truncated lyrics penalty: e.g. lyrics stop prematurely before end of song
+                if coverage < 0.65 {
+                    score -= 600.0;
+                } else if coverage >= 0.94 {
+                    score += 240.0; // Complete song coverage (end of song)
+                } else if coverage >= 0.85 {
+                    score += 160.0;
+                } else if coverage >= 0.72 {
+                    score += 80.0;
+                }
+
+                // Late start penalty: e.g. lyrics start at 138s on a 198s song (remix verse only)
+                if first_t > spotify_dur * 0.40 {
+                    score -= 350.0;
+                } else if first_t < 40.0 {
+                    score += 40.0;
+                }
+
+                // Natural ending near track duration (< 15s before track ends)
+                let end_gap = (last_t - spotify_dur).abs();
+                if end_gap < 12.0 {
+                    score += 80.0;
+                } else if end_gap < 20.0 {
+                    score += 40.0;
+                }
+            }
+
+            if line_count < 8 {
+                score -= 200.0;
+            } else if line_count >= 35 {
+                score += 80.0; // Comprehensive lyric line breakdown
+            } else if line_count >= 18 {
+                score += 30.0;
             }
         }
     }
 
-    // 2. Video tag penalty: video versions have intro skits/dialogue causing 5-15s desync
+    // 2. Duration precision between audio track and candidate metadata (allow 2s margin for rounding)
+    if spotify_dur > 0.0 {
+        if let Some(d) = track.duration {
+            let diff = (d - spotify_dur).abs();
+            if diff < 2.0 {
+                score += 150.0; // Studio audio match (within 2s)
+            } else if diff < 4.0 {
+                score += 70.0;
+            } else if diff < 7.0 {
+                score += 25.0;
+            } else {
+                score -= diff * 12.0;
+            }
+        }
+    }
+
+    // 3. Video tag penalty: video versions have intro skits/dialogue causing 5-15s desync
     let is_video = track_name.contains("video")
         || track_name.contains("mv")
         || track_name.contains("official video")
@@ -200,11 +275,11 @@ fn score_candidate(track: &LrclibTrack, spotify_dur: f64, target_title: &str, ta
         score -= 220.0;
     }
 
-    // 3. Remix / Live penalty if current track is studio album version
+    // 4. Remix / Live penalty if current track is studio album version
     let is_remix = track_name.contains("remix") || album_name.contains("remix");
     let target_is_remix = target_title.to_lowercase().contains("remix");
     if is_remix && !target_is_remix {
-        score -= 90.0;
+        score -= 120.0;
     }
 
     let is_live = track_name.contains("live") || album_name.contains("live");
@@ -213,9 +288,9 @@ fn score_candidate(track: &LrclibTrack, spotify_dur: f64, target_title: &str, ta
         score -= 90.0;
     }
 
-    // 4. Clean artist similarity bonus
+    // 5. Clean artist similarity bonus
     if !target_artist.is_empty() && (artist_name.contains(&target_artist.to_lowercase()) || target_artist.to_lowercase().contains(&artist_name)) {
-        score += 35.0;
+        score += 40.0;
     }
 
     score
@@ -347,14 +422,35 @@ pub async fn fetch_lyrics(
             score_b.partial_cmp(&score_a).unwrap_or(std::cmp::Ordering::Equal)
         });
 
-        // Cycle through candidates if user triggers re-sync
-        let chosen_idx = cycle_index % synced_tracks.len();
-        let best = &synced_tracks[chosen_idx];
+        // Deduplicate candidates that have identical timestamps & line counts
+        let mut unique_candidates: Vec<LrclibTrack> = Vec::new();
+        let mut seen_signatures: Vec<String> = Vec::new();
+
+        for track in synced_tracks {
+            let sig = if let Some(synced) = &track.synced_lyrics {
+                if let Some((f, l, cnt)) = get_lyrics_timestamp_span(synced) {
+                    format!("{:.0}_{:.0}_{}", f, l, cnt)
+                } else {
+                    track.id.map(|id| id.to_string()).unwrap_or_default()
+                }
+            } else {
+                track.id.map(|id| id.to_string()).unwrap_or_default()
+            };
+
+            if !seen_signatures.contains(&sig) {
+                seen_signatures.push(sig);
+                unique_candidates.push(track);
+            }
+        }
+
+        // Cycle through unique distinct candidates if user triggers re-sync
+        let chosen_idx = cycle_index % unique_candidates.len();
+        let best = &unique_candidates[chosen_idx];
         let raw = best.synced_lyrics.clone().unwrap_or_default();
         let lines = parse_lrc(&raw);
 
-        let candidate_info = if synced_tracks.len() > 1 {
-            Some(format!("Sinkronisasi opsi {} dari {}", chosen_idx + 1, synced_tracks.len()))
+        let candidate_info = if unique_candidates.len() > 1 {
+            Some(format!("Sinkronisasi opsi {} dari {}", chosen_idx + 1, unique_candidates.len()))
         } else {
             None
         };
@@ -421,9 +517,9 @@ mod tests {
         let res = fetch_lyrics(
             &client,
             "Pulang Malu Tak Pulang Rindu",
-            "ANDRI AR",
-            "Pulang Malu Tak Pulang Rindu",
-            351.24,
+            "Armada",
+            "Dengerin Abang",
+            210.0,
             "",
             0,
         ).await;
@@ -448,6 +544,30 @@ mod tests {
         // Verify first line starts around 11 seconds (album track), NOT 23 seconds (video)
         if let Some(first) = res.lines.first() {
             assert!(first.time < 15.0, "First line should start ~11s, got {}", first.time);
+        }
+    }
+
+    #[tokio::test]
+    async fn test_separuh_nafas_full_coverage() {
+        let client = reqwest::Client::new();
+        let res = fetch_lyrics(
+            &client,
+            "Separuh Nafas",
+            "Dewa 19",
+            "Bintang Lima",
+            222.0,
+            "",
+            0,
+        ).await;
+        println!("TEST SEPARUH NAFAS: title={}, lines={}, first={:?}, last={:?}",
+            res.title, res.lines.len(), res.lines.first().map(|l| l.time), res.lines.last().map(|l| l.time));
+        assert!(res.has_synced, "Separuh Nafas should have synced lyrics");
+        assert!(res.lines.len() >= 35, "Should NOT pick truncated 28-line candidate, got {} lines", res.lines.len());
+        if let Some(last) = res.lines.last() {
+            assert!(last.time > 190.0, "Last line should be near end of song (>190s), got {}", last.time);
+        }
+        if let Some(first) = res.lines.first() {
+            assert!(first.time >= 20.0, "First vocal line of Separuh Nafas starts ~23s, got {}", first.time);
         }
     }
 }
