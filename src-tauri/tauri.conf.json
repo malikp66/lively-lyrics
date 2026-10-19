@@ -10,7 +10,9 @@
     "withGlobalTauri": true,
     "windows": [
       {
+        "label": "main",
         "title": "LivelyLyrics",
+        "url": "index.html",
         "width": 520,
         "height": 140,
         "minWidth": 320,
@@ -21,6 +23,22 @@
         "decorations": false,
         "alwaysOnTop": true,
         "shadow": false
+      },
+      {
+        "label": "settings",
+        "title": "Pengaturan LivelyLyrics",
+        "url": "settings.html",
+        "width": 500,
+        "height": 530,
+        "minWidth": 460,
+        "minHeight": 400,
+        "resizable": true,
+        "fullscreen": false,
+        "transparent": true,
+        "decorations": false,
+        "alwaysOnTop": true,
+        "shadow": false,
+        "visible": false
       }
     ],
     "security": {

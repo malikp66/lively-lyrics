@@ -42,6 +42,12 @@ contextBridge.exposeInMainWorld('electronAPI', {
     closeWindow: () => {
         ipcRenderer.send('close-window');
     },
+    openSettingsWindow: () => {
+        ipcRenderer.send('open-settings-window');
+    },
+    closeSettingsWindow: () => {
+        ipcRenderer.send('close-settings-window');
+    },
     resizeWindow: (width, height) => {
         ipcRenderer.send('resize-window', { width, height });
     },

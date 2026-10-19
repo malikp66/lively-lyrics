@@ -77,6 +77,12 @@
         closeWindow: () => {
             invoke('close_window');
         },
+        openSettingsWindow: () => {
+            invoke('open_settings_window').catch(() => {});
+        },
+        closeSettingsWindow: () => {
+            invoke('close_settings_window').catch(() => {});
+        },
         resizeWindow: (w, h) => {
             let width = w;
             let height = h;

@@ -243,9 +243,49 @@ const isMac = currentPlatform === 'darwin';
 const modShortcut = isMac ? 'Cmd+Option' : 'Ctrl+Alt';
 const resyncShortcut = isMac ? 'Cmd+R' : 'Ctrl+R';
 
+function reloadPreferencesFromStorage() {
+    userOffset = parseFloat(localStorage.getItem('lyric_offset') || localStorage.getItem('lyrics_offset') || '0');
+    userTheme = localStorage.getItem('lyric_theme') || localStorage.getItem('lively_theme') || 'spotify';
+    userFontSize = localStorage.getItem('lyric_font_size') || localStorage.getItem('lyric_size') || 'medium';
+    userAlign = localStorage.getItem('lyric_align') || localStorage.getItem('align_mode') || 'center';
+    userBgStyle = localStorage.getItem('lyric_bg_style') || localStorage.getItem('bg_style') || 'liquid';
+    userCustomBgColor = localStorage.getItem('lyric_custom_bg_color') || '#0f172a';
+    userSolidColor = localStorage.getItem('lyric_solid_color') || localStorage.getItem('bg_solid_color') || '#05070c';
+    userGradientIndex = parseInt(localStorage.getItem('lyric_gradient_index') || localStorage.getItem('bg_gradient_idx') || '0', 10);
+    showRemainingDuration = localStorage.getItem('show_remaining_duration') === 'true';
+    userWindowBlur = localStorage.getItem('lyric_window_blur') || localStorage.getItem('glass_blur') || '28';
+    userFontFamily = localStorage.getItem('lyric_font_family') || localStorage.getItem('font_family') || 'jakarta';
+    userFontWeight = localStorage.getItem('lyric_font_weight') || localStorage.getItem('font_weight') || '700';
+    userTextGlow = localStorage.getItem('lyric_text_glow') || localStorage.getItem('glow_effect') || 'soft';
+    userInactiveOpacity = localStorage.getItem('lyric_inactive_opacity') || localStorage.getItem('inactive_opacity') || '35';
+    userCustomAccent = localStorage.getItem('lyric_custom_accent') || localStorage.getItem('custom_accent_color') || '';
+    userTextColorMode = localStorage.getItem('lyric_text_color_mode') || localStorage.getItem('active_text_color_mode') || 'white';
+    userCustomTextColor = localStorage.getItem('lyric_custom_text_color') || localStorage.getItem('custom_active_text_color') || '';
+    userInactiveColor = localStorage.getItem('lyric_inactive_color') || localStorage.getItem('inactive_text_color') || '#cbd5e1';
+    userFontStyle = localStorage.getItem('lyric_font_style') || localStorage.getItem('font_style') || 'normal';
+    userTextStroke = localStorage.getItem('lyric_text_stroke') || localStorage.getItem('text_stroke') || 'none';
+    isCompactMode = localStorage.getItem('is_compact_mode') === 'true';
+    isOnlyLyricsMode = localStorage.getItem('only_lyrics_mode') === 'true';
+    autoHideControls = localStorage.getItem('autohide_controls') !== 'false' && localStorage.getItem('auto_hide_controls') !== 'false';
+    ambientGlowEnabled = localStorage.getItem('ambient_glow') !== 'false';
+    isAlwaysOnTop = localStorage.getItem('always_on_top') !== 'false';
+}
+
+// Live Cross-Window Preferences Synchronization
+const settingsBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('lively-lyrics-settings') : null;
+if (settingsBroadcast) {
+    settingsBroadcast.onmessage = () => {
+        applySavedPreferences();
+    };
+}
+window.addEventListener('storage', () => {
+    applySavedPreferences();
+});
+
 // Initialize Saved Preferences & Dynamic Version
 function applySavedPreferences() {
     try {
+        reloadPreferencesFromStorage();
         // Dynamic Platform Labels & Shortcuts
         const platformNames = {
             darwin: 'macOS',
@@ -714,17 +754,23 @@ if (totalDurationEl) {
 }
 
 // Media Control Buttons
-btnPlayPause.addEventListener('click', () => {
-    if (window.electronAPI) window.electronAPI.controlMedia('playpause');
-});
+if (btnPlayPause) {
+    btnPlayPause.addEventListener('click', () => {
+        if (window.electronAPI) window.electronAPI.controlMedia('playpause');
+    });
+}
 
-btnPrev.addEventListener('click', () => {
-    if (window.electronAPI) window.electronAPI.controlMedia('previous');
-});
+if (btnPrev) {
+    btnPrev.addEventListener('click', () => {
+        if (window.electronAPI) window.electronAPI.controlMedia('previous');
+    });
+}
 
-btnNext.addEventListener('click', () => {
-    if (window.electronAPI) window.electronAPI.controlMedia('next');
-});
+if (btnNext) {
+    btnNext.addEventListener('click', () => {
+        if (window.electronAPI) window.electronAPI.controlMedia('next');
+    });
+}
 
 // Always on Top Pin
 if (btnPin) {
@@ -1031,9 +1077,11 @@ if (btnCloseOnlyLyrics) {
 }
 
 // Compact vs Card Mode
-btnCompact.addEventListener('click', () => {
-    setMode(!isCompactMode);
-});
+if (btnCompact) {
+    btnCompact.addEventListener('click', () => {
+        setMode(!isCompactMode);
+    });
+}
 
 function setMode(compact) {
     isCompactMode = compact;
@@ -1057,56 +1105,18 @@ function setMode(compact) {
     setTimeout(() => centerActiveLineInViewport('auto'), 60);
 }
 
-// Settings Popout Window & Tabs
-let savedOpacityBeforeSettings = null;
-
+// Independent Settings Window Triggers
 function openSettings() {
-    if (!settingsPanel) return;
-    settingsPanel.classList.remove('hidden');
-
-    // Expand window smoothly so music card and settings popout float together
-    if (window.electronAPI) {
-        if (isOnlyLyricsMode) {
-            window.electronAPI.resizeWindow(480, 510);
-        } else {
-            window.electronAPI.resizeWindow(520, 530);
-        }
+    if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+    if (window.electronAPI && window.electronAPI.openSettingsWindow) {
+        window.electronAPI.openSettingsWindow();
     }
-
-    const scrollContainer = document.querySelector('.settings-body-scroll');
-    if (scrollContainer) scrollContainer.scrollTop = 0;
 }
 
 function closeSettings() {
-    if (!settingsPanel) return;
-    settingsPanel.classList.add('hidden');
-
-    // Restore active miniplayer card window size
-    if (window.electronAPI) {
-        if (isOnlyLyricsMode) {
-            window.electronAPI.resizeWindow(380, 120);
-        } else {
-            window.electronAPI.resizeWindow(520, 140);
-        }
+    if (window.electronAPI && window.electronAPI.closeSettingsWindow) {
+        window.electronAPI.closeSettingsWindow();
     }
-
-    // Force WebKit compositor invalidation so headers & controls repaint properly
-    requestAnimationFrame(() => {
-        const dragH = document.getElementById('drag-header');
-        if (dragH) {
-            dragH.style.display = 'none';
-            dragH.offsetHeight; // trigger reflow
-            dragH.style.display = '';
-        }
-        if (appContainer) {
-            appContainer.offsetHeight;
-        }
-    });
-
-    setTimeout(() => {
-        centerActiveLineInViewport('auto');
-        syncLoop();
-    }, 60);
 }
 
 // Robust mouse hover tracking to guarantee header visibility across all modes
@@ -1127,11 +1137,7 @@ if (appContainer) {
 if (btnSettings) {
     btnSettings.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (settingsPanel && settingsPanel.classList.contains('hidden')) {
-            openSettings();
-        } else {
-            closeSettings();
-        }
+        openSettings();
     });
 }
 
@@ -1149,10 +1155,12 @@ if (btnCloseSettings) {
     });
 }
 
-// ESC key to close settings modal
+// ESC key to close quick dropdown
 window.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && settingsPanel && !settingsPanel.classList.contains('hidden')) {
-        closeSettings();
+    if (e.key === 'Escape') {
+        if (quickDropdownMenu && !quickDropdownMenu.classList.contains('hidden')) {
+            quickDropdownMenu.classList.add('hidden');
+        }
     }
 });
 
@@ -1170,12 +1178,14 @@ tabButtons.forEach(btn => {
 });
 
 // Opacity Slider
-opacitySlider.addEventListener('input', (e) => {
-    const val = e.target.value;
-    opacityVal.textContent = val + '%';
-    localStorage.setItem('window_opacity', val);
-    savedOpacityBeforeSettings = parseInt(val, 10);
-});
+if (opacitySlider) {
+    opacitySlider.addEventListener('input', (e) => {
+        const val = e.target.value;
+        if (opacityVal) opacityVal.textContent = val + '%';
+        localStorage.setItem('window_opacity', val);
+        savedOpacityBeforeSettings = parseInt(val, 10);
+    });
+}
 
 // Theme Selector
 themeChips.forEach(chip => {
@@ -1565,11 +1575,11 @@ function showOffsetToast(msg) {
     }, 1200);
 }
 
-btnOffsetM5.addEventListener('click', () => adjustOffset(-0.5));
-btnOffsetM1.addEventListener('click', () => adjustOffset(-0.1));
-btnOffsetP1.addEventListener('click', () => adjustOffset(+0.1));
-btnOffsetP5.addEventListener('click', () => adjustOffset(+0.5));
-btnOffsetReset.addEventListener('click', () => setOffset(0));
+if (btnOffsetM5) btnOffsetM5.addEventListener('click', () => adjustOffset(-0.5));
+if (btnOffsetM1) btnOffsetM1.addEventListener('click', () => adjustOffset(-0.1));
+if (btnOffsetP1) btnOffsetP1.addEventListener('click', () => adjustOffset(+0.1));
+if (btnOffsetP5) btnOffsetP5.addEventListener('click', () => adjustOffset(+0.5));
+if (btnOffsetReset) btnOffsetReset.addEventListener('click', () => setOffset(0));
 
 function adjustOffset(delta) {
     setOffset(userOffset + delta, true);
@@ -1578,6 +1588,7 @@ function adjustOffset(delta) {
 function setOffset(val, notify = false) {
     userOffset = Math.round(val * 100) / 100;
     localStorage.setItem('lyric_offset', userOffset);
+    localStorage.setItem('lyrics_offset', userOffset);
     updateOffsetDisplay();
     if (notify) {
         const sign = userOffset > 0 ? '+' : '';
@@ -1586,7 +1597,9 @@ function setOffset(val, notify = false) {
 }
 
 function updateOffsetDisplay() {
-    offsetValEl.textContent = (userOffset >= 0 ? '+' : '') + userOffset.toFixed(2) + 's';
+    if (offsetValEl) {
+        offsetValEl.textContent = (userOffset >= 0 ? '+' : '') + userOffset.toFixed(2) + 's';
+    }
 }
 
 // Global Keyboard Shortcuts for Offset Fine-tuning: [ (-0.5s), ] (+0.5s), \ (Reset)
@@ -1607,16 +1620,21 @@ window.addEventListener('keydown', (e) => {
 });
 
 // Manual Lyrics Search
-btnManualSearch.addEventListener('click', performManualSearch);
-manualSearchInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') performManualSearch();
-});
+if (btnManualSearch) {
+    btnManualSearch.addEventListener('click', performManualSearch);
+}
+if (manualSearchInput) {
+    manualSearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') performManualSearch();
+    });
+}
 
 async function performManualSearch() {
+    if (!manualSearchInput) return;
     const query = manualSearchInput.value.trim();
     if (!query) return;
 
-    manualSearchStatus.textContent = 'Mencari lirik...';
+    if (manualSearchStatus) manualSearchStatus.textContent = 'Mencari lirik...';
     try {
         if (window.electronAPI) {
             const result = await window.electronAPI.searchLyricsManual(query);
@@ -1624,83 +1642,92 @@ async function performManualSearch() {
                 currentLyrics = result;
                 if (result.artwork) updateHeaderAvatar(result.artwork);
                 renderLyrics(result);
-                manualSearchStatus.textContent = `✓ Lirik ditemukan (${result.lines.length} baris)`;
-                settingsPanel.classList.add('hidden');
+                if (manualSearchStatus) manualSearchStatus.textContent = `✓ Lirik ditemukan (${result.lines.length} baris)`;
             } else {
-                manualSearchStatus.textContent = '✕ Lirik tidak ditemukan untuk pencarian tersebut.';
+                if (manualSearchStatus) manualSearchStatus.textContent = '✕ Lirik tidak ditemukan untuk pencarian tersebut.';
             }
         }
     } catch (e) {
-        manualSearchStatus.textContent = '✕ Terjadi kesalahan saat mencari.';
+        if (manualSearchStatus) manualSearchStatus.textContent = '✕ Terjadi kesalahan saat mencari.';
     }
 }
 
 // Auto-Hide Controls Toggle
-toggleAutoHide.addEventListener('change', (e) => {
-    autoHideControls = e.target.checked;
-    localStorage.setItem('autohide_controls', autoHideControls);
-    appContainer.classList.toggle('autohide-active', autoHideControls);
-});
+if (toggleAutoHide) {
+    toggleAutoHide.addEventListener('change', (e) => {
+        autoHideControls = e.target.checked;
+        localStorage.setItem('autohide_controls', autoHideControls);
+        if (appContainer) appContainer.classList.toggle('autohide-active', autoHideControls);
+    });
+}
 
 // Ambient Glow Toggle
-toggleAmbient.addEventListener('change', (e) => {
-    ambientGlowEnabled = e.target.checked;
-    localStorage.setItem('ambient_glow', ambientGlowEnabled);
-    ambientBackdrop.classList.toggle('disabled', !ambientGlowEnabled);
-});
+if (toggleAmbient) {
+    toggleAmbient.addEventListener('change', (e) => {
+        ambientGlowEnabled = e.target.checked;
+        localStorage.setItem('ambient_glow', ambientGlowEnabled);
+        if (ambientBackdrop) ambientBackdrop.classList.toggle('disabled', !ambientGlowEnabled);
+    });
+}
 
 // Auto-Updater UI Logic
-btnCheckUpdates.addEventListener('click', async () => {
-    updateStatusText.textContent = 'Memeriksa pembaruan ke server...';
-    if (window.electronAPI) {
-        const res = await window.electronAPI.checkForUpdates();
-        handleUpdateStatus(res);
-    }
-});
+if (btnCheckUpdates) {
+    btnCheckUpdates.addEventListener('click', async () => {
+        if (updateStatusText) updateStatusText.textContent = 'Memeriksa pembaruan ke server...';
+        if (window.electronAPI) {
+            const res = await window.electronAPI.checkForUpdates();
+            handleUpdateStatus(res);
+        }
+    });
+}
 
-btnDownloadUpdate.addEventListener('click', async () => {
-    if (window.electronAPI) {
-        btnDownloadUpdate.classList.add('hidden');
-        updateProgressBar.classList.remove('hidden');
-        await window.electronAPI.downloadUpdate();
-    }
-});
+if (btnDownloadUpdate) {
+    btnDownloadUpdate.addEventListener('click', async () => {
+        if (window.electronAPI) {
+            btnDownloadUpdate.classList.add('hidden');
+            if (updateProgressBar) updateProgressBar.classList.remove('hidden');
+            await window.electronAPI.downloadUpdate();
+        }
+    });
+}
 
-btnInstallUpdate.addEventListener('click', () => {
-    if (window.electronAPI) {
-        window.electronAPI.installUpdate();
-    }
-});
+if (btnInstallUpdate) {
+    btnInstallUpdate.addEventListener('click', () => {
+        if (window.electronAPI) {
+            window.electronAPI.installUpdate();
+        }
+    });
+}
 
 function handleUpdateStatus(status) {
     if (!status) return;
 
     if (status.version) {
-        appVersionBadge.textContent = `v${status.version}`;
-        updateCurrentVersion.textContent = `Versi ${status.version}`;
+        if (appVersionBadge) appVersionBadge.textContent = `v${status.version}`;
+        if (updateCurrentVersion) updateCurrentVersion.textContent = `Versi ${status.version}`;
     }
 
-    if (status.message) {
+    if (status.message && updateStatusText) {
         updateStatusText.textContent = status.message;
     }
 
     if (status.state === 'available') {
-        btnDownloadUpdate.classList.remove('hidden');
-        btnInstallUpdate.classList.add('hidden');
-        updateProgressBar.classList.add('hidden');
+        if (btnDownloadUpdate) btnDownloadUpdate.classList.remove('hidden');
+        if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+        if (updateProgressBar) updateProgressBar.classList.add('hidden');
     } else if (status.state === 'downloading') {
-        btnDownloadUpdate.classList.add('hidden');
-        btnInstallUpdate.classList.add('hidden');
-        updateProgressBar.classList.remove('hidden');
-        updateProgressFill.style.width = `${status.progress || 0}%`;
+        if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+        if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+        if (updateProgressBar) updateProgressBar.classList.remove('hidden');
+        if (updateProgressFill) updateProgressFill.style.width = `${status.progress || 0}%`;
     } else if (status.state === 'downloaded') {
-        btnDownloadUpdate.classList.add('hidden');
-        btnInstallUpdate.classList.remove('hidden');
-        updateProgressBar.classList.add('hidden');
+        if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+        if (btnInstallUpdate) btnInstallUpdate.classList.remove('hidden');
+        if (updateProgressBar) updateProgressBar.classList.add('hidden');
     } else {
-        btnDownloadUpdate.classList.add('hidden');
-        btnInstallUpdate.classList.add('hidden');
-        updateProgressBar.classList.add('hidden');
+        if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+        if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+        if (updateProgressBar) updateProgressBar.classList.add('hidden');
     }
 }
 

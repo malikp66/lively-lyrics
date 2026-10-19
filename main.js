@@ -24,6 +24,7 @@ if (!gotTheLock) {
 }
 
 let mainWindow = null;
+let settingsWindow = null;
 let tray = null;
 let isClickThrough = false;
 let currentTrackKey = '';
@@ -407,6 +408,61 @@ ipcMain.on('resize-window', (event, { width, height }) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.setSize(width, height);
     }
+});
+
+function openSettingsWindow() {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.show();
+        settingsWindow.focus();
+        return;
+    }
+    settingsWindow = new BrowserWindow({
+        width: 500,
+        height: 530,
+        minWidth: 460,
+        minHeight: 400,
+        frame: false,
+        transparent: true,
+        alwaysOnTop: true,
+        resizable: true,
+        show: false,
+        icon: getIconPath(),
+        backgroundColor: '#00000000',
+        hasShadow: false,
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            nodeIntegration: false,
+            contextIsolation: true,
+            backgroundThrottling: false
+        }
+    });
+
+    settingsWindow.loadFile(path.join(__dirname, 'public', 'settings.html'));
+    applyAlwaysOnTop(settingsWindow, true);
+
+    settingsWindow.once('ready-to-show', () => {
+        if (!settingsWindow || settingsWindow.isDestroyed()) return;
+        settingsWindow.show();
+        settingsWindow.focus();
+    });
+
+    settingsWindow.on('closed', () => {
+        settingsWindow = null;
+    });
+}
+
+function closeSettingsWindow() {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.hide();
+    }
+}
+
+ipcMain.on('open-settings-window', () => {
+    openSettingsWindow();
+});
+
+ipcMain.on('close-settings-window', () => {
+    closeSettingsWindow();
 });
 
 ipcMain.handle('search-lyrics-manual', async (event, query) => {

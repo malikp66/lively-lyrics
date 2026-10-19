@@ -307,12 +307,36 @@ body.bg-minimal .app-container {
     transform: scale(1.05);
 }
 
-* {
+*, *::before, *::after {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    user-select: none;
-    -webkit-user-drag: none;
+    -webkit-user-select: none !important;
+    user-select: none !important;
+    -webkit-user-drag: none !important;
+    cursor: default;
+}
+
+::selection {
+    background: transparent !important;
+    color: inherit !important;
+}
+
+::-moz-selection {
+    background: transparent !important;
+    color: inherit !important;
+}
+
+input[type="text"],
+input[type="search"],
+textarea {
+    -webkit-user-select: text !important;
+    user-select: text !important;
+    cursor: text !important;
+}
+
+button, input[type="color"], input[type="range"], a, .clickable {
+    cursor: pointer !important;
 }
 
 html {
@@ -1611,8 +1635,27 @@ select,
     box-shadow: 0 0 14px var(--accent-glow);
 }
 
-/* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
-/* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
+/* Standalone Settings Window Page */
+body.settings-page {
+    background: transparent !important;
+    padding: 10px;
+    margin: 0;
+    width: 100vw;
+    height: 100vh;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+body.settings-page .settings-popout-window {
+    width: 100%;
+    max-width: 100%;
+    height: 100%;
+    margin-top: 0;
+    flex: 1;
+}
+
 /* Settings Popout Window - Apple macOS Sequoia Liquid Glass Floating Card */
 .settings-popout-window,
 .settings-modal {

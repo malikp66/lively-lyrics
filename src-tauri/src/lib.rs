@@ -179,6 +179,23 @@ fn resize_window(window: tauri::Window, width: f64, height: f64) -> Result<(), S
 }
 
 #[tauri::command]
+fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("settings") {
+        let _ = win.show();
+        let _ = win.set_focus();
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn close_settings_window(app: tauri::AppHandle) -> Result<(), String> {
+    if let Some(win) = app.get_webview_window("settings") {
+        let _ = win.hide();
+    }
+    Ok(())
+}
+
+#[tauri::command]
 fn get_app_version() -> String {
     "3.0.0".to_string()
 }
@@ -252,9 +269,19 @@ pub fn run() {
             close_window,
             resize_window,
             start_dragging,
+            open_settings_window,
+            close_settings_window,
             get_app_version,
             get_platform
         ])
+        .on_window_event(|window, event| {
+            if window.label() == "settings" {
+                if let tauri::WindowEvent::CloseRequested { api, .. } = event {
+                    let _ = window.hide();
+                    api.prevent_close();
+                }
+            }
+        })
         .setup(move |app| {
             let handle = app.handle().clone();
             let state_clone = app_state.clone();
