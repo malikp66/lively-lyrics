@@ -93,11 +93,17 @@ const btnThreeDotsPlayer = document.getElementById('btn-three-dots-player');
 const btnThreeDotsLyrics = document.getElementById('btn-three-dots-lyrics');
 const quickDropdownMenu = document.getElementById('quick-dropdown-menu');
 const dropdownItemSettings = document.getElementById('dropdown-item-settings');
+const dropdownItemResync = document.getElementById('dropdown-item-resync');
 const dropdownItemToggleLyrics = document.getElementById('dropdown-item-toggle-lyrics');
 const dropdownIconLyrics = document.getElementById('dropdown-icon-lyrics');
 const dropdownTextLyrics = document.getElementById('dropdown-text-lyrics');
 const dropdownItemMinimize = document.getElementById('dropdown-item-minimize');
 const dropdownItemClose = document.getElementById('dropdown-item-close');
+
+// Animated Split Divider with Chevron Toggle
+const islandDivider = document.getElementById('island-divider');
+const btnDividerToggle = document.getElementById('btn-divider-toggle');
+const dividerChevronIcon = document.getElementById('divider-chevron-icon');
 
 const btnPlayPause = document.getElementById('btn-playpause');
 const playIcon = document.getElementById('play-icon');
@@ -857,6 +863,13 @@ if (dropdownItemSettings) {
     });
 }
 
+if (dropdownItemResync) {
+    dropdownItemResync.addEventListener('click', () => {
+        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        triggerResync();
+    });
+}
+
 if (dropdownItemToggleLyrics) {
     dropdownItemToggleLyrics.addEventListener('click', () => {
         if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
@@ -1468,7 +1481,7 @@ if (btnClose) {
 }
 
 // =========================================
-// PLAYER PANEL MINIMIZE / COLLAPSE ANIMATION
+// PLAYER PANEL MINIMIZE / COLLAPSE ANIMATION (VIA DIVIDER CHEVRON)
 // =========================================
 let isPlayerPanelCollapsed = localStorage.getItem('player_panel_collapsed') === 'true';
 
@@ -1479,12 +1492,14 @@ function setPlayerPanelCollapsed(collapsed) {
     if (trackHeaderCard) {
         trackHeaderCard.classList.toggle('collapsed', collapsed);
     }
-    if (btnExpandPlayer) {
-        btnExpandPlayer.classList.toggle('hidden', !collapsed);
+    if (islandDivider) {
+        islandDivider.classList.toggle('collapsed', collapsed);
     }
-    if (btnCollapsePlayer) {
-        btnCollapsePlayer.classList.toggle('active', collapsed);
-        btnCollapsePlayer.title = collapsed ? 'Tampilkan Panel Lagu' : 'Sembunyikan Panel Lagu (Minimize Bagian Kiri)';
+    if (dividerChevronIcon) {
+        dividerChevronIcon.className = collapsed ? 'ph-bold ph-caret-right' : 'ph-bold ph-caret-left';
+    }
+    if (btnDividerToggle) {
+        btnDividerToggle.title = collapsed ? 'Tampilkan Panel Lagu (Kembali ke Normal)' : 'Sembunyikan Panel Lagu (Mode Lirik Fokus)';
     }
 
     if (window.electronAPI && typeof window.electronAPI.resizeWindow === 'function') {
@@ -1503,15 +1518,17 @@ function setPlayerPanelCollapsed(collapsed) {
     }, 200);
 }
 
-if (btnCollapsePlayer) {
-    btnCollapsePlayer.addEventListener('click', () => {
+if (btnDividerToggle) {
+    btnDividerToggle.addEventListener('click', (e) => {
+        e.stopPropagation();
         setPlayerPanelCollapsed(!isPlayerPanelCollapsed);
     });
 }
 
-if (btnExpandPlayer) {
-    btnExpandPlayer.addEventListener('click', () => {
-        setPlayerPanelCollapsed(false);
+if (islandDivider) {
+    islandDivider.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-divider-toggle')) return;
+        setPlayerPanelCollapsed(!isPlayerPanelCollapsed);
     });
 }
 

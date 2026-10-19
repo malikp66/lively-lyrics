@@ -87,6 +87,10 @@
                 <i class="ph-bold ph-gear-six"></i>
                 <span>Pengaturan</span>
             </button>
+            <button class="dropdown-item" id="dropdown-item-resync">
+                <i id="dropdown-icon-resync" class="ph-bold ph-arrows-clockwise"></i>
+                <span>Sync Ulang (Ctrl+R)</span>
+            </button>
             <button class="dropdown-item" id="dropdown-item-toggle-lyrics">
                 <i id="dropdown-icon-lyrics" class="ph-bold ph-subtitles"></i>
                 <span id="dropdown-text-lyrics">Mode Hanya Lirik</span>
@@ -554,14 +558,8 @@
                     <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
                 </div>
 
-                <!-- Row 4: Playback Controls (Collapse Left Panel, Sync, Prev, Play/Pause, Next) -->
+                <!-- Row 4: Pure Playback Controls (Prev, Play/Pause, Next) -->
                 <footer class="playback-dock no-drag" id="playback-dock">
-                    <button id="btn-collapse-player" class="dock-btn-quote" title="Sembunyikan Panel Lagu (Minimize Bagian Kiri)">
-                        <i class="ph-bold ph-sidebar-simple"></i>
-                    </button>
-                    <button id="btn-resync" class="dock-btn" title="Sync Ulang Lirik & Waktu (Ctrl+R)">
-                        <i id="icon-resync-header" class="ph-bold ph-arrows-clockwise"></i>
-                    </button>
                     <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
                         <i class="ph-fill ph-skip-back"></i>
                     </button>
@@ -572,16 +570,21 @@
                     <button id="btn-next" class="dock-btn" title="Lagu Selanjutnya">
                         <i class="ph-fill ph-skip-forward"></i>
                     </button>
+                    <!-- Hidden compatibility references -->
+                    <button id="btn-collapse-player" class="hidden"></button>
+                    <button id="btn-resync" class="hidden"><i id="icon-resync-header"></i></button>
                 </footer>
             </section>
 
+            <!-- Interactive Split Divider with Animated Chevron Micro-Pill -->
+            <div class="island-split-divider no-drag" id="island-divider" data-tauri-drag-region="false" title="Sembunyikan / Tampilkan Panel Lagu">
+                <button class="divider-chevron-btn" id="btn-divider-toggle" title="Toggle Panel Lagu (Mode Lirik Fokus)">
+                    <i id="divider-chevron-icon" class="ph-bold ph-caret-left"></i>
+                </button>
+            </div>
+
             <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
             <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
-                <!-- Floating Button to Expand Left Panel when Collapsed -->
-                <button id="btn-expand-player" class="btn-expand-floating hidden no-drag" title="Tampilkan Panel Lagu">
-                    <i class="ph-bold ph-sidebar-simple"></i>
-                </button>
-
                 <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
                 <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
                     <i class="ph-bold ph-dots-three-vertical"></i>
