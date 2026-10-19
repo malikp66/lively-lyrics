@@ -635,7 +635,10 @@ function renderLyrics(lyrics) {
     lyricsContainer.appendChild(fragment);
 }
 
-// High-Frequency Continuous Synchronization Loop (~30 FPS)
+// High-Performance VSync-Driven Synchronization Loop (60/120Hz ProMotion Ready)
+let lastRenderedCurrentTime = '';
+let lastRenderedDurationTime = '';
+
 function syncLoop() {
     if (currentMedia && currentMedia.duration > 0) {
         let currentPos = lastKnownPosition;
@@ -647,13 +650,24 @@ function syncLoop() {
 
         const progressPercent = Math.min(100, Math.max(0, (currentPos / currentMedia.duration) * 100));
         scrubberProgress.style.width = `${progressPercent}%`;
-        currentTimeEl.textContent = formatTime(currentPos);
+
+        const curTimeStr = formatTime(currentPos);
+        if (lastRenderedCurrentTime !== curTimeStr) {
+            currentTimeEl.textContent = curTimeStr;
+            lastRenderedCurrentTime = curTimeStr;
+        }
+
         if (currentMedia.duration > 0) {
+            let durStr = '';
             if (showRemainingDuration) {
                 const remaining = Math.max(0, currentMedia.duration - currentPos);
-                totalDurationEl.textContent = `-${formatTime(remaining)}`;
+                durStr = `-${formatTime(remaining)}`;
             } else {
-                totalDurationEl.textContent = formatTime(currentMedia.duration);
+                durStr = formatTime(currentMedia.duration);
+            }
+            if (lastRenderedDurationTime !== durStr) {
+                totalDurationEl.textContent = durStr;
+                lastRenderedDurationTime = durStr;
             }
         }
 
@@ -676,8 +690,48 @@ function syncLoop() {
     }
 }
 
-// Continuous non-throttled interval
-setInterval(syncLoop, 35);
+// Driven by requestAnimationFrame for silky smooth display vsync
+let syncRafId = null;
+function syncTick() {
+    syncLoop();
+    syncRafId = requestAnimationFrame(syncTick);
+}
+syncRafId = requestAnimationFrame(syncTick);
+
+// High-performance smooth scrolling with instant zero-frame ramp-up (ease-out cubic)
+let lyricScrollAnimId = null;
+
+function smoothScrollLyricsTo(targetTop, duration = 180) {
+    if (!lyricsViewport) return;
+    if (lyricScrollAnimId) {
+        cancelAnimationFrame(lyricScrollAnimId);
+        lyricScrollAnimId = null;
+    }
+
+    const startTop = lyricsViewport.scrollTop;
+    const distance = targetTop - startTop;
+    if (Math.abs(distance) < 1) {
+        lyricsViewport.scrollTop = targetTop;
+        return;
+    }
+
+    const startTime = performance.now();
+    function step(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(1, elapsed / duration);
+        // easeOutCubic: starts at full velocity immediately (slope = 3), zero initial lag
+        const ease = 1 - Math.pow(1 - progress, 3);
+        lyricsViewport.scrollTop = startTop + (distance * ease);
+
+        if (progress < 1) {
+            lyricScrollAnimId = requestAnimationFrame(step);
+        } else {
+            lyricsViewport.scrollTop = targetTop;
+            lyricScrollAnimId = null;
+        }
+    }
+    lyricScrollAnimId = requestAnimationFrame(step);
+}
 
 // Scroll active lyric line into center of viewport reliably across all modes
 function centerActiveLineInViewport(behavior = 'smooth') {
@@ -690,15 +744,16 @@ function centerActiveLineInViewport(behavior = 'smooth') {
 
     const activeTop = activeEl.offsetTop;
     const activeHeight = activeEl.offsetHeight;
-    const targetScrollTop = activeTop - (viewportHeight / 2) + (activeHeight / 2);
+    const targetScrollTop = Math.max(0, activeTop - (viewportHeight / 2) + (activeHeight / 2));
 
-    try {
-        lyricsViewport.scrollTo({
-            top: Math.max(0, targetScrollTop),
-            behavior: behavior
-        });
-    } catch (e) {
-        lyricsViewport.scrollTop = Math.max(0, targetScrollTop);
+    if (behavior === 'smooth') {
+        smoothScrollLyricsTo(targetScrollTop, 180);
+    } else {
+        if (lyricScrollAnimId) {
+            cancelAnimationFrame(lyricScrollAnimId);
+            lyricScrollAnimId = null;
+        }
+        lyricsViewport.scrollTop = targetScrollTop;
     }
 }
 
