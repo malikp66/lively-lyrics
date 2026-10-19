@@ -2438,18 +2438,23 @@ kbd {
     );
     border-top-left-radius: var(--radius-window);
     border-top-right-radius: var(--radius-window);
-    opacity: 0.88;
-    pointer-events: auto;
-    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
+    opacity: 0;
+    pointer-events: none;
+    transform: translateY(-8px);
+    transition: opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                transform 0.28s cubic-bezier(0.16, 1, 0.3, 1),
+                background 0.2s ease;
 }
 
-.app-container.mode-only-lyrics:hover .drag-header,
-.app-container.mode-only-lyrics.is-hovered .drag-header {
+.app-container.mode-only-lyrics.is-hovered .drag-header,
+.mode-only-lyrics .drag-header:hover {
     opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
     background: linear-gradient(
         180deg,
-        rgba(32, 42, 60, 0.96) 0%,
-        rgba(18, 24, 38, 0.88) 75%,
+        rgba(24, 32, 48, 0.96) 0%,
+        rgba(16, 22, 34, 0.85) 75%,
         transparent 100%
     );
 }
@@ -2612,11 +2617,11 @@ kbd {
 
 .mode-only-lyrics .lyrics-stage {
     padding: 0 16px;
-    height: calc(100% - 34px);
-    margin-top: 34px;
+    height: 100% !important;
+    margin-top: 0 !important;
     display: block !important;
-    mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
+    mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
     overflow-y: auto !important;
     overflow-x: hidden !important;
     scrollbar-width: none !important;
@@ -2630,7 +2635,7 @@ kbd {
 }
 
 .mode-only-lyrics .lyrics-flow {
-    padding: 30px 0 34px 0;
+    padding: 24px 0 28px 0;
     gap: 8px;
     width: 100%;
     display: flex;

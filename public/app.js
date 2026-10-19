@@ -1080,6 +1080,9 @@ document.addEventListener('click', (e) => {
     if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) return;
     if (!quickDropdownMenu.contains(e.target) && !e.target.closest('#btn-three-dots-player') && !e.target.closest('#btn-three-dots-lyrics')) {
         quickDropdownMenu.classList.add('hidden');
+        if (!appContainer.matches(':hover')) {
+            appContainer.classList.remove('is-hovered');
+        }
     }
 });
 
@@ -1163,18 +1166,34 @@ function closeSettings() {
     }
 }
 
-// Robust mouse hover tracking to guarantee header visibility across all modes
-if (appContainer) {
-    appContainer.addEventListener('mouseenter', () => {
-        appContainer.classList.add('is-hovered');
-    });
-    appContainer.addEventListener('mousemove', () => {
-        if (!appContainer.classList.contains('is-hovered')) {
-            appContainer.classList.add('is-hovered');
+// Robust cursor hover and motion tracking with auto-hide timer for Only-Lyrics header
+let headerInactivityTimer = null;
+
+function revealHeaderOnCursorActivity() {
+    if (!appContainer) return;
+    appContainer.classList.add('is-hovered');
+
+    if (headerInactivityTimer) {
+        clearTimeout(headerInactivityTimer);
+    }
+
+    // Auto-close header after 2.2s of cursor inactivity so lyrics are never obstructed
+    headerInactivityTimer = setTimeout(() => {
+        // Keep visible only if quick dropdown menu is open
+        if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) {
+            appContainer.classList.remove('is-hovered');
         }
-    });
+    }, 2200);
+}
+
+if (appContainer) {
+    appContainer.addEventListener('mouseenter', revealHeaderOnCursorActivity);
+    appContainer.addEventListener('mousemove', revealHeaderOnCursorActivity);
     appContainer.addEventListener('mouseleave', () => {
-        appContainer.classList.remove('is-hovered');
+        if (headerInactivityTimer) clearTimeout(headerInactivityTimer);
+        if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) {
+            appContainer.classList.remove('is-hovered');
+        }
     });
 }
 
