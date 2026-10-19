@@ -11,10 +11,10 @@
     "windows": [
       {
         "title": "LivelyLyrics",
-        "width": 460,
-        "height": 275,
-        "minWidth": 280,
-        "minHeight": 80,
+        "width": 520,
+        "height": 140,
+        "minWidth": 380,
+        "minHeight": 110,
         "resizable": true,
         "fullscreen": false,
         "transparent": true,

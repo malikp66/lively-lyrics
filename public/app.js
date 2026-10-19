@@ -297,12 +297,12 @@ setTimeout(() => {
     dismissSplashScreen('Siap menyanyikan lagu favoritmu...');
 }, 1800);
 
-// Format Seconds -> mm:ss
+// Format Seconds -> mm:ss (Always 2-digit padded)
 function formatTime(seconds) {
-    if (isNaN(seconds) || seconds < 0) return '0:00';
+    if (isNaN(seconds) || seconds < 0) return '00:00';
     const m = Math.floor(seconds / 60);
     const s = Math.floor(seconds % 60);
-    return `${m}:${s < 10 ? '0' : ''}${s}`;
+    return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
 // Update Header Track Artwork Avatar
@@ -504,6 +504,10 @@ function syncLoop() {
         const progressPercent = Math.min(100, Math.max(0, (currentPos / currentMedia.duration) * 100));
         scrubberProgress.style.width = `${progressPercent}%`;
         currentTimeEl.textContent = formatTime(currentPos);
+        if (currentMedia.duration > 0) {
+            const remaining = Math.max(0, currentMedia.duration - currentPos);
+            totalDurationEl.textContent = `-${formatTime(remaining)}`;
+        }
 
         if (currentLyrics && currentLyrics.hasSynced && currentLyrics.lines.length > 0) {
             let foundIdx = -1;
@@ -717,13 +721,9 @@ function setOnlyLyricsMode(enabled) {
     if (normalWindowActions) normalWindowActions.classList.toggle('hidden', enabled);
 
     if (enabled) {
-        if (window.electronAPI) window.electronAPI.resizeWindow(460, 150);
+        if (window.electronAPI) window.electronAPI.resizeWindow(380, 120);
     } else {
-        if (isCompactMode) {
-            if (window.electronAPI) window.electronAPI.resizeWindow(440, 160);
-        } else {
-            if (window.electronAPI) window.electronAPI.resizeWindow(460, 275);
-        }
+        if (window.electronAPI) window.electronAPI.resizeWindow(520, 140);
     }
 
     // Re-center active lyric line immediately after layout/resize settles
@@ -764,7 +764,7 @@ function setMode(compact) {
         if (compactIcon) {
             compactIcon.className = 'ph-bold ph-arrows-in-simple';
         }
-        if (!isOnlyLyricsMode && window.electronAPI) window.electronAPI.resizeWindow(460, 275);
+        if (!isOnlyLyricsMode && window.electronAPI) window.electronAPI.resizeWindow(520, 140);
     }
     setTimeout(() => centerActiveLineInViewport('auto'), 60);
 }
@@ -790,11 +790,9 @@ function closeSettings() {
     // Restore active mode window size
     if (window.electronAPI) {
         if (isOnlyLyricsMode) {
-            window.electronAPI.resizeWindow(460, 150);
-        } else if (isCompactMode) {
-            window.electronAPI.resizeWindow(440, 160);
+            window.electronAPI.resizeWindow(380, 120);
         } else {
-            window.electronAPI.resizeWindow(460, 275);
+            window.electronAPI.resizeWindow(520, 140);
         }
     }
 
@@ -1330,3 +1328,10 @@ if (btnClose) {
 // Run preferences initialization now that everything is attached and defined
 applySavedPreferences();
 
+
+const btnOnlyLyricsToggle = document.getElementById('btn-only-lyrics-toggle');
+if (btnOnlyLyricsToggle) {
+    btnOnlyLyricsToggle.addEventListener('click', () => {
+        setOnlyLyricsMode(!isOnlyLyricsMode);
+    });
+}

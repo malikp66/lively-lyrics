@@ -116,8 +116,8 @@ function createWindow() {
     const primaryDisplay = screen.getPrimaryDisplay();
     const { width: screenWidth, height: screenHeight } = primaryDisplay.workAreaSize;
 
-    const winWidth = 460;
-    const winHeight = 275;
+    const winWidth = 520;
+    const winHeight = 140;
     const defaultX = Math.max(20, screenWidth - winWidth - 30);
     const defaultY = Math.max(20, screenHeight - winHeight - 30);
     const { x: posX, y: posY } = loadSavedPosition(defaultX, defaultY);
@@ -127,8 +127,8 @@ function createWindow() {
         height: winHeight,
         x: posX,
         y: posY,
-        minWidth: 280,
-        minHeight: 80,
+        minWidth: 380,
+        minHeight: 110,
         frame: false,
         transparent: true,
         alwaysOnTop: true,

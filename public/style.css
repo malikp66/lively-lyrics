@@ -523,19 +523,30 @@ body {
     align-items: flex-start;
 }
 
-/* Drag Header */
+/* Floating Drag Header Overlay (Subtle, Non-Intrusive) */
 .drag-header {
-    height: 40px;
+    height: 26px;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    padding: 0 14px;
-    background: rgba(255, 255, 255, 0.03);
-    border-bottom: 1px solid var(--border-glass-subtle);
+    justify-content: flex-end;
+    padding: 0 8px;
+    background: transparent;
+    border: none;
     border-radius: var(--radius-window) var(--radius-window) 0 0;
-    flex-shrink: 0;
-    position: relative;
-    z-index: 2;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.app-container:hover .drag-header,
+.app-container.is-hovered .drag-header {
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .drag-region {
@@ -776,34 +787,46 @@ select,
 }
 
 /* Track Header Card (Cover Art, Info, Scrubber) */
-.track-header-card {
-    padding: 10px 14px 6px 14px;
-    margin: 8px 10px 2px 10px;
-    background: rgba(255, 255, 255, 0.04);
-    backdrop-filter: blur(16px);
-    border: 1px solid rgba(255, 255, 255, 0.10);
-    border-top: 1px solid rgba(255, 255, 255, 0.22);
-    border-radius: var(--radius-md);
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+/* 2-Column Horizontal Island Split Layout */
+.island-main-split {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    position: relative;
+    z-index: 2;
+}
+
+.island-player-panel {
+    width: 220px;
     flex-shrink: 0;
-    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 14px 14px 12px 16px;
+    box-sizing: border-box;
+    border-right: 1px solid rgba(255, 255, 255, 0.08);
+    position: relative;
+    background: transparent;
 }
 
 .track-info-layout {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 10px;
+    width: 100%;
 }
 
 .artwork-wrapper {
-    width: 42px;
-    height: 42px;
-    border-radius: var(--radius-md);
+    width: 46px;
+    height: 46px;
+    border-radius: 12px;
     overflow: hidden;
     background: rgba(255, 255, 255, 0.08);
-    border: 1px solid var(--border-glass-subtle);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
     flex-shrink: 0;
     display: flex;
     align-items: center;
@@ -826,26 +849,32 @@ select,
 .track-copy {
     flex: 1;
     overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
 }
 
 .track-name-display {
     font-size: 13.5px;
     font-weight: 700;
-    color: var(--text-primary);
+    color: #ffffff;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    letter-spacing: -0.2px;
+    letter-spacing: -0.01em;
+    line-height: 1.25;
 }
 
 .artist-name-display {
-    font-size: 11.5px;
+    font-size: 10.5px;
     font-weight: 500;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.65);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    margin-top: 1px;
+    margin-top: 2px;
+    line-height: 1.2;
 }
 
 .badge-status {
@@ -893,21 +922,47 @@ select,
 
 /* Scrubber Timeline Bar */
 .scrubber-bar-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    margin: 4px 0 2px 0;
     cursor: pointer;
-    padding: 3px 0 2px 0;
+    padding: 3px 0;
     position: relative;
+    user-select: none;
+}
+
+.time-stamp {
+    font-size: 10.5px;
+    font-weight: 600;
+    font-family: var(--font-ui);
+    font-variant-numeric: tabular-nums;
+    color: rgba(255, 255, 255, 0.85);
+    flex-shrink: 0;
+    letter-spacing: -0.01em;
+}
+
+#current-time {
+    text-align: left;
+    min-width: 30px;
+}
+
+#total-duration {
+    text-align: right;
+    min-width: 36px;
 }
 
 /* Scrubber Time Hover Preview Tooltip */
 .scrubber-tooltip {
     position: absolute;
-    bottom: 24px;
+    bottom: 22px;
     transform: translateX(-50%);
     background: rgba(12, 16, 26, 0.92);
     backdrop-filter: blur(12px);
     border: 1px solid var(--border-glass-highlight);
     color: #ffffff;
-    font-family: var(--font-mono);
+    font-family: var(--font-ui);
     font-size: 10px;
     font-weight: 700;
     padding: 2px 7px;
@@ -919,13 +974,13 @@ select,
 }
 
 .scrubber-track {
-    width: 100%;
-    height: 3px;
-    background: rgba(255, 255, 255, 0.1);
-    border-radius: 4px;
+    flex: 1;
+    height: 3.5px;
+    background: rgba(255, 255, 255, 0.18);
+    border-radius: 999px;
     position: relative;
     overflow: hidden;
-    transition: height 0.18s ease;
+    transition: height 0.15s ease;
 }
 
 .scrubber-bar-container:hover .scrubber-track {
@@ -935,63 +990,80 @@ select,
 .scrubber-progress {
     height: 100%;
     width: 0%;
-    background: var(--accent-color);
-    box-shadow: 0 0 10px var(--accent-glow);
-    border-radius: 4px;
+    background: #ffffff;
+    border-radius: 999px;
+    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
     transition: width 0.15s linear;
 }
 
-.scrubber-timestamps {
-    display: flex;
-    justify-content: space-between;
-    font-family: var(--font-mono);
-    font-size: 9.5px;
-    color: var(--text-muted);
-    font-weight: 500;
-    margin-top: 4px;
-}
-
 /* Lyrics Stage & Flow */
+/* Lyrics Stage & Flow (3-line vertical carousel) */
 .lyrics-stage {
     flex: 1;
     overflow-y: auto;
     overflow-x: hidden;
     scroll-behavior: smooth;
-    padding: 10px 18px;
-    mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 14%, black 86%, transparent 100%);
+    padding: 0 16px;
+    mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 22%, black 78%, transparent 100%);
     position: relative;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
 }
 
 .lyrics-stage::-webkit-scrollbar {
-    width: 3px;
-}
-
-.lyrics-stage::-webkit-scrollbar-thumb {
-    background: rgba(255, 255, 255, 0.12);
-    border-radius: 3px;
+    display: none;
+    width: 0;
 }
 
 .lyrics-flow {
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    padding: 30px 0;
+    gap: 7px;
+    padding: 44px 0;
     transition: all 0.3s ease;
+    align-items: flex-start;
+    text-align: left;
+    width: 100%;
 }
 
 .lyric-line {
-    font-size: var(--lyric-size);
+    font-size: 12px;
     font-weight: 500;
-    color: var(--lyric-inactive-color, rgba(255, 255, 255, 0.72));
-    line-height: 1.45;
+    color: var(--lyric-inactive-color, rgba(255, 255, 255, 0.5));
+    line-height: 1.35;
     cursor: pointer;
-    padding: 4px 10px;
-    border-radius: var(--radius-md);
-    transform: scale(0.97);
-    opacity: var(--lyric-inactive-opacity, 0.35);
+    padding: 2px 0;
+    border-radius: 6px;
+    opacity: var(--lyric-inactive-opacity, 0.42);
     text-shadow: var(--lyric-stroke-shadow);
-    transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: all 0.24s cubic-bezier(0.16, 1, 0.3, 1);
+    text-align: left;
+    width: 100%;
+    transform-origin: left center;
+    transform: scale(0.98);
+}
+
+.lyric-line:hover {
+    color: var(--text-primary);
+    opacity: 0.8;
+}
+
+.lyric-line.near {
+    color: var(--lyric-inactive-color, rgba(255, 255, 255, 0.7));
+    opacity: 0.65;
+    transform: scale(1);
+}
+
+.lyric-line.active {
+    font-size: 14.5px;
+    font-weight: 700;
+    color: var(--lyric-active-color, #ffffff);
+    opacity: 1;
+    transform: scale(1.02);
+    line-height: 1.3;
+    text-shadow: 0 0 16px rgba(255, 255, 255, 0.3), var(--lyric-glow-shadow);
 }
 
 .lyric-line:hover {
@@ -1120,77 +1192,87 @@ select,
     transform: translateY(-1px);
 }
 
-/* Bottom Playback Dock */
+/* Island Playback Dock */
 .playback-dock {
-    height: 48px;
+    height: 32px;
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 16px;
-    background: rgba(0, 0, 0, 0.22);
-    border-top: 1px solid var(--border-glass-subtle);
+    justify-content: space-between;
+    padding: 0 4px;
+    background: transparent !important;
+    border: none !important;
+    box-shadow: none !important;
     flex-shrink: 0;
-    transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-/* Auto-hide feature */
-.autohide-active .playback-dock {
-    opacity: 0;
-    pointer-events: none;
-    transform: translateY(6px);
+.dock-btn-quote {
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.7);
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.18s ease;
 }
 
-.app-container:hover .playback-dock {
-    opacity: 1 !important;
-    pointer-events: auto !important;
-    transform: translateY(0) !important;
+.dock-btn-quote:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.dock-btn-quote.active {
+    color: var(--accent-color);
+    background: rgba(255, 255, 255, 0.14);
 }
 
 .dock-btn {
     background: transparent;
     border: none;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.88);
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    margin: 0;
+    line-height: 1;
+    cursor: pointer;
+    font-size: 15px;
+    transition: all 0.18s ease;
+}
+
+.dock-btn:hover {
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.14);
+    transform: scale(1.08);
+}
+
+.dock-btn-main {
+    background: transparent;
+    color: #ffffff;
+    border: none;
     width: 32px;
     height: 32px;
     border-radius: 50%;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    padding: 0;
-    margin: 0;
-    line-height: 1;
+    font-size: 19px;
     cursor: pointer;
-    transition: all 0.18s ease;
-}
-
-.dock-btn:hover {
-    color: var(--text-primary);
-    background: var(--bg-surface);
-    transform: scale(1.08);
-}
-
-.dock-btn-main {
-    background: var(--text-primary);
-    color: #0b0c10;
-    border: none;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    padding: 0;
-    margin: 0;
-    line-height: 1;
-    cursor: pointer;
-    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.25);
     transition: all 0.18s ease;
 }
 
 .dock-btn-main:hover {
-    background: #ffffff;
+    color: #ffffff;
+    background: rgba(255, 255, 255, 0.18);
     transform: scale(1.12);
-    box-shadow: 0 6px 20px var(--accent-glow);
 }
 
 /* Settings Modal Overlay - High Contrast 100% Opaque Solid Dark Theme */
@@ -1950,6 +2032,7 @@ kbd {
         0 20px 48px -8px rgba(0, 0, 0, 0.60) !important;
 }
 
+.mode-only-lyrics .island-player-panel,
 .mode-only-lyrics #track-header-card,
 .mode-only-lyrics #playback-dock,
 .mode-only-lyrics .normal-actions {
