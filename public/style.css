@@ -1666,6 +1666,7 @@ body.settings-page .settings-popout-window {
 }
 
 .modal-header {
+    -webkit-app-region: drag;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -1684,6 +1685,7 @@ body.settings-page .settings-popout-window {
 }
 
 .modal-title-row {
+    -webkit-app-region: drag;
     display: flex;
     align-items: center;
     gap: 8px;
