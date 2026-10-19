@@ -87,18 +87,6 @@ Aplikasi desktop pemutar musik resmi seperti Spotify memiliki keterbatasan saat 
 3. **Desain Monoton**: Tidak menyatu dengan estetika OS modern dan wallpaper desktop.
 4. **Lirik Sering Desync**: Database lirik sering kali salah memilih versi video klip resmi YouTube (yang memiliki intro video 10-15 detik) daripada versi audio album resmi Spotify.
 
-**LivelyLyrics memecahkan semua masalah tersebut:**
-- 🦀 **Migrasi Rust + Tauri v2**: Penggunaan memori terpangkas drastis menjadi **< 35 MB RAM** dengan startup instan di bawah 1 detik.
-- 🍏 **Apple Liquid Glassmorphism**: Desain kaca cair multi-layer dengan specular highlight border, refraction backdrop blur, pill capsule controls, dan ambient glow adaptif.
-- 🪟 **Detached Settings Popout (Smart Proximity)**: Jendela Pengaturan mandiri terpisah dengan algoritma penempatan dinamis yang otomatis menempel di sekitar miniplayer (atas/bawah dengan gap 10px) dan bebas bercak shadow.
-- 🎤 **Only-Lyrics Mode 2.0 (Motion Reveal)**: Mode subtitle lirik cerdas dengan auto-hide saat idle agar lirik tidak terhalang, dan meluncur turun secara instan saat kursor bergerak.
-- 🎛️ **Quick Three-Dots Menu**: Menu opsi cepat (Pengaturan, Sync Ulang, Minimize, Tutup) yang serasi baik pada mode kartu maupun mode subtitle.
-- 🔤 **Auto-Marquee Bounce**: Judul lagu dan nama artis beranimasi horizontal bolak-balik otomatis bila melebihi lebar wadah.
-- 🎯 **Duration-Precision Scoring Engine**: Algoritma pencocokan durasi otomatis (< 0.3 detik) dan penalti entri video/MV klip untuk mencegah delay lirik.
-- 🔁 **Candidate Cycling pada Re-sync**: Cukup klik tombol sync ulang untuk otomatis beralih ke kandidat pengunggah lirik alternatif bila diperlukan.
-- ⌨️ **Instant Offset Hotkeys**: Tombol pintas `[` (-0.5s), `]` (+0.5s), dan `\` (Reset) disertai floating iOS Liquid Capsule Toast.
-- 👻 **Always-on-Top & Ghost Mode**: Melayang di atas layar penuh (termasuk Full-Screen Space di macOS), dengan kursor tembus klik tanpa mengganggu pekerjaan.
-
 ---
 
 ## ✨ Fitur Unggulan
