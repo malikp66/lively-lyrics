@@ -411,14 +411,52 @@ ipcMain.on('resize-window', (event, { width, height }) => {
 });
 
 function openSettingsWindow() {
+    let targetX = 100;
+    let targetY = 100;
+    const setW = 500;
+    const setH = 530;
+    const gap = 10;
+
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        const [mainX, mainY] = mainWindow.getPosition();
+        const [mainW, mainH] = mainWindow.getSize();
+        const curDisplay = screen.getDisplayNearestPoint({ x: mainX, y: mainY });
+        const workArea = curDisplay ? curDisplay.workArea : { x: 0, y: 0, width: 1920, height: 1080 };
+
+        targetX = mainX + Math.round((mainW - setW) / 2);
+        targetY = mainY - setH - gap;
+
+        const minSafeTop = workArea.y + 30;
+        const maxSafeBottom = workArea.y + workArea.height - 10;
+        if (targetY < minSafeTop) {
+            if (mainY + mainH + gap + setH <= maxSafeBottom) {
+                targetY = mainY + mainH + gap;
+            } else if (mainX + mainW + gap + setW <= workArea.x + workArea.width) {
+                targetX = mainX + mainW + gap;
+                targetY = mainY;
+            } else if (mainX - setW - gap >= workArea.x) {
+                targetX = mainX - setW - gap;
+                targetY = mainY;
+            } else {
+                targetY = mainY + mainH + gap;
+            }
+        }
+
+        targetX = Math.max(workArea.x + 10, Math.min(targetX, workArea.x + workArea.width - setW - 10));
+        targetY = Math.max(minSafeTop, Math.min(targetY, workArea.y + workArea.height - setH - 10));
+    }
+
     if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.setPosition(targetX, targetY);
         settingsWindow.show();
         settingsWindow.focus();
         return;
     }
     settingsWindow = new BrowserWindow({
-        width: 500,
-        height: 530,
+        width: setW,
+        height: setH,
+        x: targetX,
+        y: targetY,
         minWidth: 460,
         minHeight: 400,
         frame: false,
@@ -442,6 +480,7 @@ function openSettingsWindow() {
 
     settingsWindow.once('ready-to-show', () => {
         if (!settingsWindow || settingsWindow.isDestroyed()) return;
+        settingsWindow.setPosition(targetX, targetY);
         settingsWindow.show();
         settingsWindow.focus();
     });

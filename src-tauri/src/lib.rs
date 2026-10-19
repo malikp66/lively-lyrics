@@ -180,9 +180,57 @@ fn resize_window(window: tauri::Window, width: f64, height: f64) -> Result<(), S
 
 #[tauri::command]
 fn open_settings_window(app: tauri::AppHandle) -> Result<(), String> {
-    if let Some(win) = app.get_webview_window("settings") {
-        let _ = win.show();
-        let _ = win.set_focus();
+    if let Some(settings_win) = app.get_webview_window("settings") {
+        if let Some(main_win) = app.get_webview_window("main") {
+            if let (Ok(main_pos), Ok(main_size)) = (main_win.outer_position(), main_win.outer_size()) {
+                let scale = main_win.scale_factor().unwrap_or(1.0);
+                let (mon_x, mon_y, mon_w, mon_h) = if let Ok(Some(mon)) = main_win.current_monitor() {
+                    (mon.position().x, mon.position().y, mon.size().width as i32, mon.size().height as i32)
+                } else {
+                    (0, 0, (1920.0 * scale) as i32, (1080.0 * scale) as i32)
+                };
+
+                let set_w = (500.0 * scale) as i32;
+                let set_h = (530.0 * scale) as i32;
+                let gap = (10.0 * scale) as i32;
+                let main_w_i32 = main_size.width as i32;
+                let main_h_i32 = main_size.height as i32;
+
+                // Calculate bounds
+                let min_safe_top = mon_y + (30.0 * scale) as i32;
+                let max_safe_bottom = mon_y + mon_h - (10.0 * scale) as i32;
+
+                // Priority 1: Right above the miniplayer (centered horizontally)
+                let mut target_x = main_pos.x + (main_w_i32 - set_w) / 2;
+                let mut target_y = main_pos.y - set_h - gap;
+
+                // If not enough room above, place right below the miniplayer
+                if target_y < min_safe_top {
+                    if main_pos.y + main_h_i32 + gap + set_h <= max_safe_bottom {
+                        target_y = main_pos.y + main_h_i32 + gap;
+                    } else if main_pos.x + main_w_i32 + gap + set_w <= mon_x + mon_w {
+                        // Place adjacent right
+                        target_x = main_pos.x + main_w_i32 + gap;
+                        target_y = main_pos.y;
+                    } else if main_pos.x - set_w - gap >= mon_x {
+                        // Place adjacent left
+                        target_x = main_pos.x - set_w - gap;
+                        target_y = main_pos.y;
+                    } else {
+                        // Fallback below clamped
+                        target_y = main_pos.y + main_h_i32 + gap;
+                    }
+                }
+
+                // Clamp to monitor boundaries to ensure full visibility
+                let clamped_x = target_x.clamp(mon_x + (10.0 * scale) as i32, (mon_x + mon_w - set_w - (10.0 * scale) as i32).max(mon_x));
+                let clamped_y = target_y.clamp(min_safe_top, (mon_y + mon_h - set_h - (10.0 * scale) as i32).max(min_safe_top));
+
+                let _ = settings_win.set_position(tauri::Position::Physical(tauri::PhysicalPosition::new(clamped_x, clamped_y)));
+            }
+        }
+        let _ = settings_win.show();
+        let _ = settings_win.set_focus();
     }
     Ok(())
 }

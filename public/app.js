@@ -421,23 +421,41 @@ function formatTime(seconds) {
     return `${m < 10 ? '0' : ''}${m}:${s < 10 ? '0' : ''}${s}`;
 }
 
-// Update Header Track Artwork Avatar
+// Update Header Track Artwork Avatar (Both Normal & Only-Lyrics Mode)
 function updateHeaderAvatar(artworkUrl) {
-    if (!headerAvatarImg || !headerAvatarFallback) return;
-    if (artworkUrl) {
-        headerAvatarImg.src = artworkUrl;
-        headerAvatarImg.classList.remove('hidden');
-        headerAvatarFallback.classList.add('hidden');
-    } else {
-        headerAvatarImg.classList.add('hidden');
-        headerAvatarImg.src = '';
-        headerAvatarFallback.classList.remove('hidden');
+    if (headerAvatarImg && headerAvatarFallback) {
+        if (artworkUrl) {
+            headerAvatarImg.src = artworkUrl;
+            headerAvatarImg.classList.remove('hidden');
+            headerAvatarFallback.classList.add('hidden');
+        } else {
+            headerAvatarImg.classList.add('hidden');
+            headerAvatarImg.src = '';
+            headerAvatarFallback.classList.remove('hidden');
+        }
+    }
+
+    const onlyLyricsAvatar = document.getElementById('only-lyrics-avatar');
+    const onlyLyricsFallback = document.getElementById('only-lyrics-fallback');
+    if (onlyLyricsAvatar && onlyLyricsFallback) {
+        if (artworkUrl) {
+            onlyLyricsAvatar.src = artworkUrl;
+            onlyLyricsAvatar.classList.remove('hidden');
+            onlyLyricsFallback.classList.add('hidden');
+        } else {
+            onlyLyricsAvatar.classList.add('hidden');
+            onlyLyricsAvatar.src = '';
+            onlyLyricsFallback.classList.remove('hidden');
+        }
     }
 }
 
 // Media State Update from Electron IPC
 if (window.electronAPI) {
     window.electronAPI.onMediaUpdate((data) => {
+        const onlyLyricsTitle = document.getElementById('only-lyrics-title');
+        const onlyLyricsArtist = document.getElementById('only-lyrics-artist');
+
         if (!data || !data.active) {
             dismissSplashScreen('Menunggu pemutar musik...');
             updateHeaderAvatar('');
@@ -446,6 +464,8 @@ if (window.electronAPI) {
             if (liveEq) liveEq.classList.add('hidden');
             playbackBadge.classList.remove('playing');
             trackHeaderTicker.textContent = 'Spotify tidak aktif';
+            if (onlyLyricsTitle) onlyLyricsTitle.textContent = 'Menunggu Spotify...';
+            if (onlyLyricsArtist) onlyLyricsArtist.textContent = 'LivelyLyrics';
             isPlaying = false;
             updatePlayPauseButton();
             return;
@@ -463,6 +483,9 @@ if (window.electronAPI) {
         trackNameEl.textContent = titleText;
         artistNameEl.textContent = artistText;
         trackHeaderTicker.textContent = `${titleText} — ${artistText}`;
+
+        if (onlyLyricsTitle) onlyLyricsTitle.textContent = titleText;
+        if (onlyLyricsArtist) onlyLyricsArtist.textContent = artistText;
 
         // Trigger marquee check for long titles and artists
         updateMarquee(trackNameEl);
@@ -877,6 +900,14 @@ if (btnExitOnlyLyrics) {
     });
 }
 
+const btnOnlyLyricsExit = document.getElementById('btn-only-lyrics-exit');
+if (btnOnlyLyricsExit) {
+    btnOnlyLyricsExit.addEventListener('click', (e) => {
+        e.stopPropagation();
+        setOnlyLyricsMode(false);
+    });
+}
+
 if (toggleOnlyLyricsSetting) {
     toggleOnlyLyricsSetting.addEventListener('change', (e) => {
         setOnlyLyricsMode(e.target.checked);
@@ -895,6 +926,19 @@ function setOnlyLyricsMode(enabled) {
     }
     if (iconKaraokeDock) {
         iconKaraokeDock.className = enabled ? 'ph-fill ph-microphone' : 'ph-bold ph-microphone';
+    }
+
+    // Update header karaoke exit button
+    if (btnOnlyLyricsExit) {
+        btnOnlyLyricsExit.classList.toggle('active', enabled);
+    }
+
+    // Sync only-lyrics header metadata
+    if (enabled && currentMedia) {
+        const onlyLyricsTitle = document.getElementById('only-lyrics-title');
+        const onlyLyricsArtist = document.getElementById('only-lyrics-artist');
+        if (onlyLyricsTitle) onlyLyricsTitle.textContent = currentMedia.title || 'Lagu Tanpa Judul';
+        if (onlyLyricsArtist) onlyLyricsArtist.textContent = currentMedia.artist || (currentMedia.album ? currentMedia.album : 'Spotify');
     }
 
     appContainer.classList.toggle('mode-only-lyrics', enabled);
@@ -918,7 +962,7 @@ function setOnlyLyricsMode(enabled) {
     if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
 
     if (enabled) {
-        if (window.electronAPI) window.electronAPI.resizeWindow(380, 120);
+        if (window.electronAPI) window.electronAPI.resizeWindow(400, 130);
     } else {
         if (window.electronAPI) {
             window.electronAPI.resizeWindow(520, 140);

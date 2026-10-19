@@ -597,31 +597,6 @@ body {
     pointer-events: none;
 }
 
-.mode-only-lyrics .drag-header {
-    height: 28px;
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-    padding: 0 8px;
-    background: transparent;
-    border: none;
-    border-radius: var(--radius-window) var(--radius-window) 0 0;
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    z-index: 50;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.mode-only-lyrics.app-container:hover .drag-header,
-.mode-only-lyrics.app-container.is-hovered .drag-header {
-    opacity: 1;
-    pointer-events: auto;
-}
-
 .drag-region {
     -webkit-app-region: drag;
     display: flex;
@@ -1635,10 +1610,10 @@ select,
     box-shadow: 0 0 14px var(--accent-glow);
 }
 
-/* Standalone Settings Window Page */
+/* Standalone Settings Window Page - Clean Apple Liquid Glass (No Dirty Halo Shadow) */
 body.settings-page {
     background: transparent !important;
-    padding: 10px;
+    padding: 0 !important;
     margin: 0;
     width: 100vw;
     height: 100vh;
@@ -1646,14 +1621,20 @@ body.settings-page {
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    border-radius: 18px;
 }
 
 body.settings-page .settings-popout-window {
     width: 100%;
     max-width: 100%;
     height: 100%;
-    margin-top: 0;
+    margin: 0 !important;
     flex: 1;
+    border-radius: 18px;
+    box-shadow: 
+        inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.08),
+        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35) !important;
 }
 
 /* Settings Popout Window - Apple macOS Sequoia Liquid Glass Floating Card */
@@ -1665,9 +1646,9 @@ body.settings-page .settings-popout-window {
     margin-top: 10px;
     background: linear-gradient(
         140deg,
-        rgba(30, 36, 52, 0.90) 0%,
-        rgba(18, 22, 34, 0.95) 42%,
-        rgba(12, 16, 26, 0.98) 100%
+        rgba(30, 36, 52, 0.94) 0%,
+        rgba(18, 22, 34, 0.97) 42%,
+        rgba(12, 16, 26, 0.99) 100%
     ) !important;
     backdrop-filter: blur(52px) saturate(220%) contrast(106%) brightness(105%) !important;
     -webkit-backdrop-filter: blur(52px) saturate(220%) contrast(106%) brightness(105%) !important;
@@ -1676,9 +1657,7 @@ body.settings-page .settings-popout-window {
     box-shadow: 
         inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
-        0 24px 60px rgba(0, 0, 0, 0.80),
-        0 8px 24px rgba(0, 0, 0, 0.45);
+        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35);
     z-index: 1000;
     display: flex;
     flex-direction: column;
@@ -2417,6 +2396,9 @@ kbd {
    MODE HANYA LIRIK (PURE LYRICS / SUBTITLE MODE)
    ========================================= */
 .app-container.mode-only-lyrics {
+    height: 100% !important;
+    max-height: 100% !important;
+    width: 100% !important;
     border-radius: var(--radius-window) !important;
     background: var(--bg-liquid-gradient) !important;
     backdrop-filter: blur(42px) saturate(220%) contrast(106%) brightness(106%) !important;
@@ -2425,8 +2407,10 @@ kbd {
     box-shadow: 
         inset 0 1.5px 0.5px 0 rgba(255, 255, 255, 0.45),
         inset 0 0 0 1px rgba(255, 255, 255, 0.08),
-        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35),
-        0 20px 48px -8px rgba(0, 0, 0, 0.60) !important;
+        inset 0 -1.5px 1px 0 rgba(0, 0, 0, 0.35);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden !important;
 }
 
 .mode-only-lyrics .island-player-panel,
@@ -2437,124 +2421,174 @@ kbd {
 }
 
 .mode-only-lyrics .drag-header {
-    height: 40px;
-    padding: 0 14px;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.22s cubic-bezier(0.16, 1, 0.3, 1), background 0.22s ease;
-    border-bottom: 1px solid transparent;
-    border-radius: var(--radius-window) var(--radius-window) 0 0;
+    height: 34px;
+    padding: 0 10px;
+    display: flex !important;
+    align-items: center;
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     z-index: 60;
-    background: transparent;
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
-    -webkit-backface-visibility: hidden;
-    backface-visibility: hidden;
-    will-change: opacity, transform;
+    background: linear-gradient(
+        180deg,
+        rgba(26, 32, 48, 0.88) 0%,
+        rgba(16, 22, 34, 0.72) 70%,
+        transparent 100%
+    );
+    border-top-left-radius: var(--radius-window);
+    border-top-right-radius: var(--radius-window);
+    opacity: 0.88;
+    pointer-events: auto;
+    transition: opacity 0.2s cubic-bezier(0.16, 1, 0.3, 1), background 0.2s ease;
 }
 
 .app-container.mode-only-lyrics:hover .drag-header,
 .app-container.mode-only-lyrics.is-hovered .drag-header {
     opacity: 1;
-    pointer-events: auto;
     background: linear-gradient(
         180deg,
-        rgba(36, 46, 68, 0.92) 0%,
-        rgba(20, 26, 42, 0.94) 55%,
-        rgba(14, 18, 30, 0.96) 100%
+        rgba(32, 42, 60, 0.96) 0%,
+        rgba(18, 24, 38, 0.88) 75%,
+        transparent 100%
     );
-    border-bottom: 1px solid rgba(255, 255, 255, 0.16);
-    box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.38),
-        0 4px 18px rgba(0, 0, 0, 0.45);
 }
 
-.mode-only-lyrics .drag-region {
+.only-lyrics-header-bar {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    height: 100%;
     gap: 8px;
-    max-width: 48%;
 }
 
-.mode-only-lyrics .header-track-avatar {
-    width: 22px;
-    height: 22px;
-    border-radius: 6px;
+/* Header Buttons (Left Active Karaoke Mic & Right Three Dots) */
+.only-lyrics-dock-btn {
+    width: 26px;
+    height: 26px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.10);
     border: 1px solid rgba(255, 255, 255, 0.18);
-}
-
-.mode-only-lyrics .track-ticker-header {
-    font-size: 11px;
-    font-weight: 600;
-    color: rgba(255, 255, 255, 0.92);
-    letter-spacing: -0.01em;
-}
-
-.mode-only-lyrics .only-lyrics-toolbar {
-    display: flex !important;
-    align-items: center;
-    gap: 6px;
-    margin-left: auto;
-}
-
-.mode-only-lyrics .pill-btn {
-    background: rgba(255, 255, 255, 0.14);
-    border: 1px solid rgba(255, 255, 255, 0.22);
-    box-shadow: 
-        inset 0 1px 0 rgba(255, 255, 255, 0.35),
-        0 2px 8px rgba(0, 0, 0, 0.25);
-    color: #ffffff;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 2px 6px rgba(0, 0, 0, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    font-size: 13px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    height: 26px;
-    padding: 0 10px;
-    border-radius: 10px;
     cursor: pointer;
-    box-sizing: border-box;
+    flex-shrink: 0;
+    padding: 0;
     transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
-    -webkit-transform: translate3d(0, 0, 0);
-    transform: translate3d(0, 0, 0);
 }
 
-.mode-only-lyrics .pill-btn span {
-    display: inline-flex;
-    align-items: center;
-    line-height: 1;
-}
-
-.mode-only-lyrics .pill-btn:hover {
+.only-lyrics-dock-btn:hover {
     background: rgba(255, 255, 255, 0.22);
-    border-color: rgba(255, 255, 255, 0.36);
+    border-color: rgba(255, 255, 255, 0.35);
     color: #ffffff;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
+    transform: translateY(-0.5px);
 }
 
-.mode-only-lyrics .pill-btn-icon {
-    width: 26px;
-    height: 26px;
-    padding: 0 !important;
-    border-radius: 10px !important;
+.only-lyrics-dock-btn.active {
+    background: var(--accent-color, #1ed760);
+    color: #0b0f19;
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 12px var(--accent-glow, rgba(30, 215, 96, 0.5)), inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-.mode-only-lyrics .pill-btn-close:hover {
-    background: rgba(239, 68, 68, 0.35) !important;
-    border-color: rgba(239, 68, 68, 0.6) !important;
-    color: #fca5a5 !important;
+.only-lyrics-dock-btn.active:hover {
+    filter: brightness(1.1);
+    transform: translateY(-0.5px);
+}
+
+/* Center Info: Draggable with Avatar + Title & Artist */
+.only-lyrics-center-info {
+    -webkit-app-region: drag;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    flex: 1;
+    min-width: 0;
+    height: 100%;
+    cursor: grab;
+    user-select: none;
+}
+
+.only-lyrics-center-info:active {
+    cursor: grabbing;
+}
+
+.only-lyrics-avatar-wrap {
+    width: 20px;
+    height: 20px;
+    border-radius: 5px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.only-lyrics-avatar {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.only-lyrics-fallback {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.only-lyrics-meta {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    min-width: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.only-lyrics-title {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #ffffff;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
+}
+
+.only-lyrics-sep {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.4);
+    flex-shrink: 0;
+}
+
+.only-lyrics-artist {
+    font-size: 11px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.72);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: -0.01em;
 }
 
 .mode-only-lyrics .lyrics-stage {
-    padding: 0 20px;
-    height: 100%;
+    padding: 0 16px;
+    height: calc(100% - 34px);
+    margin-top: 34px;
     display: block !important;
     mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
     -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 18%, black 82%, transparent 100%);
@@ -2562,6 +2596,7 @@ kbd {
     overflow-x: hidden !important;
     scrollbar-width: none !important;
     scroll-behavior: smooth;
+    box-sizing: border-box;
 }
 
 .mode-only-lyrics .lyrics-stage::-webkit-scrollbar {
@@ -2570,11 +2605,12 @@ kbd {
 }
 
 .mode-only-lyrics .lyrics-flow {
-    padding: 58px 0;
+    padding: 30px 0 34px 0;
     gap: 8px;
     width: 100%;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .mode-only-lyrics .lyric-line {

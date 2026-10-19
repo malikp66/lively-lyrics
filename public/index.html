@@ -37,14 +37,16 @@
         <!-- Ambient Reactive Backdrop Glow (Contained inside card with exact border radius) -->
         <div id="ambient-backdrop" class="ambient-backdrop"></div>
 
-        <!-- Floating Drag Header (Hanya untuk Mode Only-Lyrics atau Drag Titlebar) -->
+        <!-- Floating Drag Header (Hanya untuk Mode Only-Lyrics) -->
         <header class="drag-header" id="drag-header" data-tauri-drag-region="deep">
-            <!-- Hidden compatibility anchors for background references -->
+            <!-- Hidden compatibility anchors for JS handlers -->
             <div id="normal-window-actions" class="hidden">
                 <button id="btn-only-lyrics" class="hidden"></button>
                 <button id="btn-pin" class="hidden"></button>
                 <button id="btn-ghost" class="hidden"></button>
                 <button id="btn-compact" class="hidden"></button>
+                <button id="btn-exit-only-lyrics" class="hidden"></button>
+                <span id="font-pill-label" class="hidden"></span>
             </div>
             <div id="header-track-avatar" class="hidden">
                 <img id="header-avatar-img" class="hidden" alt="Artwork" />
@@ -53,24 +55,31 @@
                 <span id="track-header-ticker" class="hidden"></span>
             </div>
 
-            <!-- Only-Lyrics Dedicated Sleek Toolbar (Unified within Header) -->
-            <div id="only-lyrics-exit-pill" class="only-lyrics-toolbar hidden no-drag">
-                <button id="btn-exit-only-lyrics" class="pill-btn" title="Kembali ke Mode Normal (Ctrl+Alt+L)">
-                    <i class="ph-bold ph-arrows-out-simple"></i>
-                    <span>Normal</span>
+            <!-- Only-Lyrics 3-Part Header: Left Mic, Center Avatar+Title, Right Three-Dots -->
+            <div class="only-lyrics-header-bar" id="only-lyrics-header-bar">
+                <!-- Left: Active Karaoke Icon (Clicking returns to normal mode) -->
+                <button id="btn-only-lyrics-exit" class="only-lyrics-dock-btn active no-drag" title="Kembali ke Mode Normal (Ctrl+Alt+L)">
+                    <i class="ph-fill ph-microphone"></i>
                 </button>
-                <button id="btn-resync-pill" class="pill-btn pill-btn-icon" title="Sync Ulang (Ctrl+R)">
-                    <i id="icon-resync-pill" class="ph-bold ph-arrows-clockwise"></i>
-                </button>
-                <button id="btn-font-pill" class="pill-btn" title="Ganti Gaya Font">
-                    <i class="ph-bold ph-text-aa"></i>
-                    <span id="font-pill-label">Font</span>
-                </button>
-                <button id="btn-settings-pill" class="pill-btn pill-btn-icon" title="Pengaturan">
-                    <i class="ph-bold ph-gear-six"></i>
-                </button>
-                <button id="btn-close-only-lyrics" class="pill-btn pill-btn-icon pill-btn-close" title="Tutup">
-                    <i class="ph-bold ph-x"></i>
+
+                <!-- Center: Drag Region with Track Artwork Avatar and Title/Artist -->
+                <div class="only-lyrics-center-info" data-tauri-drag-region="deep">
+                    <div class="only-lyrics-avatar-wrap" data-tauri-drag-region="deep">
+                        <img id="only-lyrics-avatar" class="only-lyrics-avatar hidden" alt="Artwork" />
+                        <div id="only-lyrics-fallback" class="only-lyrics-fallback" data-tauri-drag-region="deep">
+                            <i class="ph-duotone ph-disc"></i>
+                        </div>
+                    </div>
+                    <div class="only-lyrics-meta" data-tauri-drag-region="deep">
+                        <span id="only-lyrics-title" class="only-lyrics-title" data-tauri-drag-region="deep">Menunggu Spotify...</span>
+                        <span class="only-lyrics-sep" data-tauri-drag-region="deep">&bull;</span>
+                        <span id="only-lyrics-artist" class="only-lyrics-artist" data-tauri-drag-region="deep">LivelyLyrics</span>
+                    </div>
+                </div>
+
+                <!-- Right: Three Dots Settings Menu -->
+                <button id="btn-three-dots-lyrics" class="only-lyrics-dock-btn no-drag" title="Menu Opsi">
+                    <i class="ph-bold ph-dots-three"></i>
                 </button>
             </div>
         </header>
@@ -164,10 +173,6 @@
 
             <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
             <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
-                <!-- Floating Three-Dots Button for Only-Lyrics Mode -->
-                <button id="btn-three-dots-lyrics" class="btn-three-dots-floating hidden no-drag" title="Menu Opsi">
-                    <i class="ph-bold ph-dots-three"></i>
-                </button>
                 <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
                     <div class="stage-placeholder">
                         <div class="music-bars-anim">
