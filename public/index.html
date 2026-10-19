@@ -16,26 +16,19 @@
 </head>
 <body class="theme-spotify font-medium align-center bg-liquid">
     <div id="app-container" class="app-container mode-card">
-        <!-- Startup Splash Loading Screen -->
-        <div id="splash-screen" class="splash-screen">
+        <!-- Startup Splash Loading Screen (Liquid Frosted Glass) -->
+        <div id="splash-screen" class="splash-screen" data-tauri-drag-region="deep">
             <div class="splash-ambient-orb"></div>
-            <div class="splash-content">
-                <div class="splash-logo-wrapper">
-                    <span class="splash-ring splash-ring-1"></span>
-                    <span class="splash-ring splash-ring-2"></span>
-                    <div class="splash-squircle">
-                        <i class="ph-fill ph-music-notes splash-main-icon"></i>
-                        <div class="splash-sub-badge">
-                            <i class="ph-bold ph-waveform"></i>
-                        </div>
-                    </div>
+            <div class="splash-card-liquid" data-tauri-drag-region="deep">
+                <div class="splash-icon-mark">
+                    <i class="ph-fill ph-music-notes"></i>
                 </div>
-                <div class="splash-title-group">
-                    <div class="splash-brand-name">LIVELY<span class="splash-brand-accent">LYRICS</span></div>
+                <div class="splash-text-col">
+                    <div class="splash-brand-title">LIVELY<span class="splash-brand-green">LYRICS</span></div>
                     <div class="splash-subtitle" id="splash-status-text">Menghubungkan ke sesi musik...</div>
                 </div>
-                <div class="splash-wave-loader">
-                    <span></span><span></span><span></span><span></span><span></span>
+                <div class="splash-mini-eq">
+                    <span></span><span></span><span></span><span></span>
                 </div>
             </div>
         </div>
@@ -514,19 +507,9 @@
 
         <!-- Main Island Content (2-Column Horizontal Split Layout) -->
         <div class="island-main-split" data-tauri-drag-region="deep">
-            <!-- Left Column: Player Module -->
+            <!-- Left Column: Player Module (Vertically Centered) -->
             <section class="island-player-panel" id="track-header-card" data-tauri-drag-region="deep">
-                <!-- Top Row: Status Badge in Song Details -->
-                <div class="player-panel-header" data-tauri-drag-region="deep">
-                    <div id="playback-status-badge" class="badge-status hidden" data-tauri-drag-region="deep">
-                        <span id="live-eq" class="live-eq hidden">
-                            <span></span><span></span><span></span>
-                        </span>
-                        <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
-                    </div>
-                </div>
-
-                <!-- Row 2: Artwork + Song Details -->
+                <!-- Row 1: Artwork + Song Details -->
                 <div class="track-info-layout" data-tauri-drag-region="deep">
                     <div class="artwork-wrapper" id="artwork-wrapper" data-tauri-drag-region="deep">
                         <img id="track-cover-art" class="cover-art-img hidden" alt="Cover Art" src="" />
@@ -541,7 +524,7 @@
                     </div>
                 </div>
 
-                <!-- Row 3: Scrubber Timeline Bar (03:33 === -01:24) -->
+                <!-- Row 2: Scrubber Timeline Bar (03:33 === -01:24) -->
                 <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
                     <span id="current-time" class="time-stamp">00:00</span>
                     <div class="scrubber-track">
@@ -551,7 +534,7 @@
                     <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
                 </div>
 
-                <!-- Row 4: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->
+                <!-- Row 3: Playback Controls (Three-Dots, Prev, Play/Pause, Next, Karaoke) -->
                 <footer class="playback-dock no-drag" id="playback-dock">
                     <button id="btn-three-dots-player" class="dock-btn" title="Menu Opsi">
                         <i class="ph-bold ph-dots-three"></i>
@@ -559,7 +542,7 @@
                     <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
                         <i class="ph-fill ph-skip-back"></i>
                     </button>
-                    <button id="btn-playpause" class="dock-btn-main" title="Play / Pause">
+                    <button id="btn-playpause" class="dock-btn dock-btn-main" title="Play / Pause">
                         <i id="play-icon" class="ph-fill ph-play"></i>
                         <i id="pause-icon" class="ph-fill ph-pause hidden"></i>
                     </button>
@@ -573,6 +556,12 @@
                     <button id="btn-collapse-player" class="hidden"></button>
                     <button id="btn-resync" class="hidden"><i id="icon-resync-header"></i></button>
                 </footer>
+
+                <!-- Compatibility anchor for status badge (kept in DOM for JS handlers) -->
+                <div id="playback-status-badge" class="badge-status hidden" style="display: none;">
+                    <span id="live-eq" class="live-eq hidden"><span></span><span></span><span></span></span>
+                    <span id="playback-status-text">Standby</span>
+                </div>
             </section>
 
             <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
