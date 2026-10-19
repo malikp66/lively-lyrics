@@ -897,7 +897,7 @@ function setOnlyLyricsMode(enabled) {
     }, 180);
 }
 
-// Quick Three-Dots Dropdown Interaction
+// Quick Three-Dots Dropdown Interaction (Anti-Cutoff Positioning)
 function toggleQuickDropdown(anchorBtn) {
     if (!quickDropdownMenu || !anchorBtn) return;
     const isCurrentlyOpen = !quickDropdownMenu.classList.contains('hidden');
@@ -906,28 +906,62 @@ function toggleQuickDropdown(anchorBtn) {
         return;
     }
 
+    // Render offscreen/hidden momentarily to measure exact dimensions
+    quickDropdownMenu.style.visibility = 'hidden';
+    quickDropdownMenu.classList.remove('hidden');
+
     const containerRect = appContainer.getBoundingClientRect();
     const btnRect = anchorBtn.getBoundingClientRect();
+    const menuHeight = quickDropdownMenu.offsetHeight || 108;
+    const menuWidth = quickDropdownMenu.offsetWidth || 168;
+    const pad = 6; // Minimum distance from window outer boundary
 
     if (anchorBtn === btnThreeDotsPlayer) {
-        // Tampilkan ke ATAS tombol dock di pojok kiri bawah (anti-cutoff)
-        const bottomOffset = Math.max(34, containerRect.bottom - btnRect.top + 4);
-        const leftOffset = Math.max(8, btnRect.left - containerRect.left);
-        quickDropdownMenu.style.top = 'auto';
-        quickDropdownMenu.style.bottom = `${bottomOffset}px`;
+        // Horizontal: Align with button left, clamped to window bounds
+        let leftOffset = btnRect.left - containerRect.left;
+        if (leftOffset + menuWidth > containerRect.width - pad) {
+            leftOffset = containerRect.width - menuWidth - pad;
+        }
+        if (leftOffset < pad) leftOffset = pad;
+
         quickDropdownMenu.style.left = `${leftOffset}px`;
         quickDropdownMenu.style.right = 'auto';
+
+        // Vertical: Check if placing above button clips top (140px window)
+        const spaceAbove = btnRect.top - containerRect.top;
+        if (menuHeight + 8 > spaceAbove) {
+            // Pin to top with safe margin so "Pengaturan" is always 100% visible
+            quickDropdownMenu.style.top = `${pad}px`;
+            quickDropdownMenu.style.bottom = 'auto';
+        } else {
+            const bottomOffset = containerRect.bottom - btnRect.top + 4;
+            quickDropdownMenu.style.top = 'auto';
+            quickDropdownMenu.style.bottom = `${bottomOffset}px`;
+        }
     } else {
-        // Tampilkan ke BAWAH tombol floating lyrics di pojok kanan atas
-        const topOffset = Math.max(6, btnRect.bottom - containerRect.top + 4);
-        const rightOffset = Math.max(8, containerRect.right - btnRect.right);
-        quickDropdownMenu.style.top = `${topOffset}px`;
-        quickDropdownMenu.style.bottom = 'auto';
+        // btnThreeDotsLyrics (Floating button in Only-Lyrics Mode)
+        let rightOffset = containerRect.right - btnRect.right;
+        if (rightOffset + menuWidth > containerRect.width - pad) {
+            rightOffset = containerRect.width - menuWidth - pad;
+        }
+        if (rightOffset < pad) rightOffset = pad;
+
         quickDropdownMenu.style.right = `${rightOffset}px`;
         quickDropdownMenu.style.left = 'auto';
+
+        // Vertical: Check if placing below button clips bottom (120px window)
+        const idealTop = btnRect.bottom - containerRect.top + 4;
+        if (idealTop + menuHeight > containerRect.height - pad) {
+            quickDropdownMenu.style.top = 'auto';
+            quickDropdownMenu.style.bottom = `${pad}px`;
+        } else {
+            quickDropdownMenu.style.top = `${idealTop}px`;
+            quickDropdownMenu.style.bottom = 'auto';
+        }
     }
 
-    quickDropdownMenu.classList.remove('hidden');
+    // Make visible and trigger animation
+    quickDropdownMenu.style.visibility = 'visible';
 }
 
 if (btnThreeDotsPlayer) {
