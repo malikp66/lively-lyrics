@@ -272,6 +272,32 @@ function reloadPreferencesFromStorage() {
 }
 
 // Live Cross-Window Preferences Synchronization
+const KEY_MAP_APP = {
+    'bg_style': 'lyric_bg_style',
+    'bg_solid_color': 'lyric_solid_color',
+    'bg_gradient_idx': 'lyric_gradient_index',
+    'glass_blur': 'lyric_window_blur',
+    'font_family': 'lyric_font_family',
+    'lively_theme': 'lyric_theme',
+    'custom_accent_color': 'lyric_custom_accent',
+    'active_text_color_mode': 'lyric_text_color_mode',
+    'custom_active_text_color': 'lyric_custom_text_color',
+    'inactive_text_color': 'lyric_inactive_color',
+    'lyric_size': 'lyric_font_size',
+    'font_weight': 'lyric_font_weight',
+    'font_style': 'lyric_font_style',
+    'glow_effect': 'lyric_text_glow',
+    'text_stroke': 'lyric_text_stroke',
+    'align_mode': 'lyric_align',
+    'inactive_opacity': 'lyric_inactive_opacity',
+    'lyrics_offset': 'lyric_offset',
+    'auto_hide_controls': 'autohide_controls',
+    'ambient_glow': 'ambient_glow',
+    'always_on_top': 'always_on_top',
+    'is_ghost_mode': 'is_ghost_mode',
+    'window_opacity': 'window_opacity'
+};
+
 const settingsBroadcast = ('BroadcastChannel' in window) ? new BroadcastChannel('lively-lyrics-settings') : null;
 if (settingsBroadcast) {
     settingsBroadcast.onmessage = () => {
@@ -281,6 +307,23 @@ if (settingsBroadcast) {
 window.addEventListener('storage', () => {
     applySavedPreferences();
 });
+
+if (window.electronAPI && window.electronAPI.onSettingChanged) {
+    window.electronAPI.onSettingChanged((data) => {
+        if (data && data.key) {
+            localStorage.setItem(data.key, data.value);
+            if (KEY_MAP_APP[data.key]) {
+                localStorage.setItem(KEY_MAP_APP[data.key], data.value);
+            }
+            for (const [k, v] of Object.entries(KEY_MAP_APP)) {
+                if (v === data.key) {
+                    localStorage.setItem(k, data.value);
+                }
+            }
+        }
+        applySavedPreferences();
+    });
+}
 
 // Initialize Saved Preferences & Dynamic Version
 function applySavedPreferences() {
@@ -338,9 +381,9 @@ function applySavedPreferences() {
         }
 
         try { setTheme(userTheme); } catch (e) { console.warn('setTheme error:', e); }
-        try { if (userCustomAccent) setCustomAccentColor(userCustomAccent); } catch (e) {}
+        try { if (userTheme === 'custom' && userCustomAccent) setCustomAccentColor(userCustomAccent); } catch (e) {}
         try { setTextColorMode(userTextColorMode); } catch (e) {}
-        try { if (userCustomTextColor) setCustomTextColor(userCustomTextColor); } catch (e) {}
+        try { if (userTextColorMode === 'custom' && userCustomTextColor) setCustomTextColor(userCustomTextColor); } catch (e) {}
         try { setInactiveTextColor(userInactiveColor); } catch (e) {}
         try { setBgStyle(userBgStyle); } catch (e) {}
         try { setCustomBgColor(userCustomBgColor); } catch (e) {}
@@ -831,21 +874,41 @@ if (totalDurationEl) {
     });
 }
 
-// Media Control Buttons
+// Media Control Buttons (with instant tactile feedback & optimistic state toggle)
 if (btnPlayPause) {
     btnPlayPause.addEventListener('click', () => {
+        btnPlayPause.classList.add('btn-press-active');
+        setTimeout(() => btnPlayPause.classList.remove('btn-press-active'), 180);
+
+        // Optimistic UI state toggle immediately (0ms latency feedback)
+        isPlaying = !isPlaying;
+        if (isPlaying) {
+            lastKnownTime = Date.now();
+        } else {
+            lastKnownPosition += (Date.now() - lastKnownTime) / 1000;
+            lastKnownTime = Date.now();
+        }
+        if (playbackStatusText) playbackStatusText.textContent = isPlaying ? 'Playing' : 'Paused';
+        if (liveEq) liveEq.classList.toggle('hidden', !isPlaying);
+        if (playbackBadge) playbackBadge.classList.toggle('playing', isPlaying);
+        updatePlayPauseButton();
+
         if (window.electronAPI) window.electronAPI.controlMedia('playpause');
     });
 }
 
 if (btnPrev) {
     btnPrev.addEventListener('click', () => {
+        btnPrev.classList.add('btn-press-active');
+        setTimeout(() => btnPrev.classList.remove('btn-press-active'), 180);
         if (window.electronAPI) window.electronAPI.controlMedia('previous');
     });
 }
 
 if (btnNext) {
     btnNext.addEventListener('click', () => {
+        btnNext.classList.add('btn-press-active');
+        setTimeout(() => btnNext.classList.remove('btn-press-active'), 180);
         if (window.electronAPI) window.electronAPI.controlMedia('next');
     });
 }
@@ -1318,14 +1381,36 @@ themeChips.forEach(chip => {
     });
 });
 
+const THEME_HEX_MAP = {
+    spotify: '#1ed760',
+    purple: '#c084fc',
+    cyan: '#22d3ee',
+    amber: '#fbbf24',
+    rose: '#fb7185',
+    frost: '#f8fafc'
+};
+
 function setTheme(theme) {
-    userTheme = theme;
-    localStorage.setItem('lyric_theme', theme);
-    themeChips.forEach(c => c.classList.toggle('active', c.dataset.theme === theme));
-    bodyEl.classList.remove('theme-spotify', 'theme-purple', 'theme-cyan', 'theme-amber', 'theme-rose', 'theme-frost');
-    bodyEl.classList.add(`theme-${theme}`);
-    document.documentElement.style.removeProperty('--accent-color');
-    document.documentElement.style.removeProperty('--accent-glow');
+    userTheme = theme || 'spotify';
+    localStorage.setItem('lyric_theme', userTheme);
+    themeChips.forEach(c => c.classList.toggle('active', c.dataset.theme === userTheme));
+    bodyEl.classList.remove('theme-spotify', 'theme-purple', 'theme-cyan', 'theme-amber', 'theme-rose', 'theme-frost', 'theme-custom');
+    bodyEl.classList.add(`theme-${userTheme}`);
+
+    if (userTheme === 'custom' && userCustomAccent) {
+        document.documentElement.style.setProperty('--accent-color', userCustomAccent);
+        document.documentElement.style.setProperty('--accent-glow', `${userCustomAccent}77`);
+    } else {
+        const hex = THEME_HEX_MAP[userTheme] || '#1ed760';
+        document.documentElement.style.setProperty('--accent-color', hex);
+        document.documentElement.style.setProperty('--accent-glow', `${hex}77`);
+    }
+
+    if (userTextColorMode === 'accent' && !userCustomTextColor) {
+        const curAccent = (userTheme === 'custom' && userCustomAccent) ? userCustomAccent : (THEME_HEX_MAP[userTheme] || '#1ed760');
+        document.documentElement.style.setProperty('--lyric-active-color', curAccent);
+        if (textColorHexVal) textColorHexVal.textContent = curAccent;
+    }
 }
 
 // Custom Accent Color
@@ -1346,6 +1431,7 @@ function setCustomAccentColor(hex) {
     if (customAccentColor) customAccentColor.value = hex;
     if (userTextColorMode === 'accent' && !userCustomTextColor) {
         if (textColorHexVal) textColorHexVal.textContent = hex;
+        document.documentElement.style.setProperty('--lyric-active-color', hex);
     }
 }
 
@@ -1364,17 +1450,20 @@ function setTextColorMode(mode) {
     textColorBtns.forEach(b => b.classList.toggle('active', b.dataset.textcolor === userTextColorMode));
     bodyEl.classList.remove('textcolor-white', 'textcolor-accent', 'textcolor-gold', 'textcolor-cyan');
     bodyEl.classList.add(`textcolor-${userTextColorMode}`);
-    document.documentElement.style.removeProperty('--lyric-active-color');
 
+    const curAccent = (userTheme === 'custom' && userCustomAccent) ? userCustomAccent : (THEME_HEX_MAP[userTheme] || '#1ed760');
     const modeHexMap = {
         white: '#ffffff',
-        accent: userCustomAccent || (accentHexVal ? accentHexVal.textContent : '#1ed760'),
+        accent: curAccent,
         gold: '#fde047',
         cyan: '#67e8f9'
     };
-    const resolvedHex = modeHexMap[userTextColorMode] || '#ffffff';
-    if (textColorHexVal) textColorHexVal.textContent = resolvedHex;
-    if (customTextColor && resolvedHex.startsWith('#')) customTextColor.value = resolvedHex;
+    if (userTextColorMode !== 'custom') {
+        const resolvedHex = modeHexMap[userTextColorMode] || '#ffffff';
+        document.documentElement.style.setProperty('--lyric-active-color', resolvedHex);
+        if (textColorHexVal) textColorHexVal.textContent = resolvedHex;
+        if (customTextColor && resolvedHex.startsWith('#')) customTextColor.value = resolvedHex;
+    }
 }
 
 if (customTextColor) {

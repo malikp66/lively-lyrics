@@ -52,6 +52,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
         ipcRenderer.send('resize-window', { width, height });
     },
 
+    // Settings synchronization across windows
+    sendSettingChanged: (data) => {
+        ipcRenderer.send('setting-changed', data);
+    },
+    onSettingChanged: (callback) => {
+        ipcRenderer.on('setting-changed', (event, data) => callback(data));
+    },
+
     // Manual lyrics search fallback
     searchLyricsManual: (query) => {
         return ipcRenderer.invoke('search-lyrics-manual', query);

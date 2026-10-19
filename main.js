@@ -504,6 +504,15 @@ ipcMain.on('close-settings-window', () => {
     closeSettingsWindow();
 });
 
+ipcMain.on('setting-changed', (event, data) => {
+    if (mainWindow && !mainWindow.isDestroyed() && event.sender !== mainWindow.webContents) {
+        mainWindow.webContents.send('setting-changed', data);
+    }
+    if (settingsWindow && !settingsWindow.isDestroyed() && event.sender !== settingsWindow.webContents) {
+        settingsWindow.webContents.send('setting-changed', data);
+    }
+});
+
 ipcMain.handle('search-lyrics-manual', async (event, query) => {
     return await lyricsService.fetchLyrics(query, '', '', 0);
 });

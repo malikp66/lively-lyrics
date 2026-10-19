@@ -158,13 +158,17 @@ while ($true) {
                     if ($activeSess) {
                         if ($cmd.action -eq "playpause") {
                             $activeSess.TryTogglePlayPauseAsync() | Out-Null
+                            $forceEmit = $true
                         } elseif ($cmd.action -eq "next") {
                             $activeSess.TrySkipNextAsync() | Out-Null
+                            $forceEmit = $true
                         } elseif ($cmd.action -eq "previous") {
                             $activeSess.TrySkipPreviousAsync() | Out-Null
+                            $forceEmit = $true
                         } elseif ($cmd.action -eq "seek" -and $null -ne $cmd.position) {
                             $ticks = [long]($cmd.position * 10000000)
                             $activeSess.TryChangePlaybackPositionAsync($ticks) | Out-Null
+                            $forceEmit = $true
                         }
                     }
                     if ($cmd.action -eq "resync") {
@@ -175,6 +179,9 @@ while ($true) {
         }
 
         $now = [DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()
+        if ($forceEmit) {
+            [System.Threading.Thread]::Sleep(70)
+        }
         if ($forceEmit -or ($now - $lastCheckTime) -ge 950) {
             $state = GetCurrentMediaState
             $stateObj = @{
@@ -188,5 +195,5 @@ while ($true) {
         }
     } catch {}
 
-    Start-Sleep -Milliseconds 200
+    Start-Sleep -Milliseconds 50
 }

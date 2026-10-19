@@ -43,6 +43,9 @@
         if (broadcast) {
             broadcast.postMessage({ type: 'settings-changed', key, value });
         }
+        if (window.electronAPI && window.electronAPI.sendSettingChanged) {
+            window.electronAPI.sendSettingChanged({ key, value });
+        }
     }
 
     // Platform detection for shortcuts
@@ -198,14 +201,14 @@
         }
 
         // Background Style
-        const savedBgStyle = localStorage.getItem('bg_style') || 'liquid';
+        const savedBgStyle = localStorage.getItem('bg_style') || localStorage.getItem('lyric_bg_style') || 'liquid';
         bgStyleBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.bgstyle === savedBgStyle);
         });
         updateBgOptionPanels(savedBgStyle);
 
         // Solid Color
-        const savedSolidColor = localStorage.getItem('bg_solid_color') || '#05070c';
+        const savedSolidColor = localStorage.getItem('bg_solid_color') || localStorage.getItem('lyric_solid_color') || '#05070c';
         if (bgCustomSolidColor) bgCustomSolidColor.value = savedSolidColor;
         if (solidColorHexVal) solidColorHexVal.textContent = savedSolidColor;
         solidPresetBtns.forEach(btn => {
@@ -213,7 +216,7 @@
         });
 
         // Gradient Index
-        const savedGradIdx = parseInt(localStorage.getItem('bg_gradient_idx') || '0', 10);
+        const savedGradIdx = parseInt(localStorage.getItem('bg_gradient_idx') || localStorage.getItem('lyric_gradient_index') || '0', 10);
         updateGradientChipsSelection(savedGradIdx);
 
         // Opacity & Blur
@@ -221,19 +224,19 @@
         if (opacitySlider) opacitySlider.value = savedOpacity;
         if (opacityVal) opacityVal.textContent = `${savedOpacity}%`;
 
-        const savedBlur = localStorage.getItem('glass_blur') || '28';
+        const savedBlur = localStorage.getItem('glass_blur') || localStorage.getItem('lyric_window_blur') || '28';
         if (blurSlider) blurSlider.value = savedBlur;
         if (blurVal) blurVal.textContent = `${savedBlur}px`;
 
         // Font Family
-        const savedFont = localStorage.getItem('font_family') || 'jakarta';
+        const savedFont = localStorage.getItem('font_family') || localStorage.getItem('lyric_font_family') || 'jakarta';
         fontBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.font === savedFont);
         });
 
         // Accent Theme
-        const savedTheme = localStorage.getItem('lively_theme') || 'spotify';
-        const savedAccentColor = localStorage.getItem('custom_accent_color') || '#1ed760';
+        const savedTheme = localStorage.getItem('lively_theme') || localStorage.getItem('lyric_theme') || 'spotify';
+        const savedAccentColor = localStorage.getItem('custom_accent_color') || localStorage.getItem('lyric_custom_accent') || '#1ed760';
         if (customAccentColor) customAccentColor.value = savedAccentColor;
         if (accentHexVal) accentHexVal.textContent = savedAccentColor;
         themeChips.forEach(chip => {
@@ -241,8 +244,8 @@
         });
 
         // Active Text Color
-        const savedTextColor = localStorage.getItem('active_text_color_mode') || 'white';
-        const savedCustomTextColor = localStorage.getItem('custom_active_text_color') || '#ffffff';
+        const savedTextColor = localStorage.getItem('active_text_color_mode') || localStorage.getItem('lyric_text_color_mode') || 'white';
+        const savedCustomTextColor = localStorage.getItem('custom_active_text_color') || localStorage.getItem('lyric_custom_text_color') || '#ffffff';
         if (customTextColor) customTextColor.value = savedCustomTextColor;
         if (textColorHexVal) textColorHexVal.textContent = (savedTextColor === 'custom') ? savedCustomTextColor : savedTextColor;
         textColorBtns.forEach(btn => {
@@ -250,7 +253,7 @@
         });
 
         // Inactive Text Color
-        const savedInactiveColor = localStorage.getItem('inactive_text_color') || '#cbd5e1';
+        const savedInactiveColor = localStorage.getItem('inactive_text_color') || localStorage.getItem('lyric_inactive_color') || '#cbd5e1';
         if (customInactiveColor) customInactiveColor.value = savedInactiveColor;
         if (inactiveColorHexVal) inactiveColorHexVal.textContent = savedInactiveColor;
         inactiveColorBtns.forEach(btn => {
@@ -258,13 +261,13 @@
         });
 
         // Font Size
-        const savedSize = localStorage.getItem('lyric_size') || 'medium';
+        const savedSize = localStorage.getItem('lyric_size') || localStorage.getItem('lyric_font_size') || 'medium';
         segFontBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.size === savedSize);
         });
 
         // Font Weight
-        const savedWeight = localStorage.getItem('font_weight') || '700';
+        const savedWeight = localStorage.getItem('font_weight') || localStorage.getItem('lyric_font_weight') || '700';
         weightBtns.forEach(btn => {
             btn.classList.toggle('active', btn.dataset.weight === savedWeight);
         });
@@ -430,7 +433,7 @@
             const color = chip.dataset.color;
             if (customAccentColor) customAccentColor.value = color;
             if (accentHexVal) accentHexVal.textContent = color;
-            localStorage.setItem('lively_theme', theme);
+            notifyChange('lively_theme', theme);
             notifyChange('custom_accent_color', color);
         });
     });
@@ -440,7 +443,7 @@
             const color = e.target.value;
             themeChips.forEach(c => c.classList.remove('active'));
             if (accentHexVal) accentHexVal.textContent = color;
-            localStorage.setItem('lively_theme', 'custom');
+            notifyChange('lively_theme', 'custom');
             notifyChange('custom_accent_color', color);
         });
     }
@@ -452,6 +455,7 @@
             btn.classList.add('active');
             const mode = btn.dataset.textcolor;
             if (textColorHexVal) textColorHexVal.textContent = mode;
+            notifyChange('custom_active_text_color', '');
             notifyChange('active_text_color_mode', mode);
         });
     });
@@ -461,7 +465,7 @@
             const color = e.target.value;
             textColorBtns.forEach(b => b.classList.remove('active'));
             if (textColorHexVal) textColorHexVal.textContent = color;
-            localStorage.setItem('active_text_color_mode', 'custom');
+            notifyChange('active_text_color_mode', 'custom');
             notifyChange('custom_active_text_color', color);
         });
     }

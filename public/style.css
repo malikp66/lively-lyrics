@@ -1520,6 +1520,14 @@ select,
     transform: none;
 }
 
+.dock-btn:active,
+.dock-btn-main:active,
+.btn-press-active {
+    transform: scale(0.88) !important;
+    opacity: 0.75 !important;
+    transition: transform 0.06s ease, opacity 0.06s ease !important;
+}
+
 .dock-btn-main {
     color: #ffffff;
 }
@@ -2358,7 +2366,7 @@ kbd {
     max-height: 100% !important;
     width: 100% !important;
     border-radius: var(--radius-window) !important;
-    background: var(--bg-liquid-gradient) !important;
+    background: var(--bg-liquid-gradient);
     backdrop-filter: blur(42px) saturate(220%) contrast(106%) brightness(106%) !important;
     -webkit-backdrop-filter: blur(42px) saturate(220%) contrast(106%) brightness(106%) !important;
     border: 1px solid rgba(255, 255, 255, 0.18) !important;
