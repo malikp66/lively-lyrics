@@ -17,19 +17,16 @@
 <body class="theme-spotify font-medium align-center bg-liquid">
     <div class="window-shell">
         <div id="app-container" class="app-container mode-card">
-        <!-- Startup Splash Loading Screen (Liquid Frosted Glass) -->
+        <!-- Startup Splash Loading Screen (Clean Minimal Apple Glass) -->
         <div id="splash-screen" class="splash-screen" data-tauri-drag-region="deep">
-            <div class="splash-ambient-orb"></div>
-            <div class="splash-card-liquid" data-tauri-drag-region="deep">
-                <div class="splash-icon-mark">
+            <div class="splash-content" data-tauri-drag-region="deep">
+                <div class="splash-icon-mark" data-tauri-drag-region="deep">
                     <i class="ph-fill ph-music-notes"></i>
                 </div>
-                <div class="splash-text-col">
-                    <div class="splash-brand-title">LIVELY<span class="splash-brand-green">LYRICS</span></div>
-                    <div class="splash-subtitle" id="splash-status-text">Menghubungkan ke sesi musik...</div>
-                </div>
-                <div class="splash-mini-eq">
-                    <span></span><span></span><span></span><span></span>
+                <div class="splash-brand-title" data-tauri-drag-region="deep">Lively<span class="splash-brand-accent">Lyrics</span></div>
+                <div class="splash-status" id="splash-status-text" data-tauri-drag-region="deep">Menghubungkan ke pemutar musik...</div>
+                <div class="splash-loader-bar">
+                    <div class="splash-loader-indicator"></div>
                 </div>
             </div>
         </div>

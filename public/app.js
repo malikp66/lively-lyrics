@@ -397,21 +397,21 @@ function dismissSplashScreen(customMessage) {
     }
 
     const elapsed = Date.now() - appStartTime;
-    const minSplashDuration = 1200; // minimum display time so user enjoys the logo & wave animation
+    const minSplashDuration = 750; // Snappy & sleek transition
     const remainingTime = Math.max(0, minSplashDuration - elapsed);
 
     setTimeout(() => {
         splashScreen.classList.add('splash-hide');
         setTimeout(() => {
             splashScreen.style.display = 'none';
-        }, 550);
+        }, 450);
     }, remainingTime);
 }
 
-// Fallback auto-dismissal after 1.8s
+// Fallback auto-dismissal after 1.2s
 setTimeout(() => {
     dismissSplashScreen('Siap menyanyikan lagu favoritmu...');
-}, 1800);
+}, 1200);
 
 // Format Seconds -> mm:ss (Always 2-digit padded)
 function formatTime(seconds) {
