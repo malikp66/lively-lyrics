@@ -127,7 +127,7 @@ function createWindow() {
         height: winHeight,
         x: posX,
         y: posY,
-        minWidth: 380,
+        minWidth: 320,
         minHeight: 110,
         frame: false,
         transparent: true,

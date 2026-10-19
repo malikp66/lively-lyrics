@@ -115,6 +115,11 @@ const btnManualSearch = document.getElementById('btn-manual-search');
 const manualSearchStatus = document.getElementById('manual-search-status');
 const toggleAutoHide = document.getElementById('toggle-autohide');
 const toggleAmbient = document.getElementById('toggle-ambient');
+const togglePinSetting = document.getElementById('toggle-pin-setting');
+const toggleGhostSetting = document.getElementById('toggle-ghost-setting');
+const btnCollapsePlayer = document.getElementById('btn-collapse-player');
+const btnExpandPlayer = document.getElementById('btn-expand-player');
+const trackHeaderCard = document.getElementById('track-header-card');
 const btnForceResync = document.getElementById('btn-force-resync');
 const iconForceResync = document.getElementById('icon-force-resync');
 const textForceResync = document.getElementById('text-force-resync');
@@ -263,6 +268,9 @@ function applySavedPreferences() {
 
         if (toggleAmbient) toggleAmbient.checked = ambientGlowEnabled;
         if (ambientBackdrop) ambientBackdrop.classList.toggle('disabled', !ambientGlowEnabled);
+
+        if (togglePinSetting) togglePinSetting.checked = isAlwaysOnTop;
+        try { setPlayerPanelCollapsed(isPlayerPanelCollapsed); } catch (e) {}
     } catch (err) {
         console.error('[Preferences Error]:', err);
     }
@@ -411,8 +419,9 @@ if (window.electronAPI) {
     });
 
     window.electronAPI.onClickThroughChanged((enabled) => {
-        ghostBadge.classList.toggle('hidden', !enabled);
-        btnGhost.classList.toggle('active', enabled);
+        if (ghostBadge) ghostBadge.classList.toggle('hidden', !enabled);
+        if (btnGhost) btnGhost.classList.toggle('active', enabled);
+        if (toggleGhostSetting) toggleGhostSetting.checked = enabled;
     });
 
     // Shortcut Ctrl+Alt+L for Only Lyrics
@@ -623,17 +632,34 @@ btnNext.addEventListener('click', () => {
 });
 
 // Always on Top Pin
-btnPin.addEventListener('click', () => {
-    isAlwaysOnTop = !isAlwaysOnTop;
-    btnPin.classList.toggle('active', isAlwaysOnTop);
-    if (window.electronAPI) window.electronAPI.setAlwaysOnTop(isAlwaysOnTop);
-});
+if (btnPin) {
+    btnPin.addEventListener('click', () => {
+        isAlwaysOnTop = !isAlwaysOnTop;
+        btnPin.classList.toggle('active', isAlwaysOnTop);
+        if (togglePinSetting) togglePinSetting.checked = isAlwaysOnTop;
+        if (window.electronAPI) window.electronAPI.setAlwaysOnTop(isAlwaysOnTop);
+    });
+}
+if (togglePinSetting) {
+    togglePinSetting.addEventListener('change', (e) => {
+        isAlwaysOnTop = e.target.checked;
+        if (btnPin) btnPin.classList.toggle('active', isAlwaysOnTop);
+        if (window.electronAPI) window.electronAPI.setAlwaysOnTop(isAlwaysOnTop);
+    });
+}
 
 // Ghost Mode
-btnGhost.addEventListener('click', () => {
-    const isNowGhost = !btnGhost.classList.contains('active');
-    if (window.electronAPI) window.electronAPI.setClickThrough(isNowGhost);
-});
+if (btnGhost) {
+    btnGhost.addEventListener('click', () => {
+        const isNowGhost = !btnGhost.classList.contains('active');
+        if (window.electronAPI) window.electronAPI.setClickThrough(isNowGhost);
+    });
+}
+if (toggleGhostSetting) {
+    toggleGhostSetting.addEventListener('change', (e) => {
+        if (window.electronAPI) window.electronAPI.setClickThrough(e.target.checked);
+    });
+}
 
 // Resync / Sync Ulang Implementation
 function triggerResync() {
@@ -1325,13 +1351,54 @@ if (btnClose) {
     });
 }
 
+// =========================================
+// PLAYER PANEL MINIMIZE / COLLAPSE ANIMATION
+// =========================================
+let isPlayerPanelCollapsed = localStorage.getItem('player_panel_collapsed') === 'true';
+
+function setPlayerPanelCollapsed(collapsed) {
+    isPlayerPanelCollapsed = collapsed;
+    localStorage.setItem('player_panel_collapsed', collapsed);
+
+    if (trackHeaderCard) {
+        trackHeaderCard.classList.toggle('collapsed', collapsed);
+    }
+    if (btnExpandPlayer) {
+        btnExpandPlayer.classList.toggle('hidden', !collapsed);
+    }
+    if (btnCollapsePlayer) {
+        btnCollapsePlayer.classList.toggle('active', collapsed);
+        btnCollapsePlayer.title = collapsed ? 'Tampilkan Panel Lagu' : 'Sembunyikan Panel Lagu (Minimize Bagian Kiri)';
+    }
+
+    if (window.electronAPI && typeof window.electronAPI.resizeWindow === 'function') {
+        if (collapsed) {
+            window.electronAPI.resizeWindow(350, 140);
+        } else {
+            window.electronAPI.resizeWindow(520, 140);
+        }
+    }
+
+    setTimeout(() => {
+        centerActiveLineInViewport('auto');
+    }, 80);
+    setTimeout(() => {
+        centerActiveLineInViewport('smooth');
+    }, 200);
+}
+
+if (btnCollapsePlayer) {
+    btnCollapsePlayer.addEventListener('click', () => {
+        setPlayerPanelCollapsed(!isPlayerPanelCollapsed);
+    });
+}
+
+if (btnExpandPlayer) {
+    btnExpandPlayer.addEventListener('click', () => {
+        setPlayerPanelCollapsed(false);
+    });
+}
+
 // Run preferences initialization now that everything is attached and defined
 applySavedPreferences();
 
-
-const btnOnlyLyricsToggle = document.getElementById('btn-only-lyrics-toggle');
-if (btnOnlyLyricsToggle) {
-    btnOnlyLyricsToggle.addEventListener('click', () => {
-        setOnlyLyricsMode(!isOnlyLyricsMode);
-    });
-}

@@ -43,60 +43,20 @@
         <!-- Ambient Reactive Backdrop Glow (Contained inside card with exact border radius) -->
         <div id="ambient-backdrop" class="ambient-backdrop"></div>
 
-        <!-- Floating Drag Header -->
+        <!-- Floating Drag Header (Hanya untuk Mode Only-Lyrics atau Drag Titlebar) -->
         <header class="drag-header" id="drag-header" data-tauri-drag-region="deep">
-            <div class="drag-region" data-tauri-drag-region="deep">
-                <div class="header-track-avatar" id="header-track-avatar" title="Lagu yang sedang diputar" data-tauri-drag-region="deep">
-                    <img id="header-avatar-img" class="header-avatar-img hidden" alt="Artwork" />
-                    <div id="header-avatar-fallback" class="header-avatar-fallback">
-                        <i class="ph-fill ph-music-notes"></i>
-                    </div>
-                    <span class="header-avatar-status" id="connection-dot"></span>
-                </div>
-                <div class="header-metadata" data-tauri-drag-region="deep">
-                    <span class="track-ticker-header" id="track-header-ticker" data-tauri-drag-region="deep">Menunggu Spotify...</span>
-                </div>
+            <!-- Hidden compatibility anchors for background references -->
+            <div id="normal-window-actions" class="hidden">
+                <button id="btn-only-lyrics" class="hidden"></button>
+                <button id="btn-pin" class="hidden"></button>
+                <button id="btn-ghost" class="hidden"></button>
+                <button id="btn-compact" class="hidden"></button>
             </div>
-
-            <!-- Standard Window Controls (Card & Compact Mode) -->
-            <div class="window-actions normal-actions no-drag" id="normal-window-actions">
-                <!-- Only Lyrics Mode Toggle -->
-                <button id="btn-only-lyrics" class="btn-icon" title="Mode Hanya Lirik (Ctrl+Alt+L)">
-                    <i class="ph-bold ph-subtitles"></i>
-                </button>
-
-                <!-- Pin / Always on Top -->
-                <button id="btn-pin" class="btn-icon active" title="Selalu di Atas (Always on Top)">
-                    <i class="ph-fill ph-push-pin"></i>
-                </button>
-
-                <!-- Ghost Mode / Click-Through -->
-                <button id="btn-ghost" class="btn-icon" title="Ghost Mode / Tembus Klik (Ctrl+Alt+G)">
-                    <i class="ph-fill ph-ghost"></i>
-                </button>
-
-                <!-- Resync / Sync Ulang -->
-                <button id="btn-resync" class="btn-icon" title="Sync Ulang Lirik & Waktu (Ctrl+R)">
-                    <i id="icon-resync-header" class="ph-bold ph-arrows-clockwise"></i>
-                </button>
-
-                <!-- Compact / Expanded Toggle -->
-                <button id="btn-compact" class="btn-icon" title="Ganti Mode Ukuran (Compact / Card)">
-                    <i id="icon-compact-expand" class="ph-bold ph-arrows-in-simple"></i>
-                </button>
-
-                <!-- Settings -->
-                <button id="btn-settings" class="btn-icon" title="Pengaturan & Penampilan">
-                    <i class="ph-bold ph-sliders-horizontal"></i>
-                </button>
-
-                <!-- Window Minimize & Close -->
-                <button id="btn-minimize" class="btn-icon" title="Minimize">
-                    <i class="ph-bold ph-minus"></i>
-                </button>
-                <button id="btn-close" class="btn-icon btn-close" title="Tutup">
-                    <i class="ph-bold ph-x"></i>
-                </button>
+            <div id="header-track-avatar" class="hidden">
+                <img id="header-avatar-img" class="hidden" alt="Artwork" />
+                <div id="header-avatar-fallback" class="hidden"></div>
+                <span id="connection-dot" class="hidden"></span>
+                <span id="track-header-ticker" class="hidden"></span>
             </div>
 
             <!-- Only-Lyrics Dedicated Sleek Toolbar (Unified within Header) -->
@@ -426,6 +386,30 @@
 
                 <!-- Tab 3: Window Behavior -->
                 <div id="tab-window" class="tab-content">
+                    <!-- Pin Mode (Always on Top) -->
+                    <div class="toggle-row">
+                        <div class="toggle-text">
+                            <span class="toggle-title">Selalu di Atas (Always on Top / Pin)</span>
+                            <span class="toggle-desc">Jendela LivelyLyrics tetap melayang di atas aplikasi lain dan game.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-pin-setting" checked>
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
+                    <!-- Ghost Mode (Click-Through) -->
+                    <div class="toggle-row">
+                        <div class="toggle-text">
+                            <span class="toggle-title">Ghost Mode (Tembus Klik)</span>
+                            <span class="toggle-desc">Semua klik mouse menembus jendela ke aplikasi di baliknya.</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="toggle-ghost-setting">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+
                     <div class="toggle-row">
                         <div class="toggle-text">
                             <span class="toggle-title">Auto-Hide Kontrol Media</span>
@@ -507,7 +491,30 @@
         <div class="island-main-split" data-tauri-drag-region="deep">
             <!-- Left Column: Player Module -->
             <section class="island-player-panel" id="track-header-card" data-tauri-drag-region="deep">
-                <!-- Row 1: Artwork + Song Details -->
+                <!-- Top Row: Status Badge & Window Controls in Top-Right of Song Details -->
+                <div class="player-panel-header" data-tauri-drag-region="deep">
+                    <div id="playback-status-badge" class="badge-status hidden" data-tauri-drag-region="deep">
+                        <span id="live-eq" class="live-eq hidden">
+                            <span></span><span></span><span></span>
+                        </span>
+                        <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
+                    </div>
+
+                    <!-- Application Controls in Song Detail Top-Right -->
+                    <div class="player-header-actions no-drag" data-tauri-drag-region="false">
+                        <button id="btn-settings" class="panel-btn-action" title="Pengaturan & Penampilan">
+                            <i class="ph-bold ph-gear-six"></i>
+                        </button>
+                        <button id="btn-minimize" class="panel-btn-action" title="Minimize">
+                            <i class="ph-bold ph-minus"></i>
+                        </button>
+                        <button id="btn-close" class="panel-btn-action panel-btn-close" title="Tutup">
+                            <i class="ph-bold ph-x"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Row 2: Artwork + Song Details -->
                 <div class="track-info-layout" data-tauri-drag-region="deep">
                     <div class="artwork-wrapper" id="artwork-wrapper" data-tauri-drag-region="deep">
                         <img id="track-cover-art" class="cover-art-img hidden" alt="Cover Art" src="" />
@@ -520,16 +527,9 @@
                         <div id="track-name" class="track-name-display" data-tauri-drag-region="deep" title="Menunggu Spotify...">Menunggu Spotify...</div>
                         <div id="artist-name" class="artist-name-display" data-tauri-drag-region="deep">Putar lagu apa saja di Spotify</div>
                     </div>
-
-                    <div id="playback-status-badge" class="badge-status hidden" data-tauri-drag-region="deep">
-                        <span id="live-eq" class="live-eq hidden">
-                            <span></span><span></span><span></span>
-                        </span>
-                        <span id="playback-status-text" data-tauri-drag-region="deep">Standby</span>
-                    </div>
                 </div>
 
-                <!-- Row 2: Scrubber Timeline Bar (03:33 === -01:24) -->
+                <!-- Row 3: Scrubber Timeline Bar (03:33 === -01:24) -->
                 <div class="scrubber-bar-container no-drag" id="scrubber-container" data-tauri-drag-region="false">
                     <span id="current-time" class="time-stamp">00:00</span>
                     <div class="scrubber-track">
@@ -539,10 +539,13 @@
                     <div id="scrubber-tooltip" class="scrubber-tooltip hidden">00:00</div>
                 </div>
 
-                <!-- Row 3: Playback Controls (Lyrics Toggle, Prev, Play/Pause, Next) -->
+                <!-- Row 4: Playback Controls (Collapse Left Panel, Sync, Prev, Play/Pause, Next) -->
                 <footer class="playback-dock no-drag" id="playback-dock">
-                    <button id="btn-only-lyrics-toggle" class="dock-btn-quote" title="Mode Hanya Lirik">
-                        <i class="ph-bold ph-chat-teardrop-text"></i>
+                    <button id="btn-collapse-player" class="dock-btn-quote" title="Sembunyikan Panel Lagu (Minimize Bagian Kiri)">
+                        <i class="ph-bold ph-sidebar-simple"></i>
+                    </button>
+                    <button id="btn-resync" class="dock-btn" title="Sync Ulang Lirik & Waktu (Ctrl+R)">
+                        <i id="icon-resync-header" class="ph-bold ph-arrows-clockwise"></i>
                     </button>
                     <button id="btn-prev" class="dock-btn" title="Lagu Sebelumnya">
                         <i class="ph-fill ph-skip-back"></i>
@@ -559,6 +562,10 @@
 
             <!-- Right Column: Lyrics Stage (Singing Karaoke Vertical Flow) -->
             <main class="lyrics-stage has-placeholder" id="lyrics-viewport" data-tauri-drag-region="deep">
+                <!-- Floating Button to Expand Left Panel when Collapsed -->
+                <button id="btn-expand-player" class="btn-expand-floating hidden no-drag" title="Tampilkan Panel Lagu">
+                    <i class="ph-bold ph-sidebar-simple"></i>
+                </button>
                 <div class="lyrics-flow has-placeholder" id="lyrics-container" data-tauri-drag-region="deep">
                     <div class="stage-placeholder">
                         <div class="music-bars-anim">

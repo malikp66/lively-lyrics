@@ -161,6 +161,10 @@
         // Check if clicked in any draggable area
         if (
             target.closest('[data-tauri-drag-region]') ||
+            target.closest('.island-main-split') ||
+            target.closest('.island-player-panel') ||
+            target.closest('.lyrics-stage') ||
+            target.closest('.player-panel-header') ||
             target.closest('.drag-header') ||
             target.closest('.drag-region') ||
             target.closest('.modal-header') ||
@@ -168,7 +172,7 @@
             target.closest('.track-info-layout') ||
             target.closest('.track-copy') ||
             target.closest('#drag-header') ||
-            target.closest('.app-container.mode-only-lyrics')
+            target.closest('.app-container')
         ) {
             if (window.__TAURI_INTERNALS__ && typeof window.__TAURI_INTERNALS__.invoke === 'function') {
                 window.__TAURI_INTERNALS__.invoke('plugin:window|start_dragging').catch(() => {});

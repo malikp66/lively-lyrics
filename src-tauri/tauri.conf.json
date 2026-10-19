@@ -13,7 +13,7 @@
         "title": "LivelyLyrics",
         "width": 520,
         "height": 140,
-        "minWidth": 380,
+        "minWidth": 320,
         "minHeight": 110,
         "resizable": true,
         "fullscreen": false,
