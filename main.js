@@ -203,15 +203,25 @@ function createWindow() {
 
     mainWindow.on('closed', () => {
         mainWindow = null;
+        if (settingsWindow && !settingsWindow.isDestroyed()) {
+            settingsWindow.destroy();
+            settingsWindow = null;
+        }
+        if (process.platform !== 'darwin') {
+            mediaService.stop();
+            app.quit();
+        }
     });
 }
 
-// When a second instance is launched, focus our window instead of crashing
+// When a second instance is launched, focus or recreate our window
 app.on('second-instance', () => {
-    if (mainWindow) {
+    if (mainWindow && !mainWindow.isDestroyed()) {
         if (mainWindow.isMinimized()) mainWindow.restore();
         mainWindow.show();
         mainWindow.focus();
+    } else {
+        createWindow();
     }
 });
 
@@ -288,7 +298,7 @@ function setupTray() {
         tray.on('click', () => {
             if (mainWindow && !mainWindow.isDestroyed()) {
                 mainWindow.isVisible() ? mainWindow.focus() : mainWindow.show();
-            } else if (BrowserWindow.getAllWindows().length === 0) {
+            } else {
                 createWindow();
             }
         });
@@ -401,7 +411,13 @@ ipcMain.on('minimize-window', () => {
 
 ipcMain.on('close-window', () => {
     saveWindowPosition();
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.close();
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.destroy();
+        settingsWindow = null;
+    }
+    if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.close();
+    }
 });
 
 ipcMain.on('resize-window', (event, { width, height }) => {
@@ -561,6 +577,14 @@ app.whenReady().then(() => {
     } else {
         startApp();
     }
+});
+
+app.on('before-quit', () => {
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.destroy();
+        settingsWindow = null;
+    }
+    mediaService.stop();
 });
 
 app.on('will-quit', () => {

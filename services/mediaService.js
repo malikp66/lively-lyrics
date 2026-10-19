@@ -328,7 +328,13 @@ class MediaService extends EventEmitter {
         clearInterval(this.macLinuxInterval);
         if (this.process) {
             try {
-                this.process.kill();
+                if (process.platform === 'win32' && this.process.pid) {
+                    try {
+                        const { execSync } = require('child_process');
+                        execSync(`taskkill /F /T /PID ${this.process.pid}`, { stdio: 'ignore' });
+                    } catch (e) {}
+                }
+                this.process.kill('SIGKILL');
             } catch (e) {}
             this.process = null;
         }
