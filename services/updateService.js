@@ -104,6 +104,50 @@ class UpdateService extends EventEmitter {
 
     quitAndInstall() {
         if (this.status.state === 'downloaded') {
+            if (process.platform === 'darwin') {
+                // On macOS, unsigned apps cannot be installed by Squirrel.Mac.
+                // We use a robust fallback script that unpacks the downloaded zip in cache
+                // and replaces the app bundle cleanly without signature rejection.
+                try {
+                    const fs = require('fs');
+                    const path = require('path');
+                    const { spawn } = require('child_process');
+
+                    const cacheDir = path.join(app.getPath('userCache'), `${app.getName()}-updater`, 'pending');
+                    const appBundlePath = path.resolve(app.getAppPath(), '..', '..', '..');
+
+                    if (fs.existsSync(cacheDir)) {
+                        const files = fs.readdirSync(cacheDir);
+                        const zipFile = files.find(f => f.endsWith('.zip'));
+                        if (zipFile && appBundlePath.endsWith('.app')) {
+                            const fullZipPath = path.join(cacheDir, zipFile);
+                            const tmpDir = path.join(app.getPath('temp'), `lively_update_${Date.now()}`);
+
+                            const script = `
+                                sleep 0.8
+                                mkdir -p "${tmpDir}"
+                                ditto -xk "${fullZipPath}" "${tmpDir}"
+                                rm -rf "${appBundlePath}"
+                                cp -R "${tmpDir}/LivelyLyrics.app" "${appBundlePath}"
+                                xattr -cr "${appBundlePath}" 2>/dev/null || true
+                                rm -rf "${tmpDir}"
+                                open "${appBundlePath}"
+                            `;
+
+                            const child = spawn('/bin/bash', ['-c', script], {
+                                detached: true,
+                                stdio: 'ignore'
+                            });
+                            child.unref();
+                            app.quit();
+                            return;
+                        }
+                    }
+                } catch (macErr) {
+                    console.warn('[macOS AutoUpdater Fallback Error]:', macErr);
+                }
+            }
+
             autoUpdater.quitAndInstall(false, true);
         }
     }
