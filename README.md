@@ -253,9 +253,18 @@ Cukup tekan kombinasi keyboard shortcut <b><code>Cmd + Option + G</code></b> (ma
 </details>
 
 <details>
-<summary><b>Bagaimana cara mengaktifkan izin di macOS jika dicegat System Settings?</b></summary>
+<summary><b>Bagaimana cara membuka aplikasi jika muncul pesan "Apple could not verify LivelyLyrics is free of malware" (macOS Gatekeeper)?</b></summary>
 <br>
-Buka <b>System Settings &rarr; Privacy & Security</b>, scroll ke bawah ke bagian Security, lalu klik <b>Open Anyway</b>. Pada dialog Automation, klik <b>Allow / OK</b> agar aplikasi diizinkan membaca judul lagu dan posisi detik dari Spotify / Apple Music.
+Karena LivelyLyrics adalah proyek open-source independen tanpa sertifikat berbayar tahunan Apple Developer, sistem keamanan macOS Gatekeeper secara default menandai file unduhan dari internet dengan atribut karantina.
+<br><br>
+Ada 2 cara mudah untuk membukanya:
+<ol>
+  <li><b>Melalui Terminal (Paling Cepat):</b> Jalankan perintah berikut sekali saja:
+    <pre><code>xattr -cr /Applications/LivelyLyrics.app</code></pre>
+  </li>
+  <li><b>Melalui Pengaturan macOS:</b> Buka <b>System Settings &rarr; Privacy & Security</b>, gulir ke bagian Security di bawah, lalu klik tombol <b>"Open Anyway"</b> (Buka Saja).</li>
+</ol>
+Pada dialog Automation pertama kali, klik <b>Allow / OK</b> agar aplikasi diizinkan membaca judul lagu dan posisi detik dari Spotify / Apple Music.
 </details>
 
 ---
