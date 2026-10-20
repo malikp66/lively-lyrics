@@ -319,7 +319,7 @@ pub async fn fetch_lyrics(
     });
 
     let headers = [
-        ("User-Agent", "LivelyLyrics/3.1.0 (https://github.com/malikp66/lively-lyrics)"),
+        ("User-Agent", "LivelyLyrics/3.2.0 (https://github.com/malikp66/lively-lyrics)"),
     ];
 
     let mut collected_tracks: Vec<LrclibTrack> = Vec::new();

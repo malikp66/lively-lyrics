@@ -10,7 +10,7 @@
   <!-- Primary Project Badges -->
   <p>
     <a href="https://github.com/malikp66/lively-lyrics/releases">
-      <img src="https://img.shields.io/badge/Release-v3.1.0-1ed760?style=for-the-badge&logo=spotify&logoColor=white" alt="Release v3.1.0" />
+      <img src="https://img.shields.io/badge/Release-v3.2.0-1ed760?style=for-the-badge&logo=spotify&logoColor=white" alt="Release v3.2.0" />
     </a>
     <a href="https://www.rust-lang.org/">
       <img src="https://img.shields.io/badge/Rust-1.80+-dea584?style=for-the-badge&logo=rust&logoColor=white" alt="Rust 1.80+" />
@@ -243,7 +243,7 @@ npm run dist:linux  # Linux (.AppImage & .deb)
 <details>
 <summary><b>Mengapa lirik lagu tertentu sempat terlambat beberapa detik, dan bagaimana solusinya?</b></summary>
 <br>
-Hal ini biasanya terjadi jika lirik diunggah dari video klip YouTube (yang memiliki intro dialog/helikopter 10-15 detik) alih-alih audio album resmi. LivelyLyrics v3.1.0 kini memiliki <b>Duration-Precision Scoring</b> yang otomatis memilih versi audio studio bersih. Jika masih ada selisih, cukup tekan tombol <b>Sync Ulang (Cmd+R / Ctrl+R)</b> untuk berganti ke kandidat lirik berikutnya, atau gunakan hotkey <code>[</code> dan <code>]</code> untuk fine-tune offset.
+Hal ini biasanya terjadi jika lirik diunggah dari video klip YouTube (yang memiliki intro dialog/helikopter 10-15 detik) alih-alih audio album resmi. LivelyLyrics v3.2.0 kini memiliki <b>Duration-Precision Scoring</b> yang otomatis memilih versi audio studio bersih. Jika masih ada selisih, cukup tekan tombol <b>Sync Ulang (Cmd+R / Ctrl+R)</b> untuk berganti ke kandidat lirik berikutnya, atau gunakan hotkey <code>[</code> dan <code>]</code> untuk fine-tune offset.
 </details>
 
 <details>
