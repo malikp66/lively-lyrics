@@ -1,20 +1,40 @@
 /**
  * updateService.js
  * Manages Auto-Updates for LivelyLyrics using electron-updater
- * with graceful offline and no-release fallbacks.
+ * with GitHub API fallbacks and graceful offline handling.
  */
 
 const { autoUpdater } = require('electron-updater');
-const { app } = require('electron');
+const { app, shell } = require('electron');
 const EventEmitter = require('events');
+
+function parseSemver(v) {
+    if (!v) return [0, 0, 0];
+    const clean = String(v).replace(/^v/i, '').trim();
+    const parts = clean.split(/[.-]/).map(p => parseInt(p, 10));
+    return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+}
+
+function isNewer(remote, current) {
+    const r = parseSemver(remote);
+    const c = parseSemver(current);
+    for (let i = 0; i < 3; i++) {
+        if (r[i] > c[i]) return true;
+        if (r[i] < c[i]) return false;
+    }
+    return false;
+}
 
 class UpdateService extends EventEmitter {
     constructor() {
         super();
         this.status = {
             state: 'idle', // 'idle' | 'checking' | 'available' | 'not-available' | 'downloading' | 'downloaded' | 'error'
+            updateAvailable: false,
             version: app.getVersion(),
             newVersion: null,
+            downloadUrl: null,
+            releaseUrl: null,
             progress: 0,
             message: ''
         };
@@ -33,26 +53,32 @@ class UpdateService extends EventEmitter {
         autoUpdater.on('update-available', (info) => {
             this.updateStatus('available', {
                 newVersion: info.version,
+                updateAvailable: true,
                 message: `Pembaruan v${info.version} tersedia!`
             });
         });
 
         autoUpdater.on('update-not-available', (info) => {
             this.updateStatus('not-available', {
+                updateAvailable: false,
                 message: `LivelyLyrics Anda sudah versi terbaru (v${app.getVersion()}).`
             });
         });
 
         autoUpdater.on('error', (err) => {
             console.warn('[AutoUpdater Warning]:', err.message);
-            this.updateStatus('error', {
-                message: 'Belum ada rilis baru di cloud atau server belum dikonfigurasi.'
-            });
+            if (this.status.state !== 'available') {
+                this.updateStatus('error', {
+                    updateAvailable: false,
+                    message: 'Gagal memeriksa pembaruan via autoUpdater: ' + err.message
+                });
+            }
         });
 
         autoUpdater.on('download-progress', (progressObj) => {
             this.updateStatus('downloading', {
                 progress: Math.round(progressObj.percent),
+                updateAvailable: true,
                 message: `Mengunduh pembaruan: ${Math.round(progressObj.percent)}%`
             });
         });
@@ -60,34 +86,120 @@ class UpdateService extends EventEmitter {
         autoUpdater.on('update-downloaded', (info) => {
             this.updateStatus('downloaded', {
                 newVersion: info.version,
+                updateAvailable: true,
                 message: `Pembaruan v${info.version} selesai diunduh! Klik untuk memasang.`
             });
         });
     }
 
     updateStatus(state, data = {}) {
+        const isAvail = (state === 'available' || state === 'downloading' || state === 'downloaded');
         this.status = {
             ...this.status,
             state,
+            updateAvailable: data.updateAvailable !== undefined ? data.updateAvailable : isAvail,
             ...data
         };
         this.emit('status-changed', this.status);
     }
 
-    async checkForUpdates() {
-        if (!app.isPackaged) {
-            this.updateStatus('not-available', {
-                message: `Mode Development (v${app.getVersion()}) - Pembaruan otomatis aktif pada versi terinstal.`
+    async fetchLatestGitHubRelease() {
+        try {
+            const res = await fetch('https://api.github.com/repos/malikp66/lively-lyrics/releases/latest', {
+                headers: { 'User-Agent': 'LivelyLyrics-Desktop' }
             });
-            return this.status;
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (!data || !data.tag_name) return null;
+
+            const cleanTag = data.tag_name.replace(/^v/i, '').trim();
+            let selectedAsset = null;
+
+            if (Array.isArray(data.assets)) {
+                if (process.platform === 'win32') {
+                    selectedAsset = data.assets.find(a => a.name.endsWith('.exe') && a.name.toLowerCase().includes('setup'))
+                        || data.assets.find(a => a.name.endsWith('.exe'));
+                } else if (process.platform === 'darwin') {
+                    const isArm = process.arch === 'arm64';
+                    if (isArm) {
+                        selectedAsset = data.assets.find(a => (a.name.endsWith('.dmg') || a.name.endsWith('.zip')) && a.name.toLowerCase().includes('arm64'))
+                            || data.assets.find(a => a.name.endsWith('.dmg') || a.name.endsWith('.zip'));
+                    } else {
+                        selectedAsset = data.assets.find(a => (a.name.endsWith('.dmg') || a.name.endsWith('.zip')) && !a.name.toLowerCase().includes('arm64'))
+                            || data.assets.find(a => a.name.endsWith('.dmg') || a.name.endsWith('.zip'));
+                    }
+                } else {
+                    selectedAsset = data.assets.find(a => a.name.endsWith('.AppImage'))
+                        || data.assets.find(a => a.name.endsWith('.deb'));
+                }
+            }
+
+            return {
+                tagName: data.tag_name,
+                version: cleanTag,
+                releaseUrl: data.html_url,
+                downloadUrl: selectedAsset ? selectedAsset.browser_download_url : data.html_url,
+                assetName: selectedAsset ? selectedAsset.name : null,
+                body: data.body
+            };
+        } catch (e) {
+            console.warn('[UpdateService] Failed to query GitHub Releases API:', e.message);
+            return null;
+        }
+    }
+
+    async checkForUpdates() {
+        this.updateStatus('checking', { message: 'Memeriksa rilis terbaru...' });
+
+        // 1. Try electron-updater if packaged
+        let autoUpdaterSuccess = false;
+        if (app.isPackaged) {
+            try {
+                const result = await autoUpdater.checkForUpdates();
+                if (result && result.updateInfo) {
+                    const remoteVer = result.updateInfo.version;
+                    if (isNewer(remoteVer, app.getVersion())) {
+                        autoUpdaterSuccess = true;
+                        this.updateStatus('available', {
+                            newVersion: remoteVer,
+                            updateAvailable: true,
+                            message: `Pembaruan v${remoteVer} tersedia!`
+                        });
+                    }
+                }
+            } catch (err) {
+                console.warn('[AutoUpdater] checkForUpdates error:', err.message);
+            }
         }
 
-        try {
-            this.updateStatus('checking', { message: 'Memeriksa rilis terbaru...' });
-            await autoUpdater.checkForUpdates();
-        } catch (e) {
-            this.updateStatus('error', { message: e.message });
+        // 2. Direct GitHub Release API fallback (handles unpacked dev & naming discrepancies in latest.yml)
+        if (!autoUpdaterSuccess) {
+            const ghRelease = await this.fetchLatestGitHubRelease();
+            if (ghRelease && isNewer(ghRelease.version, app.getVersion())) {
+                this.updateStatus('available', {
+                    newVersion: ghRelease.version,
+                    downloadUrl: ghRelease.downloadUrl,
+                    releaseUrl: ghRelease.releaseUrl,
+                    updateAvailable: true,
+                    message: `Pembaruan v${ghRelease.version} tersedia!`
+                });
+                return this.status;
+            } else if (ghRelease && !isNewer(ghRelease.version, app.getVersion())) {
+                this.updateStatus('not-available', {
+                    updateAvailable: false,
+                    message: `LivelyLyrics Anda sudah menggunakan versi paling mutakhir (v${app.getVersion()}).`
+                });
+                return this.status;
+            }
         }
+
+        if (this.status.state === 'checking') {
+            this.updateStatus('not-available', {
+                updateAvailable: false,
+                message: `LivelyLyrics Anda sudah menggunakan versi paling mutakhir (v${app.getVersion()}).`
+            });
+        }
+
         return this.status;
     }
 
@@ -95,9 +207,22 @@ class UpdateService extends EventEmitter {
         if (this.status.state === 'available') {
             try {
                 this.updateStatus('downloading', { progress: 0, message: 'Memulai pengunduhan...' });
-                await autoUpdater.downloadUpdate();
+                if (app.isPackaged) {
+                    await autoUpdater.downloadUpdate();
+                } else {
+                    throw new Error('Mode development: silakan unduh langsung dari GitHub.');
+                }
             } catch (e) {
-                this.updateStatus('error', { message: 'Gagal mengunduh pembaruan: ' + e.message });
+                console.warn('[AutoUpdater] downloadUpdate failed, falling back to browser download:', e.message);
+                const targetUrl = this.status.downloadUrl || this.status.releaseUrl || 'https://github.com/malikp66/lively-lyrics/releases/latest';
+                try {
+                    await shell.openExternal(targetUrl);
+                } catch (openErr) {
+                    console.error('[AutoUpdater] Failed to open external URL:', openErr);
+                }
+                this.updateStatus('available', {
+                    message: 'Membuka peramban untuk mengunduh installer versi terbaru...'
+                });
             }
         }
     }
@@ -149,6 +274,8 @@ class UpdateService extends EventEmitter {
             }
 
             autoUpdater.quitAndInstall(false, true);
+        } else if (this.status.downloadUrl || this.status.releaseUrl) {
+            shell.openExternal(this.status.downloadUrl || this.status.releaseUrl);
         }
     }
 

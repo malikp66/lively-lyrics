@@ -111,10 +111,34 @@
         },
 
         // Updater & Version APIs
-        checkForUpdates: () => {
-            return Promise.resolve({ updateAvailable: false });
+        checkForUpdates: async () => {
+            try {
+                const currentVer = await invoke('get_app_version').catch(() => '3.2.0');
+                const res = await fetch('https://api.github.com/repos/malikp66/lively-lyrics/releases/latest');
+                if (!res.ok) return { updateAvailable: false, version: currentVer };
+                const data = await res.json();
+                const latestTag = (data.tag_name || '').replace(/^v/i, '').trim();
+                const parse = (v) => (v || '').split(/[.-]/).map(n => parseInt(n, 10) || 0);
+                const l = parse(latestTag);
+                const c = parse(currentVer);
+                let isNewer = false;
+                for (let i = 0; i < 3; i++) {
+                    if ((l[i] || 0) > (c[i] || 0)) { isNewer = true; break; }
+                    if ((l[i] || 0) < (c[i] || 0)) { break; }
+                }
+                return {
+                    updateAvailable: isNewer,
+                    state: isNewer ? 'available' : 'not-available',
+                    version: currentVer,
+                    newVersion: latestTag,
+                    releaseUrl: data.html_url
+                };
+            } catch (e) {
+                return { updateAvailable: false, state: 'not-available' };
+            }
         },
         downloadUpdate: () => {
+            window.open('https://github.com/malikp66/lively-lyrics/releases/latest', '_blank');
             return Promise.resolve();
         },
         installUpdate: () => {},

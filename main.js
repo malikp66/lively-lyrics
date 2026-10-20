@@ -355,10 +355,13 @@ mediaService.on('mediaUpdate', async (data) => {
     }
 });
 
-// Update service status forwarding to renderer
+// Update service status forwarding to renderer windows
 updateService.on('status-changed', (status) => {
     if (mainWindow && !mainWindow.isDestroyed()) {
         mainWindow.webContents.send('update-status', status);
+    }
+    if (settingsWindow && !settingsWindow.isDestroyed()) {
+        settingsWindow.webContents.send('update-status', status);
     }
 });
 

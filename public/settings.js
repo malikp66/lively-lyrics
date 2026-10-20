@@ -694,14 +694,24 @@
     if (btnCheckUpdates) {
         btnCheckUpdates.addEventListener('click', () => {
             if (updateStatusText) updateStatusText.textContent = 'Memeriksa pembaruan rilis terbaru...';
+            if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+            if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+            if (updateProgressBar) updateProgressBar.classList.add('hidden');
+
             if (window.electronAPI && window.electronAPI.checkForUpdates) {
                 window.electronAPI.checkForUpdates()
                     .then((info) => {
-                        if (info && info.updateAvailable) {
-                            if (updateStatusText) updateStatusText.textContent = `Versi baru tersedia: v${info.version}!`;
+                        const isAvail = info && (info.updateAvailable || info.state === 'available' || (info.newVersion && info.newVersion !== info.version));
+                        if (isAvail) {
+                            const newVer = info.newVersion || info.version;
+                            if (updateStatusText) updateStatusText.textContent = `Versi baru tersedia: v${newVer}!`;
                             if (btnDownloadUpdate) btnDownloadUpdate.classList.remove('hidden');
+                            if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+                        } else if (info && info.state === 'error') {
+                            if (updateStatusText) updateStatusText.textContent = info.message || 'Gagal memeriksa pembaruan.';
                         } else {
-                            if (updateStatusText) updateStatusText.textContent = 'LivelyLyrics Anda sudah menggunakan versi paling mutakhir.';
+                            const curVer = (info && info.version) || '3.2.0';
+                            if (updateStatusText) updateStatusText.textContent = `LivelyLyrics Anda sudah menggunakan versi paling mutakhir (v${curVer}).`;
                         }
                     })
                     .catch(() => {
@@ -714,6 +724,7 @@
     if (btnDownloadUpdate) {
         btnDownloadUpdate.addEventListener('click', () => {
             if (updateProgressBar) updateProgressBar.classList.remove('hidden');
+            if (updateProgressFill) updateProgressFill.style.width = '0%';
             if (updateStatusText) updateStatusText.textContent = 'Mengunduh pembaruan...';
             if (window.electronAPI && window.electronAPI.downloadUpdate) {
                 window.electronAPI.downloadUpdate().catch(() => {});
@@ -725,6 +736,36 @@
         btnInstallUpdate.addEventListener('click', () => {
             if (window.electronAPI && window.electronAPI.installUpdate) {
                 window.electronAPI.installUpdate();
+            }
+        });
+    }
+
+    // Real-time update status listener
+    if (window.electronAPI && window.electronAPI.onUpdateStatus) {
+        window.electronAPI.onUpdateStatus((status) => {
+            if (!status) return;
+
+            if (status.message && updateStatusText) {
+                updateStatusText.textContent = status.message;
+            }
+
+            if (status.state === 'available') {
+                if (btnDownloadUpdate) btnDownloadUpdate.classList.remove('hidden');
+                if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+                if (updateProgressBar) updateProgressBar.classList.add('hidden');
+            } else if (status.state === 'downloading') {
+                if (updateProgressBar) updateProgressBar.classList.remove('hidden');
+                if (updateProgressFill) updateProgressFill.style.width = `${status.progress || 0}%`;
+                if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+                if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+            } else if (status.state === 'downloaded') {
+                if (updateProgressBar) updateProgressBar.classList.add('hidden');
+                if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+                if (btnInstallUpdate) btnInstallUpdate.classList.remove('hidden');
+            } else if (status.state === 'not-available' || status.state === 'error') {
+                if (btnDownloadUpdate) btnDownloadUpdate.classList.add('hidden');
+                if (btnInstallUpdate) btnInstallUpdate.classList.add('hidden');
+                if (updateProgressBar) updateProgressBar.classList.add('hidden');
             }
         });
     }
