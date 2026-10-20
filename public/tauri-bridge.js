@@ -98,6 +98,18 @@
             return invoke('search_lyrics_manual', { query });
         },
 
+        // Settings synchronization across windows
+        sendSettingChanged: (data) => {
+            if (tauri && tauri.event && typeof tauri.event.emit === 'function') {
+                tauri.event.emit('setting-changed', data);
+            }
+        },
+        onSettingChanged: (callback) => {
+            if (tauri && tauri.event && typeof tauri.event.listen === 'function') {
+                tauri.event.listen('setting-changed', (event) => callback(event.payload));
+            }
+        },
+
         // Updater & Version APIs
         checkForUpdates: () => {
             return Promise.resolve({ updateAvailable: false });
@@ -109,7 +121,7 @@
         getAppVersion: () => {
             return invoke('get_app_version');
         },
-        platform: 'darwin'
+        platform: (typeof navigator !== 'undefined' && (navigator.platform?.includes('Win') || navigator.userAgent?.includes('Windows'))) ? 'win32' : 'darwin'
     };
 
     invoke('get_platform').then((plat) => {

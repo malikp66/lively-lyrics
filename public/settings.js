@@ -363,6 +363,9 @@
             const color = btn.dataset.solidcolor;
             if (bgCustomSolidColor) bgCustomSolidColor.value = color;
             if (solidColorHexVal) solidColorHexVal.textContent = color;
+            bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === 'solid'));
+            updateBgOptionPanels('solid');
+            notifyChange('bg_style', 'solid');
             notifyChange('bg_solid_color', color);
         });
     });
@@ -372,6 +375,9 @@
             const color = e.target.value;
             solidPresetBtns.forEach(b => b.classList.remove('active'));
             if (solidColorHexVal) solidColorHexVal.textContent = color;
+            bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === 'solid'));
+            updateBgOptionPanels('solid');
+            notifyChange('bg_style', 'solid');
             notifyChange('bg_solid_color', color);
         });
     }
@@ -382,6 +388,9 @@
         chip.addEventListener('click', () => {
             const idx = parseInt(chip.dataset.gradientIdx || '0', 10);
             updateGradientChipsSelection(idx);
+            bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === 'gradient'));
+            updateBgOptionPanels('gradient');
+            notifyChange('bg_style', 'gradient');
             notifyChange('bg_gradient_idx', idx);
         });
     });
@@ -390,6 +399,9 @@
         btnRandomGradient.addEventListener('click', () => {
             const randomIdx = Math.floor(Math.random() * GRADIENT_PRESETS.length);
             updateGradientChipsSelection(randomIdx);
+            bgStyleBtns.forEach(b => b.classList.toggle('active', b.dataset.bgstyle === 'gradient'));
+            updateBgOptionPanels('gradient');
+            notifyChange('bg_style', 'gradient');
             notifyChange('bg_gradient_idx', randomIdx);
         });
     }
@@ -425,6 +437,12 @@
     });
 
     // Theme Accent
+    function applyAccentToSettings(color) {
+        if (!color) return;
+        document.documentElement.style.setProperty('--accent-color', color);
+        document.documentElement.style.setProperty('--accent-glow', `${color}77`);
+    }
+
     themeChips.forEach(chip => {
         chip.addEventListener('click', () => {
             themeChips.forEach(c => c.classList.remove('active'));
@@ -433,6 +451,7 @@
             const color = chip.dataset.color;
             if (customAccentColor) customAccentColor.value = color;
             if (accentHexVal) accentHexVal.textContent = color;
+            applyAccentToSettings(color);
             notifyChange('lively_theme', theme);
             notifyChange('custom_accent_color', color);
         });
@@ -443,6 +462,7 @@
             const color = e.target.value;
             themeChips.forEach(c => c.classList.remove('active'));
             if (accentHexVal) accentHexVal.textContent = color;
+            applyAccentToSettings(color);
             notifyChange('lively_theme', 'custom');
             notifyChange('custom_accent_color', color);
         });

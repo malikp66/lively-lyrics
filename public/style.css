@@ -572,6 +572,22 @@ body {
     pointer-events: none;
 }
 
+/* Windows & Electron Draggable Window Regions */
+.island-main-split,
+.island-player-panel,
+.track-info-layout,
+.track-copy,
+.artwork-wrapper,
+.cover-placeholder,
+.lyrics-stage,
+.lyrics-flow,
+.stage-placeholder,
+.splash-screen,
+.splash-content {
+    -webkit-app-region: drag;
+    cursor: default;
+}
+
 .drag-region {
     -webkit-app-region: drag;
     display: flex;
@@ -591,9 +607,11 @@ body {
 button,
 input,
 select,
+a,
 .btn-icon,
 .dock-btn,
 .dock-btn-main,
+.dock-btn-karaoke,
 .pill-btn,
 .btn-close-modal,
 .tab-btn,
@@ -609,7 +627,16 @@ select,
 .btn-update-action,
 .btn-resync-force,
 .glass-slider,
-.color-picker-input {
+.color-picker-input,
+.color-input-mini,
+.scrubber-bar-container,
+.scrubber-track,
+.scrubber-progress,
+.playback-dock,
+.quick-dropdown-menu,
+.dropdown-item,
+.dropdown-mini-btn,
+.lyric-line {
     -webkit-app-region: no-drag !important;
     pointer-events: auto !important;
 }
@@ -924,6 +951,30 @@ select,
 }
 
 /* Quick Dropdown Menu - Apple macOS Sequoia Liquid Glass Material */
+.dropdown-backdrop {
+    position: absolute;
+    inset: 0;
+    z-index: 9999;
+    background: transparent;
+    -webkit-app-region: no-drag !important;
+    pointer-events: auto !important;
+}
+
+body.dropdown-open .island-main-split,
+body.dropdown-open .island-player-panel,
+body.dropdown-open .track-info-layout,
+body.dropdown-open .lyrics-stage,
+body.dropdown-open .lyrics-flow,
+body.dropdown-open .stage-placeholder {
+    -webkit-app-region: no-drag !important;
+}
+
+.quick-dropdown-menu,
+.quick-dropdown-menu * {
+    -webkit-app-region: no-drag !important;
+    pointer-events: auto !important;
+}
+
 .quick-dropdown-menu {
     position: absolute;
     z-index: 10000;
@@ -1261,11 +1312,11 @@ select,
 .scrubber-progress {
     height: 100%;
     width: 0%;
-    background: #ffffff;
+    background: var(--accent-color, #ffffff);
     border-radius: 999px;
-    box-shadow: 0 0 8px rgba(255, 255, 255, 0.45);
+    box-shadow: 0 0 10px var(--accent-glow, rgba(255, 255, 255, 0.45));
     pointer-events: none;
-    transition: none;
+    transition: background 0.25s ease, box-shadow 0.25s ease;
     will-change: width;
 }
 

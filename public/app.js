@@ -112,6 +112,7 @@ const btnClose = document.getElementById('btn-close');
 const btnThreeDotsPlayer = document.getElementById('btn-three-dots-player');
 const btnThreeDotsLyrics = document.getElementById('btn-three-dots-lyrics');
 const quickDropdownMenu = document.getElementById('quick-dropdown-menu');
+const dropdownBackdrop = document.getElementById('dropdown-backdrop');
 const dropdownItemSettings = document.getElementById('dropdown-item-settings');
 const dropdownItemResync = document.getElementById('dropdown-item-resync');
 const dropdownItemToggleLyrics = document.getElementById('dropdown-item-toggle-lyrics');
@@ -1105,14 +1106,27 @@ function setOnlyLyricsMode(enabled) {
     }, 180);
 }
 
+function closeQuickDropdown() {
+    if (!quickDropdownMenu) return;
+    quickDropdownMenu.classList.add('hidden');
+    if (dropdownBackdrop) dropdownBackdrop.classList.add('hidden');
+    bodyEl.classList.remove('dropdown-open');
+    if (!appContainer.matches(':hover')) {
+        appContainer.classList.remove('is-hovered');
+    }
+}
+
 // Quick Three-Dots Dropdown Interaction (Anti-Cutoff Positioning)
 function toggleQuickDropdown(anchorBtn) {
     if (!quickDropdownMenu || !anchorBtn) return;
     const isCurrentlyOpen = !quickDropdownMenu.classList.contains('hidden');
     if (isCurrentlyOpen) {
-        quickDropdownMenu.classList.add('hidden');
+        closeQuickDropdown();
         return;
     }
+
+    bodyEl.classList.add('dropdown-open');
+    if (dropdownBackdrop) dropdownBackdrop.classList.remove('hidden');
 
     // Render offscreen/hidden momentarily to measure exact dimensions
     quickDropdownMenu.style.visibility = 'hidden';
@@ -1193,14 +1207,29 @@ if (btnLyricsToggle) {
     });
 }
 
-// Close dropdown on outside click
+// Close dropdown on outside backdrop click
+if (dropdownBackdrop) {
+    dropdownBackdrop.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQuickDropdown();
+    });
+    dropdownBackdrop.addEventListener('mousedown', (e) => {
+        e.stopPropagation();
+    });
+}
+
+// Close dropdown on outside document click
 document.addEventListener('click', (e) => {
     if (!quickDropdownMenu || quickDropdownMenu.classList.contains('hidden')) return;
     if (!quickDropdownMenu.contains(e.target) && !e.target.closest('#btn-three-dots-player') && !e.target.closest('#btn-three-dots-lyrics')) {
-        quickDropdownMenu.classList.add('hidden');
-        if (!appContainer.matches(':hover')) {
-            appContainer.classList.remove('is-hovered');
-        }
+        closeQuickDropdown();
+    }
+});
+
+// Close dropdown on Escape key
+window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && quickDropdownMenu && !quickDropdownMenu.classList.contains('hidden')) {
+        closeQuickDropdown();
     }
 });
 
@@ -1208,7 +1237,7 @@ document.addEventListener('click', (e) => {
 if (dropdownItemSettings) {
     dropdownItemSettings.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        closeQuickDropdown();
         openSettings();
     });
 }
@@ -1216,27 +1245,31 @@ if (dropdownItemSettings) {
 if (dropdownItemResync) {
     dropdownItemResync.addEventListener('click', (e) => {
         e.stopPropagation();
-        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+        closeQuickDropdown();
         triggerResync();
     });
 }
 
 if (dropdownItemMinimize) {
-    dropdownItemMinimize.addEventListener('click', () => {
-        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+    dropdownItemMinimize.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQuickDropdown();
         if (window.electronAPI) window.electronAPI.minimizeWindow();
     });
 }
 
 if (dropdownItemClose) {
-    dropdownItemClose.addEventListener('click', () => {
-        if (quickDropdownMenu) quickDropdownMenu.classList.add('hidden');
+    dropdownItemClose.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQuickDropdown();
         if (window.electronAPI) window.electronAPI.closeWindow();
     });
 }
 
 if (btnCloseOnlyLyrics) {
-    btnCloseOnlyLyrics.addEventListener('click', () => {
+    btnCloseOnlyLyrics.addEventListener('click', (e) => {
+        e.stopPropagation();
+        closeQuickDropdown();
         if (window.electronAPI) window.electronAPI.closeWindow();
     });
 }

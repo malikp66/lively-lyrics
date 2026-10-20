@@ -81,28 +81,7 @@
             </div>
         </header>
 
-        <!-- Unified Quick Three-Dots Dropdown Menu -->
-        <div id="quick-dropdown-menu" class="quick-dropdown-menu hidden no-drag" data-tauri-drag-region="false">
-            <button class="dropdown-item" id="dropdown-item-settings">
-                <i class="ph-bold ph-gear-six"></i>
-                <span>Pengaturan</span>
-            </button>
-            <button class="dropdown-item" id="dropdown-item-resync">
-                <i id="dropdown-icon-resync" class="ph-bold ph-arrows-clockwise"></i>
-                <span>Sync Ulang (Ctrl+R)</span>
-            </button>
-            <div class="dropdown-divider"></div>
-            <div class="dropdown-row-actions">
-                <button class="dropdown-mini-btn" id="dropdown-item-minimize" title="Minimize Jendela">
-                    <i class="ph-bold ph-minus"></i>
-                    <span>Minimize</span>
-                </button>
-                <button class="dropdown-mini-btn dropdown-mini-danger" id="dropdown-item-close" title="Tutup Aplikasi">
-                    <i class="ph-bold ph-x"></i>
-                    <span>Tutup</span>
-                </button>
-            </div>
-        </div>
+
 
         <!-- Ghost Mode Floating Banner Notice -->
         <div id="ghost-badge" class="ghost-badge hidden">
@@ -179,6 +158,32 @@
                     </div>
                 </div>
             </main>
+        </div> <!-- End .island-main-split -->
+        
+        <!-- Outside Click Dismiss Backdrop for Dropdown -->
+        <div id="dropdown-backdrop" class="dropdown-backdrop hidden no-drag" data-tauri-drag-region="false"></div>
+
+        <!-- Unified Quick Three-Dots Dropdown Menu -->
+        <div id="quick-dropdown-menu" class="quick-dropdown-menu hidden no-drag" data-tauri-drag-region="false">
+            <button class="dropdown-item" id="dropdown-item-settings">
+                <i class="ph-bold ph-gear-six"></i>
+                <span>Pengaturan</span>
+            </button>
+            <button class="dropdown-item" id="dropdown-item-resync">
+                <i id="dropdown-icon-resync" class="ph-bold ph-arrows-clockwise"></i>
+                <span>Sync Ulang (Ctrl+R)</span>
+            </button>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-row-actions">
+                <button class="dropdown-mini-btn" id="dropdown-item-minimize" title="Minimize Jendela">
+                    <i class="ph-bold ph-minus"></i>
+                    <span>Minimize</span>
+                </button>
+                <button class="dropdown-mini-btn dropdown-mini-danger" id="dropdown-item-close" title="Tutup Aplikasi">
+                    <i class="ph-bold ph-x"></i>
+                    <span>Tutup</span>
+                </button>
+            </div>
         </div>
     </div> <!-- End #app-container -->
 </div> <!-- End .window-shell -->
